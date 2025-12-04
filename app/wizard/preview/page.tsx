@@ -9,11 +9,14 @@ import {
   Loader2,
   RefreshCw,
   Eye,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import type { Store, Product, ProductImage } from "@/types/database";
 import { getStore, getStoreProducts } from "@/lib/supabase";
 import { formatPrice } from "@/components/wizard/WizardContext";
+import { usePaymentStatus } from "@/hooks/usePaymentStatus";
+import { UpgradeModal, PaymentStatusBadge } from "@/components/payment";
 
 function PreviewContent() {
   const router = useRouter();
@@ -26,6 +29,8 @@ function PreviewContent() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDownloaded, setIsDownloaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const { isPaid, tier, isLoading: isPaymentLoading } = usePaymentStatus();
 
   useEffect(() => {
     async function loadData() {
@@ -61,6 +66,12 @@ function PreviewContent() {
   const handleDownload = async () => {
     if (!storeId) return;
 
+    // Check payment status before allowing download
+    if (!isPaid) {
+      setShowUpgradeModal(true);
+      return;
+    }
+
     setIsGenerating(true);
     setError(null);
 
@@ -89,6 +100,7 @@ function PreviewContent() {
 
       setIsDownloaded(true);
     } catch (err) {
+      console.error("Error downloading store:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsGenerating(false);
@@ -122,6 +134,11 @@ function PreviewContent() {
 
   return (
     <div className="max-w-4xl mx-auto">
+      {/* Payment status indicator */}
+      <div className="flex justify-end mb-4">
+        <PaymentStatusBadge isPaid={isPaid} tier={tier} isLoading={isPaymentLoading} />
+      </div>
+
       <div className="text-center mb-12">
         <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-500/10 mb-6">
           {isDownloaded ? (
@@ -139,6 +156,27 @@ function PreviewContent() {
             : "Review your store configuration below, then download your custom e-commerce store."}
         </p>
       </div>
+
+      {/* Free trial watermark overlay */}
+      {!isPaid && !isPaymentLoading && (
+        <div className="mb-8 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+          <div className="flex items-center gap-3">
+            <Lock className="w-5 h-5 text-amber-400 flex-shrink-0" />
+            <div>
+              <p className="text-amber-400 font-medium">Free Trial Preview</p>
+              <p className="text-sm text-gray-400">
+                You&apos;re viewing a preview of your store configuration. Upgrade to download your store.
+              </p>
+            </div>
+            <Button
+              onClick={() => setShowUpgradeModal(true)}
+              className="ml-auto bg-amber-500 hover:bg-amber-600 text-navy-900"
+            >
+              Upgrade Now
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Store Preview Card */}
       <div className="bg-navy-800 rounded-2xl p-8 mb-8">
@@ -363,6 +401,13 @@ function PreviewContent() {
           </ol>
         </div>
       )}
+
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        context="download"
+      />
     </div>
   );
 }

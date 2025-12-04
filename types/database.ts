@@ -1,12 +1,18 @@
 // types/database.ts
 // Database types matching DATA_MODEL.md schema
 
+export type PaymentTier = "starter" | "pro" | "hosted";
+
 export interface User {
   id: string;
   email: string;
   full_name: string | null;
   avatar_url: string | null;
   stripe_customer_id: string | null;
+  // Payment tracking
+  has_paid: boolean;
+  paid_at: string | null;
+  payment_tier: PaymentTier | null;
   created_at: string;
   updated_at: string;
 }
@@ -199,6 +205,25 @@ export interface WizardProgress {
   answers: Record<string, unknown>;
   completed: boolean;
   completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type PurchaseStatus = "pending" | "completed" | "failed" | "refunded";
+
+export interface Purchase {
+  id: string;
+  user_id: string | null;
+  email: string;
+  stripe_checkout_session_id: string;
+  stripe_customer_id: string | null;
+  stripe_payment_intent_id: string | null;
+  plan: PaymentTier;
+  amount: number; // in cents
+  currency: string;
+  status: PurchaseStatus;
+  variant: string | null; // A/B test variant
+  metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }

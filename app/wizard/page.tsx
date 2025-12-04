@@ -9,21 +9,43 @@ import {
   createWizardProgress,
   getCurrentUser,
 } from "@/lib/supabase";
-import { Loader2 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { Loader2, LogOut } from "lucide-react";
+import { usePaymentStatus } from "@/hooks/usePaymentStatus";
+import { UpgradeModal, PaymentStatusBadge } from "@/components/payment";
 
 function WizardContent() {
   const router = useRouter();
   const { storeId, saveProgress } = useWizard();
+  const { isPaid, tier, isLoading: isPaymentLoading } = usePaymentStatus();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const handleGenerate = async () => {
-    // Save progress before navigating
-    await saveProgress();
+    // Check payment status before allowing generation
+    if (!isPaid) {
+      setShowUpgradeModal(true);
+      return;
+    }
 
-    // Navigate to preview with store ID
-    router.push(`/wizard/preview?store=${storeId}`);
+    try {
+      await saveProgress();
+      // Navigate to preview with store ID
+      router.push(`/wizard/preview?store=${storeId}`);
+    } catch (err) {
+      console.error("Error generating store:", err);
+    }
   };
 
-  return <WizardContainer onGenerate={handleGenerate} />;
+  return (
+    <>
+      <WizardContainer onGenerate={handleGenerate} />
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        context="generate"
+      />
+    </>
+  );
 }
 
 function WizardLoader() {
@@ -32,6 +54,7 @@ function WizardLoader() {
   const [storeId, setStoreId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { isPaid, tier, isLoading: isPaymentLoading } = usePaymentStatus();
 
   useEffect(() => {
     async function initializeWizard() {
@@ -50,6 +73,71 @@ function WizardLoader() {
         if (!user) {
           router.push("/auth/login?next=/wizard");
           return;
+        }
+
+        // Ensure user profile exists (handles race condition with auth trigger)
+        const supabase = createClient();
+        const { data: userProfile, error: profileCheckError } = await supabase
+          .from("users")
+          .select("id")
+          .eq("id", user.id)
+          .single();
+
+        console.log("Profile check result:", { userProfile, profileCheckError });
+
+        // Handle various error cases
+        if (profileCheckError) {
+          // 42P01 = table doesn't exist
+          if (profileCheckError.code === "42P01") {
+            console.error("Users table does not exist. Please run the database setup script.");
+            setError("Database not configured. Please contact support.");
+            setIsLoading(false);
+            return;
+          }
+          // PGRST116 = no rows found (expected for new users, continue to create)
+          if (profileCheckError.code !== "PGRST116") {
+            console.error("Unexpected error checking user profile:", profileCheckError);
+            // Continue anyway - the trigger might have created the profile
+          }
+        }
+
+        if (!userProfile) {
+          console.log("No user profile found, attempting to create one...");
+          // Manually create user profile if trigger hasn't fired yet
+          const { data: newProfile, error: profileError } = await supabase
+            .from("users")
+            .insert({
+              id: user.id,
+              email: user.email,
+            })
+            .select()
+            .single();
+
+          console.log("Profile creation result:", { newProfile, profileError });
+
+          if (profileError) {
+            // Ignore "already exists" error (23505 = unique_violation)
+            // This can happen if the trigger created the profile between our check and insert
+            if (profileError.code !== "23505") {
+              console.error("Error creating user profile:", {
+                code: profileError.code,
+                message: profileError.message,
+                details: profileError.details,
+                hint: profileError.hint,
+              });
+              // Check for common issues
+              if (profileError.code === "42501") {
+                setError("Permission denied. RLS policy may be misconfigured.");
+              } else if (profileError.code === "23503") {
+                setError("Foreign key error. Database may need setup.");
+              } else {
+                setError(`Failed to create user profile: ${profileError.message}`);
+              }
+              setIsLoading(false);
+              return;
+            }
+            console.log("Profile already exists (created by trigger), continuing...");
+          }
         }
 
         // Check if user has an existing store
@@ -86,12 +174,43 @@ function WizardLoader() {
     initializeWizard();
   }, [router, searchParams]);
 
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/auth/login");
+  };
+
+  // Shared header component for all states
+  const Header = () => (
+    <header className="border-b border-navy-700 bg-navy-800/50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          <div className="flex items-center gap-3">
+            <span className="text-xl font-bold text-white">GoSovereign</span>
+            <span className="text-xs text-gray-500 bg-navy-700 px-2 py-1 rounded">Setup</span>
+            <PaymentStatusBadge isPaid={isPaid} tier={tier} isLoading={isPaymentLoading} />
+          </div>
+          <button
+            onClick={handleSignOut}
+            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm"
+          >
+            <LogOut className="w-4 h-4" />
+            Sign Out
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-navy-900 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 text-emerald-500 animate-spin mx-auto mb-4" />
-          <p className="text-gray-400">Setting up your store...</p>
+      <div className="min-h-screen bg-navy-900">
+        <Header />
+        <div className="flex items-center justify-center" style={{ minHeight: "calc(100vh - 64px)" }}>
+          <div className="text-center">
+            <Loader2 className="w-8 h-8 text-emerald-500 animate-spin mx-auto mb-4" />
+            <p className="text-gray-400">Setting up your store...</p>
+          </div>
         </div>
       </div>
     );
@@ -99,15 +218,18 @@ function WizardLoader() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-navy-900 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-400 mb-4">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-emerald-500 text-navy-900 rounded-lg font-semibold hover:bg-emerald-400"
-          >
-            Try Again
-          </button>
+      <div className="min-h-screen bg-navy-900">
+        <Header />
+        <div className="flex items-center justify-center" style={{ minHeight: "calc(100vh - 64px)" }}>
+          <div className="text-center">
+            <p className="text-red-400 mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-emerald-500 text-navy-900 rounded-lg font-semibold hover:bg-emerald-400"
+            >
+              Try Again
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -115,16 +237,24 @@ function WizardLoader() {
 
   if (!storeId) {
     return (
-      <div className="min-h-screen bg-navy-900 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+      <div className="min-h-screen bg-navy-900">
+        <Header />
+        <div className="flex items-center justify-center" style={{ minHeight: "calc(100vh - 64px)" }}>
+          <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+        </div>
       </div>
     );
   }
 
   return (
-    <WizardProvider storeId={storeId}>
-      <WizardContent />
-    </WizardProvider>
+    <div className="min-h-screen bg-navy-900">
+      <Header />
+      <main className="py-8 px-4">
+        <WizardProvider storeId={storeId}>
+          <WizardContent />
+        </WizardProvider>
+      </main>
+    </div>
   );
 }
 

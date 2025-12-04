@@ -1,12 +1,46 @@
-import { CheckCircle, ArrowRight, Mail } from "lucide-react";
+"use client";
+
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { CheckCircle, ArrowRight, Loader2, Sparkles } from "lucide-react";
 import { Container, Button } from "@/components/ui";
 
-export const metadata = {
-  title: "Welcome to GoSovereign — You Own This",
-  description: "Your purchase is complete. Welcome to the ownership economy.",
-};
+interface SessionInfo {
+  email: string;
+  plan: string;
+  amount: number;
+}
 
-export default function SuccessPage(): React.ReactElement {
+function SuccessContent() {
+  const searchParams = useSearchParams();
+  const sessionId = searchParams.get("session_id");
+  const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
+  const [isLoading, setIsLoading] = useState(!!sessionId);
+
+  useEffect(() => {
+    async function fetchSessionInfo() {
+      if (!sessionId) return;
+
+      try {
+        const response = await fetch(`/api/checkout/session?session_id=${sessionId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setSessionInfo(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch session info:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchSessionInfo();
+  }, [sessionId]);
+
+  const planName = sessionInfo?.plan
+    ? sessionInfo.plan.charAt(0).toUpperCase() + sessionInfo.plan.slice(1)
+    : "GoSovereign";
+
   return (
     <main className="min-h-screen bg-navy-900 flex items-center justify-center py-20">
       <Container size="sm">
@@ -22,14 +56,32 @@ export default function SuccessPage(): React.ReactElement {
           </h1>
 
           <p className="text-xl text-gray-400 mb-8 max-w-md mx-auto">
-            Not "subscribe to" — <span className="text-emerald-400 font-semibold">own</span>.
+            Not &quot;subscribe to&quot; — <span className="text-emerald-400 font-semibold">own</span>.
             Big difference. Welcome to GoSovereign.
           </p>
+
+          {/* Plan info */}
+          {isLoading ? (
+            <div className="flex items-center justify-center gap-2 text-gray-400 mb-8">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Loading your purchase details...
+            </div>
+          ) : sessionInfo ? (
+            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-6 mb-8">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Sparkles className="w-5 h-5 text-emerald-400" />
+                <span className="text-emerald-400 font-semibold">{planName}</span>
+              </div>
+              <p className="text-gray-400 text-sm">
+                Confirmation sent to <span className="text-white font-medium">{sessionInfo.email}</span>
+              </p>
+            </div>
+          ) : null}
 
           {/* What happens next */}
           <div className="bg-navy-800 rounded-2xl p-8 border border-navy-700 mb-8 text-left">
             <h2 className="text-lg font-semibold text-gray-100 mb-4 flex items-center gap-2">
-              <Mail className="w-5 h-5 text-emerald-400" />
+              <Sparkles className="w-5 h-5 text-emerald-400" />
               What happens next
             </h2>
             <ol className="space-y-3 text-gray-400">
@@ -37,38 +89,46 @@ export default function SuccessPage(): React.ReactElement {
                 <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-semibold flex items-center justify-center">
                   1
                 </span>
-                <span>Check your email for access instructions</span>
+                <span>
+                  <strong className="text-white">Click the button below</strong> to enter the store builder
+                </span>
               </li>
               <li className="flex gap-3">
                 <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-semibold flex items-center justify-center">
                   2
                 </span>
-                <span>Pick your template</span>
+                <span>Answer 8 simple questions to configure your store</span>
               </li>
               <li className="flex gap-3">
                 <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-semibold flex items-center justify-center">
                   3
                 </span>
-                <span>Answer 15 questions</span>
+                <span>Connect your Stripe account to accept payments</span>
               </li>
               <li className="flex gap-3">
                 <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-semibold flex items-center justify-center">
                   4
                 </span>
-                <span>Launch your store</span>
+                <span>Download your complete, ready-to-deploy store</span>
               </li>
             </ol>
           </div>
 
-          {/* CTA */}
-          <p className="text-gray-500 text-sm mb-4">
+          {/* Primary CTA */}
+          <a href="/wizard">
+            <Button variant="primary" size="lg">
+              Build Your Store Now
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+          </a>
+
+          <p className="text-gray-500 text-sm mt-6 mb-4">
             Questions? Reply to your confirmation email. Real human on the other end.
           </p>
 
           <a href="/">
-            <Button variant="secondary" size="lg">
+            <Button variant="secondary" size="sm">
               Back to Home
-              <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
           </a>
 
@@ -81,5 +141,19 @@ export default function SuccessPage(): React.ReactElement {
         </div>
       </Container>
     </main>
+  );
+}
+
+export default function SuccessPage(): React.ReactElement {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-navy-900 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+        </main>
+      }
+    >
+      <SuccessContent />
+    </Suspense>
   );
 }

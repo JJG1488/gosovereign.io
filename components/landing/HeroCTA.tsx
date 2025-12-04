@@ -1,18 +1,20 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui";
-import { redirectToCheckout } from "@/lib/checkout";
 
 interface HeroCTAProps {
   cta: string;
   variant?: string;
 }
 
-export function HeroCTA({ cta, variant }: HeroCTAProps): React.ReactElement {
+export function HeroCTA({ cta }: HeroCTAProps): React.ReactElement {
+  const router = useRouter();
+
   const handleClick = (): void => {
-    // Default to starter plan from hero CTA
-    redirectToCheckout("starter", variant);
+    // Primary CTA goes to free trial signup
+    router.push("/auth/signup");
   };
 
   return (

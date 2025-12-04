@@ -36,16 +36,10 @@ export function Header() {
               Shop
             </Link>
             <Link
-              href="/about"
+              href="/#about"
               className="text-gray-600 hover:text-gray-900 transition-colors"
             >
               About
-            </Link>
-            <Link
-              href="/contact"
-              className="text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              Contact
             </Link>
           </nav>
 
@@ -97,18 +91,11 @@ export function Header() {
                 Shop
               </Link>
               <Link
-                href="/about"
+                href="/#about"
                 className="text-gray-600 hover:text-gray-900"
                 onClick={() => setIsMenuOpen(false)}
               >
                 About
-              </Link>
-              <Link
-                href="/contact"
-                className="text-gray-600 hover:text-gray-900"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Contact
               </Link>
             </div>
           </nav>

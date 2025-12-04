@@ -17,6 +17,10 @@ export function createClient() {
     );
   }
 
-  client = createBrowserClient(supabaseUrl, supabaseAnonKey);
+  client = createBrowserClient(supabaseUrl, supabaseAnonKey, {
+    db: {
+      schema: "public",
+    },
+  });
   return client;
 }

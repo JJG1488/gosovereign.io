@@ -1,9 +1,11 @@
 -- ============================================================================
--- GOSOVEREIGN SUPABASE SETUP SCRIPT
+-- GOSOVEREIGN SUPABASE SETUP SCRIPT (IDEMPOTENT)
 -- ============================================================================
 --
--- This script creates all tables, indexes, RLS policies, functions, and
--- triggers for the GoSovereign application.
+-- This script can be run multiple times safely. It will:
+-- - Create tables if they don't exist
+-- - Update policies (drop and recreate)
+-- - Update functions and triggers
 --
 -- INSTRUCTIONS:
 -- 1. Go to your Supabase Dashboard
@@ -11,10 +13,6 @@
 -- 3. Create a new query
 -- 4. Paste this entire script
 -- 5. Click "Run" to execute
---
--- AFTER RUNNING THIS SCRIPT:
--- You must manually create storage buckets via Dashboard > Storage.
--- See the comments at the end of this file for instructions.
 --
 -- ============================================================================
 
@@ -25,378 +23,269 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ============================================================================
--- 2. TABLES
+-- 2. TABLES (IF NOT EXISTS)
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
 -- USERS TABLE
--- Extended profile for auth.users
 -- ----------------------------------------------------------------------------
 
-CREATE TABLE public.users (
+CREATE TABLE IF NOT EXISTS public.users (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
   full_name TEXT,
   avatar_url TEXT,
   stripe_customer_id TEXT UNIQUE,
+  -- Payment tracking
+  has_paid BOOLEAN DEFAULT false,
+  paid_at TIMESTAMPTZ,
+  payment_tier TEXT, -- 'starter', 'pro', 'hosted'
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
+-- Add columns if table already exists (for migrations)
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS has_paid BOOLEAN DEFAULT false;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS paid_at TIMESTAMPTZ;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS payment_tier TEXT;
+
 -- ----------------------------------------------------------------------------
 -- STORES TABLE
--- One store per user (for now), contains all configuration
 -- ----------------------------------------------------------------------------
 
-CREATE TABLE public.stores (
+CREATE TABLE IF NOT EXISTS public.stores (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
-
-  -- Identity
   name TEXT NOT NULL,
   subdomain TEXT UNIQUE NOT NULL,
   custom_domain TEXT UNIQUE,
-
-  -- Template & Theming
-  template TEXT NOT NULL DEFAULT 'fashion', -- 'fashion', 'services', 'digital'
+  template TEXT NOT NULL DEFAULT 'fashion',
   config JSONB NOT NULL DEFAULT '{}'::jsonb,
-  /*
-    config structure:
-    {
-      "branding": {
-        "logoUrl": "https://...",
-        "primaryColor": "#e11d48",
-        "themePreset": "minimal-light",
-        "tagline": "...",
-        "aboutText": "...",
-        "contactEmail": "..."
-      },
-      "features": {
-        "shippingEnabled": true,
-        "taxEnabled": true,
-        "blogEnabled": false,
-        "leadgenEnabled": true
-      },
-      "shipping": {
-        "zones": ["US", "CA"],
-        "rates": [...]
-      },
-      "social": {
-        "instagram": "https://...",
-        "twitter": "https://..."
-      },
-      "seo": {
-        "title": "...",
-        "description": "..."
-      }
-    }
-  */
-
-  -- Payment
-  stripe_account_id TEXT, -- Connected Stripe account
-
-  -- Deployment
+  stripe_account_id TEXT,
   deployment_id TEXT,
   deployment_url TEXT,
-  status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'configuring', 'deploying', 'deployed', 'error'
+  status TEXT NOT NULL DEFAULT 'pending',
   deployed_at TIMESTAMPTZ,
-
-  -- Timestamps
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
 -- ----------------------------------------------------------------------------
 -- PRODUCTS TABLE
--- Products for each store
 -- ----------------------------------------------------------------------------
 
-CREATE TABLE public.products (
+CREATE TABLE IF NOT EXISTS public.products (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   store_id UUID NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
-
-  -- Basic Info
   name TEXT NOT NULL,
   slug TEXT NOT NULL,
   description TEXT,
   short_description TEXT,
-
-  -- Pricing
   price DECIMAL(10,2) NOT NULL,
-  compare_at_price DECIMAL(10,2), -- Original price for "sale" display
-  cost_per_item DECIMAL(10,2), -- For profit tracking
-
-  -- Inventory
+  compare_at_price DECIMAL(10,2),
+  cost_per_item DECIMAL(10,2),
   track_inventory BOOLEAN DEFAULT false,
   inventory_count INTEGER DEFAULT 0,
   allow_backorder BOOLEAN DEFAULT false,
-
-  -- Media
   images JSONB DEFAULT '[]'::jsonb,
-  /*
-    images structure:
-    [
-      { "url": "https://...", "alt": "Product front", "position": 0 },
-      { "url": "https://...", "alt": "Product back", "position": 1 }
-    ]
-  */
-
-  -- Variants (for fashion: size, color)
   has_variants BOOLEAN DEFAULT false,
   variants JSONB DEFAULT '[]'::jsonb,
-  /*
-    variants structure:
-    [
-      {
-        "id": "var_001",
-        "name": "Small / Red",
-        "sku": "SHIRT-S-RED",
-        "price": 29.99,
-        "inventory": 10,
-        "options": { "size": "S", "color": "Red" }
-      }
-    ]
-  */
   variant_options JSONB DEFAULT '[]'::jsonb,
-  /*
-    variant_options structure:
-    [
-      { "name": "Size", "values": ["S", "M", "L", "XL"] },
-      { "name": "Color", "values": ["Red", "Blue", "Black"] }
-    ]
-  */
-
-  -- Shipping
   requires_shipping BOOLEAN DEFAULT true,
-  weight DECIMAL(10,2), -- in oz or grams
-
-  -- Digital Products
+  weight DECIMAL(10,2),
   is_digital BOOLEAN DEFAULT false,
   digital_file_url TEXT,
   download_limit INTEGER,
-
-  -- Organization
   category TEXT,
   tags TEXT[],
-
-  -- Status
-  status TEXT NOT NULL DEFAULT 'draft', -- 'draft', 'active', 'archived'
-
-  -- SEO
+  status TEXT NOT NULL DEFAULT 'draft',
   seo_title TEXT,
   seo_description TEXT,
-
-  -- Timestamps
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
-
-  -- Unique slug per store
   UNIQUE(store_id, slug)
 );
 
 -- ----------------------------------------------------------------------------
 -- ORDERS TABLE
--- Customer orders
 -- ----------------------------------------------------------------------------
 
-CREATE TABLE public.orders (
+CREATE TABLE IF NOT EXISTS public.orders (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   store_id UUID NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
-
-  -- Order Number (human-readable)
   order_number SERIAL,
-
-  -- Customer Info
   customer_email TEXT NOT NULL,
   customer_name TEXT,
   customer_phone TEXT,
-
-  -- Addresses
   shipping_address JSONB,
-  /*
-    shipping_address structure:
-    {
-      "line1": "123 Main St",
-      "line2": "Apt 4",
-      "city": "Austin",
-      "state": "TX",
-      "postal_code": "78701",
-      "country": "US"
-    }
-  */
   billing_address JSONB,
-
-  -- Totals
   subtotal DECIMAL(10,2) NOT NULL,
   shipping_cost DECIMAL(10,2) DEFAULT 0,
   tax_amount DECIMAL(10,2) DEFAULT 0,
   discount_amount DECIMAL(10,2) DEFAULT 0,
   total DECIMAL(10,2) NOT NULL,
-
-  -- Payment
   stripe_payment_intent_id TEXT,
   stripe_charge_id TEXT,
-  payment_status TEXT DEFAULT 'pending', -- 'pending', 'paid', 'failed', 'refunded'
-
-  -- Fulfillment
-  fulfillment_status TEXT DEFAULT 'unfulfilled', -- 'unfulfilled', 'partial', 'fulfilled'
+  payment_status TEXT DEFAULT 'pending',
+  fulfillment_status TEXT DEFAULT 'unfulfilled',
   tracking_number TEXT,
   tracking_url TEXT,
   shipped_at TIMESTAMPTZ,
-
-  -- Order Status
-  status TEXT DEFAULT 'pending', -- 'pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'
-
-  -- Notes
+  status TEXT DEFAULT 'pending',
   customer_notes TEXT,
   internal_notes TEXT,
-
-  -- Timestamps
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
 -- ----------------------------------------------------------------------------
 -- ORDER ITEMS TABLE
--- Line items for each order
 -- ----------------------------------------------------------------------------
 
-CREATE TABLE public.order_items (
+CREATE TABLE IF NOT EXISTS public.order_items (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   order_id UUID NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
   product_id UUID REFERENCES public.products(id) ON DELETE SET NULL,
-
-  -- Product Snapshot (in case product changes/deleted)
   product_name TEXT NOT NULL,
   product_image TEXT,
-  variant_info JSONB, -- e.g., {"size": "M", "color": "Blue"}
-
-  -- Pricing
+  variant_info JSONB,
   quantity INTEGER NOT NULL DEFAULT 1,
   unit_price DECIMAL(10,2) NOT NULL,
   total_price DECIMAL(10,2) NOT NULL,
-
-  -- Digital Fulfillment
   download_url TEXT,
   download_count INTEGER DEFAULT 0,
-
-  -- Timestamps
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
 -- ----------------------------------------------------------------------------
 -- SUBSCRIPTIONS TABLE
--- Hosted tier subscriptions
 -- ----------------------------------------------------------------------------
 
-CREATE TABLE public.subscriptions (
+CREATE TABLE IF NOT EXISTS public.subscriptions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   store_id UUID NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
-
-  -- Stripe
   stripe_subscription_id TEXT UNIQUE NOT NULL,
   stripe_price_id TEXT NOT NULL,
-
-  -- Plan
-  plan TEXT NOT NULL, -- 'hosted_monthly', 'hosted_yearly'
-
-  -- Status
-  status TEXT NOT NULL, -- 'active', 'past_due', 'cancelled', 'paused'
-
-  -- Billing Period
+  plan TEXT NOT NULL,
+  status TEXT NOT NULL,
   current_period_start TIMESTAMPTZ,
   current_period_end TIMESTAMPTZ,
   cancel_at_period_end BOOLEAN DEFAULT false,
-
-  -- Timestamps
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
 -- ----------------------------------------------------------------------------
 -- WIZARD PROGRESS TABLE
--- Tracks wizard completion state
 -- ----------------------------------------------------------------------------
 
-CREATE TABLE public.wizard_progress (
+CREATE TABLE IF NOT EXISTS public.wizard_progress (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   store_id UUID UNIQUE NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
-
-  -- Progress
   current_step INTEGER DEFAULT 1,
   completed_steps INTEGER[] DEFAULT '{}',
-
-  -- Answers (temporary storage during wizard)
   answers JSONB DEFAULT '{}'::jsonb,
-
-  -- Status
   completed BOOLEAN DEFAULT false,
   completed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
 
-  -- Timestamps
+-- ----------------------------------------------------------------------------
+-- PURCHASES TABLE (Platform purchases, not store orders)
+-- ----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS public.purchases (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  email TEXT NOT NULL,
+  stripe_checkout_session_id TEXT UNIQUE NOT NULL,
+  stripe_customer_id TEXT,
+  stripe_payment_intent_id TEXT,
+  plan TEXT NOT NULL, -- 'starter', 'pro', 'hosted'
+  amount INTEGER NOT NULL, -- in cents
+  currency TEXT DEFAULT 'usd',
+  status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'completed', 'failed', 'refunded'
+  variant TEXT, -- A/B test variant
+  metadata JSONB DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
 -- ============================================================================
--- 3. INDEXES
+-- 3. INDEXES (IF NOT EXISTS)
 -- ============================================================================
 
--- Users
-CREATE INDEX idx_users_stripe_customer ON public.users(stripe_customer_id);
+CREATE INDEX IF NOT EXISTS idx_users_stripe_customer ON public.users(stripe_customer_id);
+CREATE INDEX IF NOT EXISTS idx_stores_user ON public.stores(user_id);
+CREATE INDEX IF NOT EXISTS idx_stores_subdomain ON public.stores(subdomain);
+CREATE INDEX IF NOT EXISTS idx_stores_status ON public.stores(status);
+CREATE INDEX IF NOT EXISTS idx_products_store ON public.products(store_id);
+CREATE INDEX IF NOT EXISTS idx_products_status ON public.products(status);
+CREATE INDEX IF NOT EXISTS idx_products_category ON public.products(category);
+CREATE INDEX IF NOT EXISTS idx_products_slug ON public.products(store_id, slug);
+CREATE INDEX IF NOT EXISTS idx_orders_store ON public.orders(store_id);
+CREATE INDEX IF NOT EXISTS idx_orders_customer_email ON public.orders(customer_email);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON public.orders(status);
+CREATE INDEX IF NOT EXISTS idx_orders_payment_status ON public.orders(payment_status);
+CREATE INDEX IF NOT EXISTS idx_orders_created ON public.orders(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_order_items_order ON public.order_items(order_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_product ON public.order_items(product_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON public.subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_store ON public.subscriptions(store_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_stripe ON public.subscriptions(stripe_subscription_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON public.subscriptions(status);
 
--- Stores
-CREATE INDEX idx_stores_user ON public.stores(user_id);
-CREATE INDEX idx_stores_subdomain ON public.stores(subdomain);
-CREATE INDEX idx_stores_status ON public.stores(status);
-
--- Products
-CREATE INDEX idx_products_store ON public.products(store_id);
-CREATE INDEX idx_products_status ON public.products(status);
-CREATE INDEX idx_products_category ON public.products(category);
-CREATE INDEX idx_products_slug ON public.products(store_id, slug);
-
--- Orders
-CREATE INDEX idx_orders_store ON public.orders(store_id);
-CREATE INDEX idx_orders_customer_email ON public.orders(customer_email);
-CREATE INDEX idx_orders_status ON public.orders(status);
-CREATE INDEX idx_orders_payment_status ON public.orders(payment_status);
-CREATE INDEX idx_orders_created ON public.orders(created_at DESC);
-
--- Order Items
-CREATE INDEX idx_order_items_order ON public.order_items(order_id);
-CREATE INDEX idx_order_items_product ON public.order_items(product_id);
-
--- Subscriptions
-CREATE INDEX idx_subscriptions_user ON public.subscriptions(user_id);
-CREATE INDEX idx_subscriptions_store ON public.subscriptions(store_id);
-CREATE INDEX idx_subscriptions_stripe ON public.subscriptions(stripe_subscription_id);
-CREATE INDEX idx_subscriptions_status ON public.subscriptions(status);
+-- Purchases
+CREATE INDEX IF NOT EXISTS idx_purchases_user ON public.purchases(user_id);
+CREATE INDEX IF NOT EXISTS idx_purchases_email ON public.purchases(email);
+CREATE INDEX IF NOT EXISTS idx_purchases_stripe_session ON public.purchases(stripe_checkout_session_id);
+CREATE INDEX IF NOT EXISTS idx_purchases_status ON public.purchases(status);
 
 -- ============================================================================
--- 4. ROW LEVEL SECURITY (RLS)
+-- 4. ROW LEVEL SECURITY
 -- ============================================================================
 
--- ----------------------------------------------------------------------------
--- Users RLS
--- ----------------------------------------------------------------------------
-
+-- Enable RLS on all tables
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.stores ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.wizard_progress ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.purchases ENABLE ROW LEVEL SECURITY;
+
+-- ----------------------------------------------------------------------------
+-- Users Policies (drop and recreate)
+-- ----------------------------------------------------------------------------
+
+DROP POLICY IF EXISTS "Users can view own profile" ON public.users;
+DROP POLICY IF EXISTS "Users can insert own profile" ON public.users;
+DROP POLICY IF EXISTS "Users can update own profile" ON public.users;
 
 CREATE POLICY "Users can view own profile"
   ON public.users FOR SELECT
   USING (auth.uid() = id);
+
+CREATE POLICY "Users can insert own profile"
+  ON public.users FOR INSERT
+  WITH CHECK (auth.uid() = id);
 
 CREATE POLICY "Users can update own profile"
   ON public.users FOR UPDATE
   USING (auth.uid() = id);
 
 -- ----------------------------------------------------------------------------
--- Stores RLS
+-- Stores Policies
 -- ----------------------------------------------------------------------------
 
-ALTER TABLE public.stores ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own stores" ON public.stores;
+DROP POLICY IF EXISTS "Users can insert own stores" ON public.stores;
+DROP POLICY IF EXISTS "Users can update own stores" ON public.stores;
+DROP POLICY IF EXISTS "Users can delete own stores" ON public.stores;
+DROP POLICY IF EXISTS "Public can view deployed stores" ON public.stores;
 
 CREATE POLICY "Users can view own stores"
   ON public.stores FOR SELECT
@@ -414,73 +303,60 @@ CREATE POLICY "Users can delete own stores"
   ON public.stores FOR DELETE
   USING (auth.uid() = user_id);
 
--- Public read for storefronts (filtered by store_id in app)
 CREATE POLICY "Public can view deployed stores"
   ON public.stores FOR SELECT
   USING (status = 'deployed');
 
 -- ----------------------------------------------------------------------------
--- Products RLS
+-- Products Policies
 -- ----------------------------------------------------------------------------
 
-ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own products" ON public.products;
+DROP POLICY IF EXISTS "Users can insert own products" ON public.products;
+DROP POLICY IF EXISTS "Users can update own products" ON public.products;
+DROP POLICY IF EXISTS "Users can delete own products" ON public.products;
+DROP POLICY IF EXISTS "Public can view active products" ON public.products;
 
--- Store owners can manage their products
 CREATE POLICY "Users can view own products"
   ON public.products FOR SELECT
-  USING (
-    store_id IN (SELECT id FROM public.stores WHERE user_id = auth.uid())
-  );
+  USING (store_id IN (SELECT id FROM public.stores WHERE user_id = auth.uid()));
 
 CREATE POLICY "Users can insert own products"
   ON public.products FOR INSERT
-  WITH CHECK (
-    store_id IN (SELECT id FROM public.stores WHERE user_id = auth.uid())
-  );
+  WITH CHECK (store_id IN (SELECT id FROM public.stores WHERE user_id = auth.uid()));
 
 CREATE POLICY "Users can update own products"
   ON public.products FOR UPDATE
-  USING (
-    store_id IN (SELECT id FROM public.stores WHERE user_id = auth.uid())
-  );
+  USING (store_id IN (SELECT id FROM public.stores WHERE user_id = auth.uid()));
 
 CREATE POLICY "Users can delete own products"
   ON public.products FOR DELETE
-  USING (
-    store_id IN (SELECT id FROM public.stores WHERE user_id = auth.uid())
-  );
+  USING (store_id IN (SELECT id FROM public.stores WHERE user_id = auth.uid()));
 
--- Public can view active products (for storefronts)
 CREATE POLICY "Public can view active products"
   ON public.products FOR SELECT
   USING (status = 'active');
 
 -- ----------------------------------------------------------------------------
--- Orders RLS
+-- Orders Policies
 -- ----------------------------------------------------------------------------
 
-ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own store orders" ON public.orders;
+DROP POLICY IF EXISTS "Users can update own store orders" ON public.orders;
 
 CREATE POLICY "Users can view own store orders"
   ON public.orders FOR SELECT
-  USING (
-    store_id IN (SELECT id FROM public.stores WHERE user_id = auth.uid())
-  );
+  USING (store_id IN (SELECT id FROM public.stores WHERE user_id = auth.uid()));
 
 CREATE POLICY "Users can update own store orders"
   ON public.orders FOR UPDATE
-  USING (
-    store_id IN (SELECT id FROM public.stores WHERE user_id = auth.uid())
-  );
-
--- Storefronts can insert orders (via service role key, not anon)
--- This will be handled via API with service role
+  USING (store_id IN (SELECT id FROM public.stores WHERE user_id = auth.uid()));
 
 -- ----------------------------------------------------------------------------
--- Order Items RLS
+-- Order Items Policies
 -- ----------------------------------------------------------------------------
 
-ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own order items" ON public.order_items;
 
 CREATE POLICY "Users can view own order items"
   ON public.order_items FOR SELECT
@@ -492,32 +368,41 @@ CREATE POLICY "Users can view own order items"
   );
 
 -- ----------------------------------------------------------------------------
--- Subscriptions RLS
+-- Subscriptions Policies
 -- ----------------------------------------------------------------------------
 
-ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can view own subscriptions" ON public.subscriptions;
 
 CREATE POLICY "Users can view own subscriptions"
   ON public.subscriptions FOR SELECT
   USING (auth.uid() = user_id);
 
 -- ----------------------------------------------------------------------------
--- Wizard Progress RLS
+-- Wizard Progress Policies
 -- ----------------------------------------------------------------------------
 
-ALTER TABLE public.wizard_progress ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can manage own wizard progress" ON public.wizard_progress;
 
 CREATE POLICY "Users can manage own wizard progress"
   ON public.wizard_progress FOR ALL
-  USING (
-    store_id IN (SELECT id FROM public.stores WHERE user_id = auth.uid())
-  );
+  USING (store_id IN (SELECT id FROM public.stores WHERE user_id = auth.uid()));
+
+-- ----------------------------------------------------------------------------
+-- Purchases Policies
+-- Note: Purchases are created by webhook using service role (bypasses RLS)
+-- Users can only view their own purchases
+-- ----------------------------------------------------------------------------
+
+DROP POLICY IF EXISTS "Users can view own purchases" ON public.purchases;
+
+CREATE POLICY "Users can view own purchases"
+  ON public.purchases FOR SELECT
+  USING (auth.uid() = user_id);
 
 -- ============================================================================
--- 5. FUNCTIONS
+-- 5. FUNCTIONS (CREATE OR REPLACE)
 -- ============================================================================
 
--- Auto-update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -526,17 +411,16 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Auto-create user profile on auth signup
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.users (id, email)
-  VALUES (NEW.id, NEW.email);
+  VALUES (NEW.id, NEW.email)
+  ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Generate slug from product name
 CREATE OR REPLACE FUNCTION generate_slug(name TEXT)
 RETURNS TEXT AS $$
 BEGIN
@@ -550,10 +434,18 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ============================================================================
--- 6. TRIGGERS
+-- 6. TRIGGERS (DROP AND RECREATE)
 -- ============================================================================
 
--- Updated_at triggers for all tables
+DROP TRIGGER IF EXISTS update_users_updated_at ON public.users;
+DROP TRIGGER IF EXISTS update_stores_updated_at ON public.stores;
+DROP TRIGGER IF EXISTS update_products_updated_at ON public.products;
+DROP TRIGGER IF EXISTS update_orders_updated_at ON public.orders;
+DROP TRIGGER IF EXISTS update_subscriptions_updated_at ON public.subscriptions;
+DROP TRIGGER IF EXISTS update_wizard_progress_updated_at ON public.wizard_progress;
+DROP TRIGGER IF EXISTS update_purchases_updated_at ON public.purchases;
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+
 CREATE TRIGGER update_users_updated_at
   BEFORE UPDATE ON public.users
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
@@ -578,52 +470,26 @@ CREATE TRIGGER update_wizard_progress_updated_at
   BEFORE UPDATE ON public.wizard_progress
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
--- Auto-create user profile on auth signup
+CREATE TRIGGER update_purchases_updated_at
+  BEFORE UPDATE ON public.purchases
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION handle_new_user();
 
 -- ============================================================================
--- MANUAL STEPS REQUIRED AFTER RUNNING THIS SCRIPT
+-- DONE!
 -- ============================================================================
 --
--- The storage schema is managed by Supabase and cannot be modified via SQL.
--- You must create storage buckets and policies via the Dashboard.
+-- After running this script, manually create storage buckets:
+-- 1. Go to Dashboard > Storage > New Bucket
+-- 2. Create "store-assets" (Public: ON)
+-- 3. Create "product-images" (Public: ON)
 --
--- STEP 1: CREATE STORAGE BUCKETS
--- ------------------------------
--- Go to: Dashboard > Storage > New Bucket
+-- For each bucket, add these policies:
+-- - INSERT: (auth.uid()::text = (storage.foldername(name))[1])
+-- - SELECT: true
+-- - DELETE: (auth.uid()::text = (storage.foldername(name))[1])
 --
--- Create these buckets:
---   1. Name: store-assets    | Public: ON
---   2. Name: product-images  | Public: ON
---
--- STEP 2: ADD STORAGE POLICIES
--- ----------------------------
--- Go to: Dashboard > Storage > [bucket name] > Policies > New Policy
---
--- For BOTH buckets (store-assets and product-images), create these policies:
---
--- Policy 1 - INSERT (Upload):
---   Name: Users can upload to their folder
---   Allowed operation: INSERT
---   Policy definition: (auth.uid()::text = (storage.foldername(name))[1])
---
--- Policy 2 - SELECT (Read):
---   Name: Public read access
---   Allowed operation: SELECT
---   Policy definition: true
---
--- Policy 3 - DELETE:
---   Name: Users can delete their files
---   Allowed operation: DELETE
---   Policy definition: (auth.uid()::text = (storage.foldername(name))[1])
---
--- Policy 4 - UPDATE (optional, for replacing files):
---   Name: Users can update their files
---   Allowed operation: UPDATE
---   Policy definition: (auth.uid()::text = (storage.foldername(name))[1])
---
--- ============================================================================
--- END OF SCRIPT
 -- ============================================================================

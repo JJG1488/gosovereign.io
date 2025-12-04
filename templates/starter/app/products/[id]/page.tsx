@@ -3,14 +3,11 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { products, getProduct, formatPrice } from "@/data/products";
+import { getProduct, formatPrice } from "@/data/products";
 import { useCart } from "@/components/CartContext";
 
-export function generateStaticParams() {
-  return products.map((product) => ({
-    id: product.id,
-  }));
-}
+// Gray placeholder for missing images
+const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect fill='%23f3f4f6' width='400' height='400'/%3E%3Ctext fill='%239ca3af' font-family='sans-serif' font-size='16' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E";
 
 export default function ProductPage() {
   const params = useParams();
@@ -55,7 +52,7 @@ export default function ProductPage() {
         <div className="space-y-4">
           <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
             <img
-              src={product.images[selectedImage] || "/placeholder.jpg"}
+              src={product.images[selectedImage] || PLACEHOLDER_IMAGE}
               alt={product.name}
               className="w-full h-full object-cover"
             />

@@ -62,6 +62,23 @@ export async function POST(request: NextRequest): Promise<Response> {
       );
     }
 
+    // Server-side payment verification (defense in depth)
+    const { data: userProfile, error: profileError } = await supabase
+      .from("users")
+      .select("has_paid, payment_tier")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !userProfile?.has_paid) {
+      return NextResponse.json(
+        {
+          error: "Payment required",
+          message: "Please upgrade to download your store",
+        },
+        { status: 402 }
+      );
+    }
+
     // Fetch store from database
     const { data: store, error: storeError } = await supabase
       .from("stores")
@@ -108,8 +125,17 @@ export async function POST(request: NextRequest): Promise<Response> {
     const archive = archiver("zip", { zlib: { level: 9 } });
     const chunks: Buffer[] = [];
 
-    // Collect chunks
-    archive.on("data", (chunk: Buffer) => chunks.push(chunk));
+    // Set up event listeners BEFORE adding files
+    const archivePromise = new Promise<Buffer>((resolve, reject) => {
+      archive.on("data", (chunk: Buffer) => chunks.push(chunk));
+      archive.on("error", (err) => {
+        console.error("Archive error:", err);
+        reject(err);
+      });
+      archive.on("end", () => {
+        resolve(Buffer.concat(chunks));
+      });
+    });
 
     // Process each template file
     const storeName = slugify(store.name);
@@ -122,21 +148,17 @@ export async function POST(request: NextRequest): Promise<Response> {
       archive.append(processedContent, { name: `${storeName}/${path}` });
     }
 
-    // Finalize the archive
-    await archive.finalize();
+    // Finalize the archive (this triggers the end event)
+    archive.finalize();
 
-    // Wait for all chunks
-    await new Promise<void>((resolve) => archive.on("end", resolve));
-
-    // Combine chunks into single buffer
-    const zipBuffer = Buffer.concat(chunks);
+    // Wait for archive to complete
+    const zipBuffer = await archivePromise;
 
     // Update store status to indicate generation
     await supabase
       .from("stores")
       .update({ status: "deployed" })
       .eq("id", storeId);
-
     // Return zip file
     return new Response(zipBuffer, {
       status: 200,

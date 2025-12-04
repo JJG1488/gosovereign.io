@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui";
@@ -13,6 +14,7 @@ interface NavigationProps {
 }
 
 export function Navigation({ logo, cta }: NavigationProps): React.ReactElement {
+  const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -24,6 +26,11 @@ export function Navigation({ logo, cta }: NavigationProps): React.ReactElement {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleCTAClick = (): void => {
+    setIsMobileMenuOpen(false);
+    router.push("/auth/signup");
+  };
 
   return (
     <>
@@ -42,7 +49,7 @@ export function Navigation({ logo, cta }: NavigationProps): React.ReactElement {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <a
-              href="#"
+              href="/"
               className="text-xl md:text-2xl font-bold text-gray-100 hover:text-emerald-400 transition-colors"
             >
               {logo}
@@ -50,7 +57,7 @@ export function Navigation({ logo, cta }: NavigationProps): React.ReactElement {
 
             {/* Desktop CTA */}
             <div className="hidden md:block">
-              <Button variant="primary" size="md">
+              <Button variant="primary" size="md" onClick={handleCTAClick}>
                 {cta}
               </Button>
             </div>
@@ -86,7 +93,7 @@ export function Navigation({ logo, cta }: NavigationProps): React.ReactElement {
                 variant="primary"
                 size="lg"
                 className="w-full max-w-sm"
-                onClick={() => setIsMobileMenuOpen(false)}
+                onClick={handleCTAClick}
               >
                 {cta}
               </Button>

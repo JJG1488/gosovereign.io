@@ -48,7 +48,14 @@ export async function createStore(
     .single();
 
   if (error) {
-    console.error("Error creating store:", error);
+    // 42P01 = table doesn't exist
+    // 23503 = foreign key violation (user profile doesn't exist)
+    console.error("Error creating store:", {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
     return null;
   }
 
@@ -83,8 +90,12 @@ export async function getUserStore(userId: string): Promise<Store | null> {
     .limit(1)
     .single();
 
-  if (error && error.code !== "PGRST116") {
-    // PGRST116 = no rows found
+  if (error) {
+    // PGRST116 = no rows found (expected for new users)
+    // 42P01 = table doesn't exist (database not set up)
+    if (error.code === "PGRST116" || error.code === "42P01") {
+      return null;
+    }
     console.error("Error fetching user store:", error);
     return null;
   }

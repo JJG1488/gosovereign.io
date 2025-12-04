@@ -32,18 +32,10 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/about"
+                  href="/#about"
                   className="text-gray-600 hover:text-gray-900 text-sm"
                 >
                   About Us
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/contact"
-                  className="text-gray-600 hover:text-gray-900 text-sm"
-                >
-                  Contact
                 </Link>
               </li>
             </ul>

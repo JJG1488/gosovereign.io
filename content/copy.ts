@@ -86,7 +86,7 @@ export const variantA: CopyVariant = {
     headline: "Shopify costs $468/year. Your store shouldn't.",
     subheadline:
       "Launch a beautiful, fully-owned e-commerce store in 15 minutes. One price. No subscriptions. No code. No permission needed.",
-    cta: "Build Your Store — $149",
+    cta: "Try Free",
     microProof:
       '"Replaced my $39/month Shopify store in an afternoon." — Early adopter',
   },
@@ -266,13 +266,13 @@ export const variantA: CopyVariant = {
     headline: "Go Sovereign. Own everything.",
     subheadline:
       "Your store. Your rules. Your profit. No landlords. No monthly fees. No permission needed.",
-    cta: "Build Your Store — $149",
+    cta: "Start Free Trial",
     guarantee:
       "30-day money-back guarantee. If it's not for you, full refund. No questions.",
   },
   nav: {
     logo: "GoSovereign",
-    cta: "Get Started",
+    cta: "Try Free",
   },
   footer: {
     logo: "GoSovereign",
@@ -308,7 +308,7 @@ export const variantB: CopyVariant = {
   },
   finalCta: {
     ...variantA.finalCta,
-    cta: "Go Sovereign — $149",
+    cta: "Start Free Trial",
   },
 };
 
