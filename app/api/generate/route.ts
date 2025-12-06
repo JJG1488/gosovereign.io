@@ -159,8 +159,8 @@ export async function POST(request: NextRequest): Promise<Response> {
       .from("stores")
       .update({ status: "deployed" })
       .eq("id", storeId);
-    // Return zip file
-    return new Response(zipBuffer, {
+    // Return zip file (convert Buffer to Uint8Array for Response compatibility)
+    return new Response(new Uint8Array(zipBuffer), {
       status: 200,
       headers: {
         "Content-Type": "application/zip",
