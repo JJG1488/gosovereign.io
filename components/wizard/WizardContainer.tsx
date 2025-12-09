@@ -8,6 +8,9 @@ import { TaglineStep } from "./steps/TaglineStep";
 import { ColorStep } from "./steps/ColorStep";
 import { LogoStep } from "./steps/LogoStep";
 import { ProductsStep } from "./steps/ProductsStep";
+import { ServicesStep } from "./steps/ServicesStep";
+import { PortfolioStep } from "./steps/PortfolioStep";
+import { TestimonialsStep } from "./steps/TestimonialsStep";
 import { AboutStep } from "./steps/AboutStep";
 import { ContactStep } from "./steps/ContactStep";
 import { PaymentsStep } from "./steps/PaymentsStep";
@@ -17,25 +20,32 @@ interface WizardContainerProps {
 }
 
 export function WizardContainer({ onGenerate }: WizardContainerProps) {
-  const { state } = useWizard();
+  const { currentStepKey, state } = useWizard();
 
+  // Render step based on step key (not step number)
   const renderStep = () => {
-    switch (state.currentStep) {
-      case 1:
+    switch (currentStepKey) {
+      case "storeName":
         return <StoreNameStep />;
-      case 2:
+      case "tagline":
         return <TaglineStep />;
-      case 3:
+      case "primaryColor":
         return <ColorStep />;
-      case 4:
+      case "logo":
         return <LogoStep />;
-      case 5:
+      case "products":
         return <ProductsStep />;
-      case 6:
+      case "services":
+        return <ServicesStep />;
+      case "portfolio":
+        return <PortfolioStep />;
+      case "testimonials":
+        return <TestimonialsStep />;
+      case "about":
         return <AboutStep />;
-      case 7:
+      case "contact":
         return <ContactStep />;
-      case 8:
+      case "payments":
         return <PaymentsStep />;
       default:
         return <StoreNameStep />;

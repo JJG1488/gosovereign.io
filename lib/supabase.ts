@@ -7,6 +7,7 @@ import type {
   StoreConfig,
   Product,
   WizardProgress,
+  StoreTemplate,
 } from "@/types/database";
 
 // Re-export client for convenience
@@ -19,7 +20,8 @@ export { createClient } from "./supabase/client";
 export async function createStore(
   userId: string,
   name: string,
-  subdomain: string
+  subdomain: string,
+  template: StoreTemplate = "goods"
 ): Promise<Store | null> {
   const supabase = createClient();
 
@@ -29,7 +31,7 @@ export async function createStore(
       user_id: userId,
       name,
       subdomain,
-      template: "fashion",
+      template,
       config: {
         branding: {
           primaryColor: "#10b981",

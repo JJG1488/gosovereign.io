@@ -3,6 +3,9 @@
 
 export type PaymentTier = "starter" | "pro" | "hosted";
 
+// Template types
+export type StoreTemplate = "goods" | "services" | "brochure";
+
 export interface User {
   id: string;
   email: string;
@@ -13,6 +16,13 @@ export interface User {
   has_paid: boolean;
   paid_at: string | null;
   payment_tier: PaymentTier | null;
+  // Deployment OAuth tokens
+  github_access_token: string | null;
+  github_username: string | null;
+  github_token_expires_at: string | null;
+  vercel_access_token: string | null;
+  vercel_team_id: string | null;
+  vercel_token_expires_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -23,12 +33,16 @@ export interface Store {
   name: string;
   subdomain: string;
   custom_domain: string | null;
-  template: "fashion" | "services" | "digital";
+  template: StoreTemplate;
   config: StoreConfig;
   stripe_account_id: string | null;
   deployment_id: string | null;
   deployment_url: string | null;
-  status: "pending" | "configuring" | "deploying" | "deployed" | "error";
+  // GitHub/Vercel deployment
+  github_repo: string | null;
+  vercel_project_id: string | null;
+  vercel_deployment_id: string | null;
+  status: "pending" | "configuring" | "deploying" | "deployed" | "failed" | "error";
   deployed_at: string | null;
   created_at: string;
   updated_at: string;
@@ -228,6 +242,18 @@ export interface Purchase {
   updated_at: string;
 }
 
+export type DeploymentLogStatus = "started" | "completed" | "failed";
+
+export interface DeploymentLog {
+  id: string;
+  store_id: string;
+  step: string;
+  status: DeploymentLogStatus;
+  message: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
 // Helper type for creating new records (omit server-generated fields)
 export type NewStore = Omit<
   Store,
@@ -249,8 +275,14 @@ export const defaultStoreConfig: StoreConfig = {
   },
 };
 
-// Wizard step definitions
-export const WIZARD_STEPS = [
+// Wizard step definitions per template type
+export interface WizardStep {
+  id: number;
+  name: string;
+  key: string;
+}
+
+export const GOODS_WIZARD_STEPS: WizardStep[] = [
   { id: 1, name: "Store Name", key: "storeName" },
   { id: 2, name: "Tagline", key: "tagline" },
   { id: 3, name: "Brand Color", key: "primaryColor" },
@@ -259,6 +291,56 @@ export const WIZARD_STEPS = [
   { id: 6, name: "About", key: "about" },
   { id: 7, name: "Contact", key: "contact" },
   { id: 8, name: "Payments", key: "payments" },
-] as const;
+];
 
-export type WizardStepKey = (typeof WIZARD_STEPS)[number]["key"];
+export const SERVICES_WIZARD_STEPS: WizardStep[] = [
+  { id: 1, name: "Business Name", key: "storeName" },
+  { id: 2, name: "Tagline", key: "tagline" },
+  { id: 3, name: "Brand Color", key: "primaryColor" },
+  { id: 4, name: "Logo", key: "logo" },
+  { id: 5, name: "Services", key: "services" },
+  { id: 6, name: "About", key: "about" },
+  { id: 7, name: "Contact", key: "contact" },
+  { id: 8, name: "Payments", key: "payments" },
+];
+
+export const BROCHURE_WIZARD_STEPS: WizardStep[] = [
+  { id: 1, name: "Site Name", key: "storeName" },
+  { id: 2, name: "Tagline", key: "tagline" },
+  { id: 3, name: "Brand Color", key: "primaryColor" },
+  { id: 4, name: "Logo", key: "logo" },
+  { id: 5, name: "Portfolio", key: "portfolio" },
+  { id: 6, name: "Testimonials", key: "testimonials" },
+  { id: 7, name: "About", key: "about" },
+  { id: 8, name: "Contact", key: "contact" },
+];
+
+// Helper to get wizard steps for a template
+export function getWizardStepsForTemplate(template: StoreTemplate): WizardStep[] {
+  switch (template) {
+    case "goods":
+      return GOODS_WIZARD_STEPS;
+    case "services":
+      return SERVICES_WIZARD_STEPS;
+    case "brochure":
+      return BROCHURE_WIZARD_STEPS;
+    default:
+      return GOODS_WIZARD_STEPS;
+  }
+}
+
+// Legacy export for backward compatibility
+export const WIZARD_STEPS = GOODS_WIZARD_STEPS;
+
+export type WizardStepKey =
+  | "storeName"
+  | "tagline"
+  | "primaryColor"
+  | "logo"
+  | "products"
+  | "services"
+  | "portfolio"
+  | "testimonials"
+  | "about"
+  | "contact"
+  | "payments";

@@ -48,7 +48,7 @@ export function PaymentStatusBadge({
     return (
       <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/30">
         <Sparkles className="w-3.5 h-3.5" />
-        Free Trial
+        Preview Mode
       </div>
     );
   }

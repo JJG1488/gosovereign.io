@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
+import { Navigation } from "@/components/landing/Navigation";
 import { Mail, Lock, AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
@@ -37,17 +38,19 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-navy-900 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-block">
-            <span className="text-2xl font-bold text-white">
-              Go<span className="text-emerald-500">Sovereign</span>
-            </span>
-          </Link>
-          <p className="mt-2 text-gray-400">Welcome back</p>
-        </div>
+    <>
+      <Navigation logo="GoSovereign" cta="Sign Up" ctaHref="/auth/signup" />
+      <div className="min-h-screen bg-navy-900 flex items-center justify-center px-4 pt-16">
+        <div className="w-full max-w-md">
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <Link href="/" className="inline-block">
+              <span className="text-2xl font-bold text-white">
+                Go<span className="text-emerald-500">Sovereign</span>
+              </span>
+            </Link>
+            <p className="mt-2 text-gray-400">Welcome back</p>
+          </div>
 
         {/* Login Form */}
         <div className="bg-navy-800 rounded-2xl p-8 shadow-xl border border-gray-800">
@@ -124,6 +127,7 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

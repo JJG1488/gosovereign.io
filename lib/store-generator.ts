@@ -1,4 +1,4 @@
-import type { Store, Product, ProductImage } from "@/types/database";
+import type { Store, Product, ProductImage, StoreTemplate } from "@/types/database";
 
 // =============================================================================
 // Template Placeholders
@@ -12,7 +12,11 @@ interface TemplatePlaceholders {
   PRIMARY_COLOR_DARK: string;
   LOGO_URL: string;
   USE_TEXT_LOGO: string;
-  PRODUCTS_JSON: string;
+  // Template-specific placeholders
+  PRODUCTS_JSON: string;       // For goods template
+  SERVICES_JSON: string;       // For services template
+  PORTFOLIO_JSON: string;      // For brochure template
+  TESTIMONIALS_JSON: string;   // For brochure template
   ABOUT_TEXT: string;
   CONTACT_EMAIL: string;
   STRIPE_ACCOUNT_ID: string;
@@ -79,6 +83,61 @@ function transformProductsForTemplate(products: Product[]): TemplateProduct[] {
 }
 
 // =============================================================================
+// Service Transformation for Template
+// =============================================================================
+
+interface TemplateService {
+  id: string;
+  name: string;
+  description: string;
+  price: number; // In cents for template (starting price)
+  images: string[];
+}
+
+function transformServicesForTemplate(products: Product[]): TemplateService[] {
+  return products.map((p) => ({
+    id: p.id,
+    name: p.name,
+    description: p.description || "",
+    price: Math.round(p.price * 100), // Convert dollars to cents
+    images: p.images?.map((img: ProductImage) => img.url) || [],
+  }));
+}
+
+// =============================================================================
+// Portfolio Transformation for Template
+// =============================================================================
+
+interface TemplatePortfolioItem {
+  id: string;
+  name: string;
+  description: string;
+  images: string[];
+}
+
+function transformPortfolioForTemplate(products: Product[]): TemplatePortfolioItem[] {
+  return products.map((p) => ({
+    id: p.id,
+    name: p.name,
+    description: p.description || "",
+    images: p.images?.map((img: ProductImage) => img.url) || [],
+  }));
+}
+
+// =============================================================================
+// Testimonial Type for Template
+// =============================================================================
+
+interface TemplateTestimonial {
+  id: string;
+  name: string;
+  quote: string;
+  company?: string;
+  role?: string;
+  photoUrl?: string;
+}
+
+// =============================================================================
 // Placeholder Creation
 // =============================================================================
 
@@ -89,6 +148,14 @@ export function createPlaceholders(
   const config = store.config || {};
   const branding = config.branding || {};
 
+  // Transform products for all template types (each template uses what it needs)
+  const transformedProducts = transformProductsForTemplate(products);
+  const transformedServices = transformServicesForTemplate(products);
+  const transformedPortfolio = transformPortfolioForTemplate(products);
+
+  // Get testimonials from config (for brochure template)
+  const testimonials: TemplateTestimonial[] = ((config as unknown) as { testimonials?: TemplateTestimonial[] }).testimonials || [];
+
   return {
     STORE_NAME: store.name,
     STORE_NAME_SLUG: slugify(store.name),
@@ -97,7 +164,11 @@ export function createPlaceholders(
     PRIMARY_COLOR_DARK: darkenColor(branding.primaryColor || "#10b981"),
     LOGO_URL: branding.logoUrl || "",
     USE_TEXT_LOGO: String(!branding.logoUrl),
-    PRODUCTS_JSON: JSON.stringify(transformProductsForTemplate(products), null, 2),
+    // Template-specific JSON data
+    PRODUCTS_JSON: JSON.stringify(transformedProducts, null, 2),
+    SERVICES_JSON: JSON.stringify(transformedServices, null, 2),
+    PORTFOLIO_JSON: JSON.stringify(transformedPortfolio, null, 2),
+    TESTIMONIALS_JSON: JSON.stringify(testimonials, null, 2),
     ABOUT_TEXT: escapeForJS(branding.aboutText || ""),
     CONTACT_EMAIL: branding.contactEmail || "",
     STRIPE_ACCOUNT_ID: store.stripe_account_id || "",
@@ -149,6 +220,9 @@ interface LegacyStoreConfig {
 export function createPlaceholdersFromLegacy(
   config: LegacyStoreConfig
 ): TemplatePlaceholders {
+  // Legacy function uses same products for all template types
+  const productsJson = JSON.stringify(config.products, null, 2);
+
   return {
     STORE_NAME: config.storeName,
     STORE_NAME_SLUG: slugify(config.storeName),
@@ -157,7 +231,10 @@ export function createPlaceholdersFromLegacy(
     PRIMARY_COLOR_DARK: darkenColor(config.primaryColor),
     LOGO_URL: config.logoUrl || "",
     USE_TEXT_LOGO: String(config.useTextLogo),
-    PRODUCTS_JSON: JSON.stringify(config.products, null, 2),
+    PRODUCTS_JSON: productsJson,
+    SERVICES_JSON: productsJson,       // Same as products for legacy
+    PORTFOLIO_JSON: productsJson,      // Same as products for legacy
+    TESTIMONIALS_JSON: "[]",           // No testimonials in legacy format
     ABOUT_TEXT: escapeForJS(config.aboutText),
     CONTACT_EMAIL: config.contactEmail,
     STRIPE_ACCOUNT_ID: config.stripeAccountId || "",

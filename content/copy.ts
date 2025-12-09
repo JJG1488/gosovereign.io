@@ -86,7 +86,7 @@ export const variantA: CopyVariant = {
     headline: "Shopify costs $468/year. Your store shouldn't.",
     subheadline:
       "Launch a beautiful, fully-owned e-commerce store in 15 minutes. One price. No subscriptions. No code. No permission needed.",
-    cta: "Try Free",
+    cta: "Try it Now",
     microProof:
       '"Replaced my $39/month Shopify store in an afternoon." — Early adopter',
   },
@@ -171,48 +171,22 @@ export const variantA: CopyVariant = {
   pricing: {
     headline: "The last e-commerce purchase you'll make",
     anchor:
-      "Shopify's cheapest plan costs $468/year. GoSovereign pays for itself in 4 months — then it's pure profit.",
+      "Shopify's cheapest plan costs $468/year. GoSovereign pays for itself in under 2 months — then it's pure profit.",
     plans: [
       {
-        name: "Starter",
-        price: "$149",
+        name: "GoSovereign",
+        price: "$50",
         priceNote: "one-time",
         features: [
-          "1 template of your choice",
+          "Complete e-commerce store",
           "15-minute setup wizard",
-          "Stripe integration",
+          "Stripe payments built-in",
           "Self-hosted (you control it)",
           "30-day email support",
+          "Yours forever — no subscriptions",
         ],
-        cta: "Get Starter",
-      },
-      {
-        name: "Pro",
-        price: "$299",
-        priceNote: "one-time",
-        features: [
-          "All 3 templates",
-          "Everything in Starter",
-          "Priority support (60 days)",
-          "Lifetime updates",
-          "Commercial license",
-        ],
-        cta: "Get Pro",
+        cta: "Get Started",
         highlighted: true,
-        badge: "Most Popular",
-      },
-      {
-        name: "Hosted",
-        price: "$149 + $19",
-        priceNote: "setup + monthly",
-        features: [
-          "Everything in Starter",
-          "We host it for you",
-          "Automatic SSL",
-          "Daily backups",
-          "Managed updates",
-        ],
-        cta: "Get Hosted",
       },
     ],
   },
@@ -266,13 +240,13 @@ export const variantA: CopyVariant = {
     headline: "Go Sovereign. Own everything.",
     subheadline:
       "Your store. Your rules. Your profit. No landlords. No monthly fees. No permission needed.",
-    cta: "Start Free Trial",
+    cta: "Try it Now",
     guarantee:
       "30-day money-back guarantee. If it's not for you, full refund. No questions.",
   },
   nav: {
     logo: "GoSovereign",
-    cta: "Try Free",
+    cta: "Try it Now",
   },
   footer: {
     logo: "GoSovereign",
@@ -281,40 +255,3 @@ export const variantA: CopyVariant = {
   },
 };
 
-// VARIANT B — Ownership-Forward
-// Only differences from Variant A listed
-export const variantB: CopyVariant = {
-  ...variantA,
-  hero: {
-    ...variantA.hero,
-    headline:
-      "You don't need another $39/month subscription. You need a store you own.",
-  },
-  problem: {
-    ...variantA.problem,
-    headline: "Stop renting your business",
-    kicker: [
-      "You built the business. They hold the keys.",
-      "That ends today.",
-    ],
-  },
-  pricing: {
-    ...variantA.pricing,
-    anchor: "Entrepreneurs own. Amateurs rent. Which one are you?",
-  },
-  whoItsFor: {
-    ...variantA.whoItsFor,
-    headline: "Built for people who are done asking permission",
-  },
-  finalCta: {
-    ...variantA.finalCta,
-    cta: "Start Free Trial",
-  },
-};
-
-export type VariantKey = "a" | "b";
-
-export const variants: Record<VariantKey, CopyVariant> = {
-  a: variantA,
-  b: variantB,
-};

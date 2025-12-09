@@ -14,8 +14,10 @@ import type {
   StoreConfig,
   Product,
   WizardProgress,
+  StoreTemplate,
+  WizardStep,
 } from "@/types/database";
-import { WIZARD_STEPS } from "@/types/database";
+import { getWizardStepsForTemplate } from "@/types/database";
 import {
   getStore,
   updateStore,
@@ -170,6 +172,9 @@ interface WizardContextValue {
   state: WizardState;
   storeId: string | undefined;
   userId: string | undefined;
+  template: StoreTemplate;
+  wizardSteps: WizardStep[];
+  currentStepKey: string;
 
   // Navigation
   goToStep: (step: number) => void;
@@ -208,9 +213,11 @@ const WizardContext = createContext<WizardContextValue | null>(null);
 interface WizardProviderProps {
   children: ReactNode;
   storeId?: string;
+  template?: StoreTemplate;
 }
 
-export function WizardProvider({ children, storeId }: WizardProviderProps) {
+export function WizardProvider({ children, storeId, template = "goods" }: WizardProviderProps) {
+  const wizardSteps = getWizardStepsForTemplate(template);
   const [state, dispatch] = useReducer(wizardReducer, {
     currentStep: 1,
     config: createEmptyConfig(),
@@ -330,16 +337,16 @@ export function WizardProvider({ children, storeId }: WizardProviderProps) {
 
   // Navigation
   const goToStep = useCallback((step: number) => {
-    if (step >= 1 && step <= WIZARD_STEPS.length) {
+    if (step >= 1 && step <= wizardSteps.length) {
       dispatch({ type: "SET_STEP", step });
     }
-  }, []);
+  }, [wizardSteps.length]);
 
   const nextStep = useCallback(() => {
-    if (state.currentStep < WIZARD_STEPS.length) {
+    if (state.currentStep < wizardSteps.length) {
       dispatch({ type: "SET_STEP", step: state.currentStep + 1 });
     }
-  }, [state.currentStep]);
+  }, [state.currentStep, wizardSteps.length]);
 
   const prevStep = useCallback(() => {
     if (state.currentStep > 1) {
@@ -406,25 +413,30 @@ export function WizardProvider({ children, storeId }: WizardProviderProps) {
     await saveToDb();
   }, [saveToDb]);
 
-  // Computed values
-  const isStepComplete = useCallback(
-    (stepId: number): boolean => {
-      switch (stepId) {
-        case 1:
+  // Computed values - check step completion by key (not step number)
+  const isStepCompleteByKey = useCallback(
+    (stepKey: string): boolean => {
+      switch (stepKey) {
+        case "storeName":
           return Boolean(state.config.storeName?.trim());
-        case 2:
+        case "tagline":
           return Boolean(state.config.tagline?.trim());
-        case 3:
+        case "primaryColor":
           return Boolean(state.config.primaryColor);
-        case 4:
+        case "logo":
           return Boolean(state.config.logoUrl || state.config.useTextLogo);
-        case 5:
+        case "products":
+        case "services":
+        case "portfolio":
           return state.products.length > 0;
-        case 6:
+        case "testimonials":
+          // Testimonials are optional for now - always complete
+          return true;
+        case "about":
           return Boolean(state.config.aboutText?.trim());
-        case 7:
+        case "contact":
           return Boolean(state.config.contactEmail?.trim());
-        case 8:
+        case "payments":
           return Boolean(state.config.stripeConnected);
         default:
           return false;
@@ -433,23 +445,34 @@ export function WizardProvider({ children, storeId }: WizardProviderProps) {
     [state.config, state.products]
   );
 
-  const completedSteps = WIZARD_STEPS.map((s) => s.id).filter(isStepComplete);
+  // Get current step key based on step number
+  const currentStepKey = wizardSteps[state.currentStep - 1]?.key || "storeName";
+
+  // Check if current step is complete
+  const isCurrentStepComplete = isStepCompleteByKey(currentStepKey);
+
+  const completedSteps = wizardSteps.map((s) => s.id).filter((id) => {
+    const step = wizardSteps.find((ws) => ws.id === id);
+    return step ? isStepCompleteByKey(step.key) : false;
+  });
   completedStepsRef.current = completedSteps;
 
   const progressPercent = Math.round(
-    (completedSteps.length / WIZARD_STEPS.length) * 100
+    (completedSteps.length / wizardSteps.length) * 100
   );
 
   const canGoNext =
-    state.currentStep < WIZARD_STEPS.length &&
-    isStepComplete(state.currentStep);
+    state.currentStep < wizardSteps.length && isCurrentStepComplete;
   const canGoPrev = state.currentStep > 1;
-  const isLastStep = state.currentStep === WIZARD_STEPS.length;
+  const isLastStep = state.currentStep === wizardSteps.length;
 
   const value: WizardContextValue = {
     state,
     storeId,
     userId: userIdRef.current,
+    template,
+    wizardSteps,
+    currentStepKey,
     goToStep,
     nextStep,
     prevStep,

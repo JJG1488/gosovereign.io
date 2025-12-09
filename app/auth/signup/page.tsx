@@ -1,14 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
-import { Mail, Lock, User, AlertCircle, CheckCircle } from "lucide-react";
+import { Navigation } from "@/components/landing/Navigation";
+import { Mail, Lock, User, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextUrl = searchParams.get("next") || "/templates";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -36,7 +40,7 @@ export default function SignupPage() {
         data: {
           full_name: fullName,
         },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextUrl)}`,
       },
     });
 
@@ -52,41 +56,46 @@ export default function SignupPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-navy-900 flex items-center justify-center px-4">
-        <div className="w-full max-w-md text-center">
-          <div className="bg-navy-800 rounded-2xl p-8 shadow-xl border border-gray-800">
-            <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-emerald-500" />
+      <>
+        <Navigation logo="GoSovereign" cta="Log In" ctaHref="/auth/login" />
+        <div className="min-h-screen bg-navy-900 flex items-center justify-center px-4 pt-16">
+          <div className="w-full max-w-md text-center">
+            <div className="bg-navy-800 rounded-2xl p-8 shadow-xl border border-gray-800">
+              <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-emerald-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-2">
+                Check your email
+              </h2>
+              <p className="text-gray-400 mb-6">
+                We sent a confirmation link to{" "}
+                <span className="text-white font-medium">{email}</span>
+              </p>
+              <p className="text-gray-500 text-sm">
+                Click the link in the email to activate your account and start
+                building your store.
+              </p>
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">
-              Check your email
-            </h2>
-            <p className="text-gray-400 mb-6">
-              We sent a confirmation link to{" "}
-              <span className="text-white font-medium">{email}</span>
-            </p>
-            <p className="text-gray-500 text-sm">
-              Click the link in the email to activate your account and start
-              building your store.
-            </p>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-navy-900 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-block">
-            <span className="text-2xl font-bold text-white">
-              Go<span className="text-emerald-500">Sovereign</span>
-            </span>
-          </Link>
-          <p className="mt-2 text-gray-400">Create your account</p>
-        </div>
+    <>
+      <Navigation logo="GoSovereign" cta="Log In" ctaHref="/auth/login" />
+      <div className="min-h-screen bg-navy-900 flex items-center justify-center px-4 pt-16">
+        <div className="w-full max-w-md">
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <Link href="/" className="inline-block">
+              <span className="text-2xl font-bold text-white">
+                Go<span className="text-emerald-500">Sovereign</span>
+              </span>
+            </Link>
+            <p className="mt-2 text-gray-400">Create your account</p>
+          </div>
 
         {/* Signup Form */}
         <div className="bg-navy-800 rounded-2xl p-8 shadow-xl border border-gray-800">
@@ -188,7 +197,22 @@ export default function SignupPage() {
         <p className="mt-6 text-center text-xs text-gray-500">
           By signing up, you agree to our Terms of Service and Privacy Policy.
         </p>
+        </div>
       </div>
-    </div>
+    </>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-navy-900 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
+        </div>
+      }
+    >
+      <SignupForm />
+    </Suspense>
   );
 }

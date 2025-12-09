@@ -109,8 +109,9 @@ export async function POST(request: NextRequest): Promise<Response> {
       );
     }
 
-    // Get template directory path
-    const templateDir = join(process.cwd(), "templates", "starter");
+    // Get template directory path (dynamic based on store template)
+    const template = store.template || "goods";
+    const templateDir = join(process.cwd(), "templates", template);
 
     // Read all template files
     const templateFiles = await getTemplateFiles(templateDir);

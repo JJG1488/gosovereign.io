@@ -10,6 +10,7 @@ import {
   RefreshCw,
   Eye,
   Lock,
+  Rocket,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import type { Store, Product, ProductImage } from "@/types/database";
@@ -163,9 +164,9 @@ function PreviewContent() {
           <div className="flex items-center gap-3">
             <Lock className="w-5 h-5 text-amber-400 flex-shrink-0" />
             <div>
-              <p className="text-amber-400 font-medium">Free Trial Preview</p>
+              <p className="text-amber-400 font-medium">Preview Mode</p>
               <p className="text-sm text-gray-400">
-                You&apos;re viewing a preview of your store configuration. Upgrade to download your store.
+                You&apos;re viewing a preview of your store configuration. Purchase to download your store.
               </p>
             </div>
             <Button
@@ -286,9 +287,10 @@ function PreviewContent() {
       )}
 
       {/* Actions */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-        {!isDownloaded ? (
-          <>
+      {!isDownloaded ? (
+        <div className="space-y-6">
+          {/* Edit button */}
+          <div className="flex justify-center">
             <Button
               variant="secondary"
               onClick={() => router.push(`/wizard?store=${storeId}`)}
@@ -297,108 +299,188 @@ function PreviewContent() {
               <RefreshCw className="w-4 h-4 mr-2" />
               Edit Configuration
             </Button>
-            <Button
-              onClick={handleDownload}
-              disabled={isGenerating}
-              className="bg-emerald-500 hover:bg-emerald-600"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4 mr-2" />
-                  Download Store
-                </>
-              )}
-            </Button>
-          </>
-        ) : (
-          <>
-            <Button
-              variant="secondary"
-              onClick={handleDownload}
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Download Again
-            </Button>
-            <Button onClick={handleStartOver}>
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Create Another Store
-            </Button>
-          </>
-        )}
-      </div>
+          </div>
+
+          {/* Deployment options */}
+          <div className="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+            {/* Guided Deploy Option */}
+            <div className="bg-navy-800 rounded-xl p-6 border-2 border-emerald-500/50 hover:border-emerald-500 transition-colors">
+              <div className="text-center mb-4">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/10 mb-3">
+                  <Rocket className="w-6 h-6 text-emerald-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white">Guided Deploy</h3>
+                <p className="text-sm text-gray-400 mt-1">
+                  We&apos;ll deploy directly to your GitHub and Vercel accounts
+                </p>
+              </div>
+              <Button
+                onClick={() => {
+                  if (!isPaid) {
+                    setShowUpgradeModal(true);
+                    return;
+                  }
+                  router.push("/dashboard/deploy");
+                }}
+                disabled={isGenerating}
+                className="w-full bg-emerald-500 hover:bg-emerald-600"
+              >
+                <Rocket className="w-4 h-4 mr-2" />
+                Deploy Now
+              </Button>
+              <p className="text-xs text-emerald-400 text-center mt-2">Recommended</p>
+            </div>
+
+            {/* Download ZIP Option */}
+            <div className="bg-navy-800 rounded-xl p-6 border border-navy-600 hover:border-navy-500 transition-colors">
+              <div className="text-center mb-4">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-navy-700 mb-3">
+                  <Download className="w-6 h-6 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white">Download ZIP</h3>
+                <p className="text-sm text-gray-400 mt-1">
+                  Download source code and deploy manually
+                </p>
+              </div>
+              <Button
+                variant="secondary"
+                onClick={handleDownload}
+                disabled={isGenerating}
+                className="w-full"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4 mr-2" />
+                    Download Store
+                  </>
+                )}
+              </Button>
+              <p className="text-xs text-gray-500 text-center mt-2">For developers</p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Button
+            variant="secondary"
+            onClick={handleDownload}
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Download Again
+          </Button>
+          <Button
+            onClick={() => router.push("/dashboard/deploy")}
+            className="bg-emerald-500 hover:bg-emerald-600"
+          >
+            <Rocket className="w-4 h-4 mr-2" />
+            Deploy with Guided Setup
+          </Button>
+          <Button variant="secondary" onClick={handleStartOver}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Create Another Store
+          </Button>
+        </div>
+      )}
 
       {/* Next steps */}
       {isDownloaded && (
-        <div className="mt-12 p-6 bg-navy-800 rounded-xl">
-          <h3 className="text-lg font-bold text-white mb-4">Next Steps</h3>
-          <ol className="space-y-4 text-gray-300">
-            <li className="flex items-start gap-3">
-              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm font-medium">
-                1
-              </span>
-              <div>
-                <p className="font-medium text-white">Extract the zip file</p>
-                <p className="text-sm text-gray-400">
-                  Unzip the downloaded file to a folder on your computer.
+        <div className="mt-12 space-y-6">
+          {/* Guided deploy CTA */}
+          <div className="p-6 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
+            <div className="flex flex-col md:flex-row items-center gap-4">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                  <Rocket className="w-6 h-6 text-emerald-400" />
+                </div>
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <h3 className="text-lg font-semibold text-white">Want us to deploy it for you?</h3>
+                <p className="text-sm text-gray-400 mt-1">
+                  Skip the manual setup. We&apos;ll deploy directly to your GitHub and Vercel accounts in one click.
                 </p>
               </div>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm font-medium">
-                2
-              </span>
-              <div>
-                <p className="font-medium text-white">Install dependencies</p>
-                <p className="text-sm text-gray-400">
-                  Open a terminal in the folder and run{" "}
-                  <code className="px-1 py-0.5 bg-navy-900 rounded text-emerald-400">
-                    npm install
-                  </code>
-                </p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm font-medium">
-                3
-              </span>
-              <div>
-                <p className="font-medium text-white">Start the development server</p>
-                <p className="text-sm text-gray-400">
-                  Run{" "}
-                  <code className="px-1 py-0.5 bg-navy-900 rounded text-emerald-400">
-                    npm run dev
-                  </code>{" "}
-                  to preview your store locally.
-                </p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm font-medium">
-                4
-              </span>
-              <div>
-                <p className="font-medium text-white">Deploy to Vercel</p>
-                <p className="text-sm text-gray-400">
-                  Push to GitHub and connect to{" "}
-                  <a
-                    href="https://vercel.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-emerald-400 hover:underline inline-flex items-center gap-1"
-                  >
-                    Vercel
-                    <ExternalLink className="w-3 h-3" />
-                  </a>{" "}
-                  for free hosting.
-                </p>
-              </div>
-            </li>
-          </ol>
+              <Button
+                onClick={() => router.push("/dashboard/deploy")}
+                className="bg-emerald-500 hover:bg-emerald-600 flex-shrink-0"
+              >
+                <Rocket className="w-4 h-4 mr-2" />
+                Use Guided Deploy
+              </Button>
+            </div>
+          </div>
+
+          {/* Manual steps */}
+          <div className="p-6 bg-navy-800 rounded-xl">
+            <h3 className="text-lg font-bold text-white mb-4">Manual Deployment Steps</h3>
+            <ol className="space-y-4 text-gray-300">
+              <li className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-navy-700 text-gray-400 flex items-center justify-center text-sm font-medium">
+                  1
+                </span>
+                <div>
+                  <p className="font-medium text-white">Extract the zip file</p>
+                  <p className="text-sm text-gray-400">
+                    Unzip the downloaded file to a folder on your computer.
+                  </p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-navy-700 text-gray-400 flex items-center justify-center text-sm font-medium">
+                  2
+                </span>
+                <div>
+                  <p className="font-medium text-white">Install dependencies</p>
+                  <p className="text-sm text-gray-400">
+                    Open a terminal in the folder and run{" "}
+                    <code className="px-1 py-0.5 bg-navy-900 rounded text-emerald-400">
+                      npm install
+                    </code>
+                  </p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-navy-700 text-gray-400 flex items-center justify-center text-sm font-medium">
+                  3
+                </span>
+                <div>
+                  <p className="font-medium text-white">Start the development server</p>
+                  <p className="text-sm text-gray-400">
+                    Run{" "}
+                    <code className="px-1 py-0.5 bg-navy-900 rounded text-emerald-400">
+                      npm run dev
+                    </code>{" "}
+                    to preview your store locally.
+                  </p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-navy-700 text-gray-400 flex items-center justify-center text-sm font-medium">
+                  4
+                </span>
+                <div>
+                  <p className="font-medium text-white">Deploy to Vercel</p>
+                  <p className="text-sm text-gray-400">
+                    Push to GitHub and connect to{" "}
+                    <a
+                      href="https://vercel.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-emerald-400 hover:underline inline-flex items-center gap-1"
+                    >
+                      Vercel
+                      <ExternalLink className="w-3 h-3" />
+                    </a>{" "}
+                    for free hosting.
+                  </p>
+                </div>
+              </li>
+            </ol>
+          </div>
         </div>
       )}
 

@@ -14,17 +14,17 @@ const PLAN_CONFIG: Record<
   { amount: number; name: string; description: string }
 > = {
   starter: {
-    amount: 14900, // $149
-    name: "GoSovereign Starter",
-    description: "One-time purchase - Full ownership of your store",
+    amount: 5000, // $50
+    name: "GoSovereign",
+    description: "One-time purchase - Full ownership of your e-commerce store",
   },
   pro: {
-    amount: 29900, // $299
+    amount: 29900, // $299 (not available yet)
     name: "GoSovereign Pro",
     description: "One-time purchase - Premium features & priority support",
   },
   hosted: {
-    amount: 14900, // $149 (+ subscription later)
+    amount: 14900, // $149 (not available yet)
     name: "GoSovereign Hosted",
     description: "One-time setup fee - Includes managed hosting",
   },

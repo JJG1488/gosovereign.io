@@ -8,7 +8,9 @@ import {
   getUserStore,
   createWizardProgress,
   getCurrentUser,
+  getStore,
 } from "@/lib/supabase";
+import type { StoreTemplate } from "@/types/database";
 import { createClient } from "@/lib/supabase/client";
 import { Loader2, LogOut } from "lucide-react";
 import { usePaymentStatus } from "@/hooks/usePaymentStatus";
@@ -52,6 +54,7 @@ function WizardLoader() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [storeId, setStoreId] = useState<string | null>(null);
+  const [template, setTemplate] = useState<StoreTemplate>("goods");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { isPaid, tier, isLoading: isPaymentLoading } = usePaymentStatus();
@@ -61,12 +64,23 @@ function WizardLoader() {
       try {
         // Check if store ID is in URL
         const urlStoreId = searchParams.get("store");
+        const urlTemplate = searchParams.get("template") as StoreTemplate | null;
 
         if (urlStoreId) {
+          // Load existing store and get its template
+          const existingStoreData = await getStore(urlStoreId);
+          if (existingStoreData) {
+            setTemplate(existingStoreData.template || "goods");
+          }
           setStoreId(urlStoreId);
           setIsLoading(false);
           return;
         }
+
+        // Validate template from URL
+        const validTemplates: StoreTemplate[] = ["goods", "services", "brochure"];
+        const selectedTemplate = urlTemplate && validTemplates.includes(urlTemplate) ? urlTemplate : "goods";
+        setTemplate(selectedTemplate);
 
         // Get current user
         const user = await getCurrentUser();
@@ -144,13 +158,16 @@ function WizardLoader() {
         const existingStore = await getUserStore(user.id);
 
         if (existingStore) {
-          // Resume existing store
+          // Resume existing store - use its template
+          setTemplate(existingStore.template || "goods");
           setStoreId(existingStore.id);
           router.replace(`/wizard?store=${existingStore.id}`);
         } else {
-          // Create new store
+          // Create new store with selected template
           const subdomain = `store-${Date.now()}`;
-          const newStore = await createStore(user.id, "My Store", subdomain);
+          const storeName = selectedTemplate === "brochure" ? "My Site" :
+                           selectedTemplate === "services" ? "My Business" : "My Store";
+          const newStore = await createStore(user.id, storeName, subdomain, selectedTemplate);
 
           if (newStore) {
             // Create wizard progress record
@@ -250,7 +267,7 @@ function WizardLoader() {
     <div className="min-h-screen bg-navy-900">
       <Header />
       <main className="py-8 px-4">
-        <WizardProvider storeId={storeId}>
+        <WizardProvider storeId={storeId} template={template}>
           <WizardContent />
         </WizardProvider>
       </main>

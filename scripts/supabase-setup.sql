@@ -49,6 +49,14 @@ ALTER TABLE public.users ADD COLUMN IF NOT EXISTS has_paid BOOLEAN DEFAULT false
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS paid_at TIMESTAMPTZ;
 ALTER TABLE public.users ADD COLUMN IF NOT EXISTS payment_tier TEXT;
 
+-- Deployment OAuth columns (for GitHub/Vercel integration)
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS github_access_token TEXT;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS github_username TEXT;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS github_token_expires_at TIMESTAMPTZ;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS vercel_access_token TEXT;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS vercel_team_id TEXT;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS vercel_token_expires_at TIMESTAMPTZ;
+
 -- ----------------------------------------------------------------------------
 -- STORES TABLE
 -- ----------------------------------------------------------------------------
@@ -69,6 +77,11 @@ CREATE TABLE IF NOT EXISTS public.stores (
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
+
+-- Add deployment columns to stores (for GitHub/Vercel integration)
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS github_repo TEXT;
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS vercel_project_id TEXT;
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS vercel_deployment_id TEXT;
 
 -- ----------------------------------------------------------------------------
 -- PRODUCTS TABLE
@@ -213,6 +226,20 @@ CREATE TABLE IF NOT EXISTS public.purchases (
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
+-- ----------------------------------------------------------------------------
+-- DEPLOYMENT LOGS TABLE
+-- ----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS public.deployment_logs (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  store_id UUID NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
+  step TEXT NOT NULL,
+  status TEXT NOT NULL, -- 'started', 'completed', 'failed'
+  message TEXT,
+  metadata JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
 -- ============================================================================
 -- 3. INDEXES (IF NOT EXISTS)
 -- ============================================================================
@@ -243,6 +270,11 @@ CREATE INDEX IF NOT EXISTS idx_purchases_email ON public.purchases(email);
 CREATE INDEX IF NOT EXISTS idx_purchases_stripe_session ON public.purchases(stripe_checkout_session_id);
 CREATE INDEX IF NOT EXISTS idx_purchases_status ON public.purchases(status);
 
+-- Deployment
+CREATE INDEX IF NOT EXISTS idx_users_github_username ON public.users(github_username);
+CREATE INDEX IF NOT EXISTS idx_deployment_logs_store ON public.deployment_logs(store_id);
+CREATE INDEX IF NOT EXISTS idx_deployment_logs_created ON public.deployment_logs(created_at DESC);
+
 -- ============================================================================
 -- 4. ROW LEVEL SECURITY
 -- ============================================================================
@@ -256,6 +288,7 @@ ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.wizard_progress ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.purchases ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.deployment_logs ENABLE ROW LEVEL SECURITY;
 
 -- ----------------------------------------------------------------------------
 -- Users Policies (drop and recreate)
@@ -398,6 +431,18 @@ DROP POLICY IF EXISTS "Users can view own purchases" ON public.purchases;
 CREATE POLICY "Users can view own purchases"
   ON public.purchases FOR SELECT
   USING (auth.uid() = user_id);
+
+-- ----------------------------------------------------------------------------
+-- Deployment Logs Policies
+-- ----------------------------------------------------------------------------
+
+DROP POLICY IF EXISTS "Users can view own deployment logs" ON public.deployment_logs;
+
+CREATE POLICY "Users can view own deployment logs"
+  ON public.deployment_logs FOR SELECT
+  USING (
+    store_id IN (SELECT id FROM public.stores WHERE user_id = auth.uid())
+  );
 
 -- ============================================================================
 -- 5. FUNCTIONS (CREATE OR REPLACE)

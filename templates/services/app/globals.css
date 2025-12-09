@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: {{PRIMARY_COLOR}};
+  --primary-dark: {{PRIMARY_COLOR_DARK}};
+}
+
+body {
+  @apply bg-white text-gray-900 antialiased;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus styles */
+button:focus-visible,
+a:focus-visible {
+  @apply outline-none ring-2 ring-primary ring-offset-2;
+}
+
+/* Custom button styles */
+.btn-primary {
+  @apply inline-flex items-center justify-center px-6 py-3
+         bg-primary text-white font-medium rounded-lg
+         hover:bg-primary-dark transition-colors
+         disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center px-6 py-3
+         bg-gray-100 text-gray-900 font-medium rounded-lg
+         hover:bg-gray-200 transition-colors
+         disabled:opacity-50 disabled:cursor-not-allowed;
+}

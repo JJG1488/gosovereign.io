@@ -13,8 +13,8 @@ export function HeroCTA({ cta }: HeroCTAProps): React.ReactElement {
   const router = useRouter();
 
   const handleClick = (): void => {
-    // Primary CTA goes to free trial signup
-    router.push("/auth/signup");
+    // Primary CTA goes to template selection
+    router.push("/templates");
   };
 
   return (

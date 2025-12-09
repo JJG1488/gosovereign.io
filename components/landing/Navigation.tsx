@@ -11,9 +11,10 @@ import { cn } from "@/lib/utils";
 interface NavigationProps {
   logo: string;
   cta: string;
+  ctaHref?: string;
 }
 
-export function Navigation({ logo, cta }: NavigationProps): React.ReactElement {
+export function Navigation({ logo, cta, ctaHref = "/templates" }: NavigationProps): React.ReactElement {
   const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -29,7 +30,7 @@ export function Navigation({ logo, cta }: NavigationProps): React.ReactElement {
 
   const handleCTAClick = (): void => {
     setIsMobileMenuOpen(false);
-    router.push("/auth/signup");
+    router.push(ctaHref);
   };
 
   return (
