@@ -219,9 +219,8 @@ export async function deployStore(store: Store): Promise<DeployResult> {
       projectUrl: `https://vercel.com/${teamId || "dashboard"}/${projectName}`,
       deploymentId: deployment.id,
       deploymentUrl: `https://${deployment.url}`,
-      storeUrl: aliasResult.success
-        ? `https://${subdomainUrl}`
-        : `https://${deployment.url}`,
+      // Always return the branded subdomain URL - DNS should be configured
+      storeUrl: `https://${subdomainUrl}`,
     };
   } catch (err) {
     console.error("deployStore error:", err);

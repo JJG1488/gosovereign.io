@@ -41,12 +41,13 @@ export async function GET(req: NextRequest) {
 
   // If deployment is ready, update store status
   if (result.status === "READY") {
+    // Keep the branded subdomain URL - don't overwrite with Vercel's deployment URL
     await supabase
       .from("stores")
       .update({
         status: "deployed",
         deployed_at: new Date().toISOString(),
-        deployment_url: result.url || store.deployment_url,
+        // Don't update deployment_url - it already has the branded subdomain
       })
       .eq("user_id", user.id);
 
