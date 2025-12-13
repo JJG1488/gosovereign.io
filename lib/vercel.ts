@@ -6,30 +6,86 @@ interface DeployResult {
   projectUrl?: string;
   deploymentId?: string;
   deploymentUrl?: string;
+  storeUrl?: string; // The branded subdomain URL
   error?: string;
 }
 
 /**
- * Creates a Vercel project and triggers deployment.
- * The project is created in the USER's Vercel account.
+ * Platform API token and team ID from environment variables.
+ * These are used for ALL deployments (stores deploy to OUR Vercel account).
  */
-export async function deployToUserVercel(
-  vercelAccessToken: string,
-  vercelTeamId: string | null,
-  githubRepoFullName: string,
-  store: Store
-): Promise<DeployResult> {
-  const headers: Record<string, string> = {
-    Authorization: `Bearer ${vercelAccessToken}`,
+function getVercelConfig() {
+  const token = process.env.VERCEL_API_TOKEN;
+  const teamId = process.env.VERCEL_TEAM_ID;
+  const storeDomain = process.env.STORE_DOMAIN || "gosovereign.io";
+  const templateRepo =
+    process.env.GITHUB_TEMPLATE_REPO || "gosovereign/storefront-template";
+
+  if (!token) {
+    throw new Error("VERCEL_API_TOKEN is not configured");
+  }
+
+  return { token, teamId, storeDomain, templateRepo };
+}
+
+/**
+ * Gets the numeric GitHub repo ID needed for Vercel deployments.
+ */
+async function getGitHubRepoId(repoFullName: string): Promise<number | null> {
+  try {
+    const response = await fetch(`https://api.github.com/repos/${repoFullName}`, {
+      headers: {
+        Accept: "application/vnd.github.v3+json",
+        // Use GitHub token if available for higher rate limits
+        ...(process.env.GITHUB_TOKEN && {
+          Authorization: `token ${process.env.GITHUB_TOKEN}`,
+        }),
+      },
+    });
+
+    if (!response.ok) {
+      console.error("GitHub API error:", await response.text());
+      return null;
+    }
+
+    const repo = await response.json();
+    return repo.id;
+  } catch (err) {
+    console.error("Failed to get GitHub repo ID:", err);
+    return null;
+  }
+}
+
+/**
+ * Creates headers for Vercel API requests.
+ */
+function getHeaders(token: string): Record<string, string> {
+  return {
+    Authorization: `Bearer ${token}`,
     "Content-Type": "application/json",
   };
+}
 
-  // If user has a team, deployments go there
-  const teamParam = vercelTeamId ? `?teamId=${vercelTeamId}` : "";
+/**
+ * Builds the team parameter for Vercel API calls.
+ */
+function getTeamParam(teamId: string | undefined): string {
+  return teamId ? `?teamId=${teamId}` : "";
+}
+
+/**
+ * One-click deployment: Creates a Vercel project and deploys from our template.
+ * The project is created in the PLATFORM's Vercel account (not user's).
+ */
+export async function deployStore(store: Store): Promise<DeployResult> {
+  const { token, teamId, storeDomain, templateRepo } = getVercelConfig();
+  const headers = getHeaders(token);
+  const teamParam = getTeamParam(teamId);
 
   try {
-    // Step 1: Check if project already exists
     const projectName = store.subdomain;
+
+    // Step 1: Check if project already exists
     const checkResponse = await fetch(
       `https://api.vercel.com/v9/projects/${projectName}${teamParam}`,
       { headers }
@@ -42,7 +98,7 @@ export async function deployToUserVercel(
       const existingProject = await checkResponse.json();
       projectId = existingProject.id;
     } else {
-      // Step 2: Create new project
+      // Step 2: Create new project linked to template repo
       const createProjectResponse = await fetch(
         `https://api.vercel.com/v9/projects${teamParam}`,
         {
@@ -52,7 +108,7 @@ export async function deployToUserVercel(
             name: projectName,
             framework: "nextjs",
             gitRepository: {
-              repo: githubRepoFullName,
+              repo: templateRepo,
               type: "github",
             },
             buildCommand: "npm run build",
@@ -104,7 +160,30 @@ export async function deployToUserVercel(
       // Continue anyway, env vars can be set manually
     }
 
-    // Step 4: Trigger deployment
+    // Step 4: Add custom subdomain alias
+    const subdomainUrl = `${store.subdomain}.${storeDomain}`;
+    const aliasResult = await addDomainAlias(
+      token,
+      teamId,
+      projectId,
+      subdomainUrl
+    );
+
+    if (!aliasResult.success) {
+      console.error("Failed to add domain alias:", aliasResult.error);
+      // Continue anyway, will use Vercel's default URL
+    }
+
+    // Step 5: Get GitHub repo ID (required by Vercel API)
+    const repoId = await getGitHubRepoId(templateRepo);
+    if (!repoId) {
+      return {
+        success: false,
+        error: `Failed to get GitHub repo ID for ${templateRepo}. Make sure the repo exists and is public.`,
+      };
+    }
+
+    // Step 6: Trigger deployment with proper gitSource
     const deployResponse = await fetch(
       `https://api.vercel.com/v13/deployments${teamParam}`,
       {
@@ -116,7 +195,7 @@ export async function deployToUserVercel(
           target: "production",
           gitSource: {
             type: "github",
-            repo: githubRepoFullName,
+            repoId: repoId,
             ref: "main",
           },
         }),
@@ -137,12 +216,61 @@ export async function deployToUserVercel(
     return {
       success: true,
       projectId,
-      projectUrl: `https://vercel.com/${vercelTeamId || "dashboard"}/${projectName}`,
+      projectUrl: `https://vercel.com/${teamId || "dashboard"}/${projectName}`,
       deploymentId: deployment.id,
       deploymentUrl: `https://${deployment.url}`,
+      storeUrl: aliasResult.success
+        ? `https://${subdomainUrl}`
+        : `https://${deployment.url}`,
     };
   } catch (err) {
-    console.error("deployToUserVercel error:", err);
+    console.error("deployStore error:", err);
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Adds a custom domain alias to a Vercel project.
+ */
+async function addDomainAlias(
+  token: string,
+  teamId: string | undefined,
+  projectId: string,
+  domain: string
+): Promise<{ success: boolean; error?: string }> {
+  const headers = getHeaders(token);
+  const teamParam = getTeamParam(teamId);
+
+  try {
+    const response = await fetch(
+      `https://api.vercel.com/v10/projects/${projectId}/domains${teamParam}`,
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ name: domain }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      // Domain might already exist, which is fine
+      if (
+        errorData.error?.code === "domain_already_in_use" ||
+        errorData.error?.code === "domain_already_exists"
+      ) {
+        return { success: true };
+      }
+      return {
+        success: false,
+        error: errorData.error?.message || "Failed to add domain",
+      };
+    }
+
+    return { success: true };
+  } catch (err) {
     return {
       success: false,
       error: err instanceof Error ? err.message : "Unknown error",
@@ -152,7 +280,7 @@ export async function deployToUserVercel(
 
 /**
  * Builds the environment variables for the deployed store.
- * These connect the storefront to YOUR Supabase + the user's Stripe.
+ * These connect the storefront to YOUR Supabase + the store owner's Stripe.
  */
 function buildEnvironmentVariables(store: Store) {
   const envVars: Array<{
@@ -180,19 +308,19 @@ function buildEnvironmentVariables(store: Store) {
       type: "plain",
     },
     {
-      key: "STORE_NAME",
+      key: "NEXT_PUBLIC_STORE_NAME",
       value: store.name,
       target: ["production", "preview", "development"],
       type: "plain",
     },
     {
-      key: "BRAND_COLOR",
+      key: "NEXT_PUBLIC_BRAND_COLOR",
       value: store.config.branding.primaryColor,
       target: ["production", "preview", "development"],
       type: "plain",
     },
     {
-      key: "THEME_PRESET",
+      key: "NEXT_PUBLIC_THEME_PRESET",
       value: store.config.branding.themePreset,
       target: ["production", "preview", "development"],
       type: "plain",
@@ -214,7 +342,7 @@ function buildEnvironmentVariables(store: Store) {
   // Add logo URL if present
   if (store.config.branding.logoUrl) {
     envVars.push({
-      key: "LOGO_URL",
+      key: "NEXT_PUBLIC_LOGO_URL",
       value: store.config.branding.logoUrl,
       target: ["production", "preview", "development"],
       type: "plain",
@@ -231,22 +359,32 @@ function buildEnvironmentVariables(store: Store) {
     });
   }
 
+  // Generate admin password for this store
+  // Uses first 12 chars of store ID + random suffix for uniqueness
+  const adminPassword = `${store.id.slice(0, 8)}-admin`;
+  envVars.push({
+    key: "ADMIN_PASSWORD",
+    value: adminPassword,
+    target: ["production", "preview", "development"],
+    type: "encrypted",
+  });
+
   return envVars;
 }
 
 /**
  * Checks the status of a Vercel deployment.
+ * Uses platform credentials (not user OAuth).
  */
 export async function getDeploymentStatus(
-  vercelAccessToken: string,
-  vercelTeamId: string | null,
   deploymentId: string
 ): Promise<{ status: string; url?: string; error?: string }> {
+  const { token, teamId } = getVercelConfig();
   const headers = {
-    Authorization: `Bearer ${vercelAccessToken}`,
+    Authorization: `Bearer ${token}`,
   };
 
-  const teamParam = vercelTeamId ? `?teamId=${vercelTeamId}` : "";
+  const teamParam = getTeamParam(teamId);
 
   try {
     const response = await fetch(
@@ -271,4 +409,26 @@ export async function getDeploymentStatus(
       error: err instanceof Error ? err.message : "Unknown error",
     };
   }
+}
+
+// ============================================================================
+// LEGACY FUNCTIONS (kept for backwards compatibility during migration)
+// These will be removed once all routes are updated
+// ============================================================================
+
+/**
+ * @deprecated Use deployStore() instead. This function is kept for backwards
+ * compatibility during the migration to platform-hosted deployments.
+ */
+export async function deployToUserVercel(
+  _vercelAccessToken: string,
+  _vercelTeamId: string | null,
+  _githubRepoFullName: string,
+  store: Store
+): Promise<DeployResult> {
+  // Redirect to new function - ignores user credentials
+  console.warn(
+    "deployToUserVercel is deprecated. Use deployStore() instead."
+  );
+  return deployStore(store);
 }

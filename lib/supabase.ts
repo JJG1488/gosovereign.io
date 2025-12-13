@@ -183,7 +183,7 @@ export async function createProduct(
       description: product.description || null,
       price: product.price || 0,
       images: product.images || [],
-      status: "draft",
+      status: "active",
       track_inventory: false,
       inventory_count: 0,
       allow_backorder: false,
