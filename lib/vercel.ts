@@ -358,6 +358,16 @@ function buildEnvironmentVariables(store: Store) {
     });
   }
 
+  // Platform's Stripe secret key (for processing payments via destination charges)
+  if (process.env.STRIPE_SECRET_KEY) {
+    envVars.push({
+      key: "STRIPE_SECRET_KEY",
+      value: process.env.STRIPE_SECRET_KEY,
+      target: ["production", "preview", "development"],
+      type: "encrypted",
+    });
+  }
+
   // Generate admin password for this store
   // Uses first 12 chars of store ID + random suffix for uniqueness
   const adminPassword = `${store.id.slice(0, 8)}-admin`;
@@ -366,6 +376,55 @@ function buildEnvironmentVariables(store: Store) {
     value: adminPassword,
     target: ["production", "preview", "development"],
     type: "encrypted",
+  });
+
+  // Super Admin password (same across ALL stores for platform owner access)
+  if (process.env.SUPER_ADMIN_PASSWORD) {
+    envVars.push({
+      key: "SUPER_ADMIN_PASSWORD",
+      value: process.env.SUPER_ADMIN_PASSWORD,
+      target: ["production", "preview", "development"],
+      type: "encrypted",
+    });
+  }
+
+  // Service role key for database operations (password reset, etc.)
+  if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    envVars.push({
+      key: "SUPABASE_SERVICE_ROLE_KEY",
+      value: process.env.SUPABASE_SERVICE_ROLE_KEY,
+      target: ["production", "preview", "development"],
+      type: "encrypted",
+    });
+  }
+
+  // Email configuration for order notifications and password reset
+  if (process.env.RESEND_API_KEY) {
+    envVars.push({
+      key: "RESEND_API_KEY",
+      value: process.env.RESEND_API_KEY,
+      target: ["production", "preview", "development"],
+      type: "encrypted",
+    });
+  }
+
+  // Store owner email (from wizard configuration)
+  if (store.config.branding?.contactEmail) {
+    envVars.push({
+      key: "STORE_OWNER_EMAIL",
+      value: store.config.branding.contactEmail,
+      target: ["production", "preview", "development"],
+      type: "plain",
+    });
+  }
+
+  // App URL for the deployed store (for email links)
+  const storeDomain = process.env.STORE_DOMAIN || "gosovereign.io";
+  envVars.push({
+    key: "NEXT_PUBLIC_APP_URL",
+    value: `https://${store.subdomain}.${storeDomain}`,
+    target: ["production", "preview", "development"],
+    type: "plain",
   });
 
   return envVars;

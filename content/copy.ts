@@ -171,11 +171,11 @@ export const variantA: CopyVariant = {
   pricing: {
     headline: "The last e-commerce purchase you'll make",
     anchor:
-      "Shopify's cheapest plan costs $468/year. GoSovereign pays for itself in under 2 months — then it's pure profit.",
+      "Shopify's cheapest plan costs $468/year. GoSovereign pays for itself in under 4 months — then it's pure profit.",
     plans: [
       {
-        name: "GoSovereign",
-        price: "$50",
+        name: "Starter",
+        price: "$149",
         priceNote: "one-time",
         features: [
           "Complete e-commerce store",
@@ -183,10 +183,38 @@ export const variantA: CopyVariant = {
           "Stripe payments built-in",
           "Self-hosted (you control it)",
           "30-day email support",
-          "Yours forever — no subscriptions",
+        ],
+        cta: "Get Started",
+        highlighted: false,
+      },
+      {
+        name: "Pro",
+        price: "$299",
+        priceNote: "one-time",
+        features: [
+          "Everything in Starter",
+          "Priority support",
+          "Custom domain setup help",
+          "Advanced analytics",
+          "1-on-1 setup call",
         ],
         cta: "Get Started",
         highlighted: true,
+        badge: "Most Popular",
+      },
+      {
+        name: "Hosted",
+        price: "$149",
+        priceNote: "+ $19/mo hosting",
+        features: [
+          "Everything in Starter",
+          "We host it for you",
+          "Automatic updates",
+          "Daily backups",
+          "99.9% uptime SLA",
+        ],
+        cta: "Get Started",
+        highlighted: false,
       },
     ],
   },
@@ -232,7 +260,7 @@ export const variantA: CopyVariant = {
       {
         question: "How is this different from Shopify?",
         answer:
-          "Shopify charges you $39+ every month forever. We charge you once. After 4 months, we're literally cheaper. After a year, you've saved $300+. After 3 years? You've saved thousands.",
+          "Shopify charges you $39+ every month forever. We charge you once. After 4 months, we're literally cheaper. After a year, you've saved $300+. After 3 years? You've saved over $1,000.",
       },
     ],
   },

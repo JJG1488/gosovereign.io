@@ -1,11 +1,10 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion, useInView, animate } from "framer-motion";
 import { Check, Sparkles } from "lucide-react";
-import { Container, Card, Badge } from "@/components/ui";
-import { CheckoutButton } from "./CheckoutButton";
-import type { PlanType } from "@/lib/checkout";
+import { Container, Card, Badge, Button } from "@/components/ui";
 
 interface Plan {
   name: string;
@@ -21,18 +20,9 @@ interface PricingProps {
   headline: string;
   anchor: string;
   plans: Plan[];
-  variant?: string;
 }
 
-// Map plan names to checkout plan types
-const PLAN_TYPE_MAP: Record<string, PlanType> = {
-  Starter: "starter",
-  Pro: "pro",
-  Hosted: "hosted",
-};
-
 // 3-year cost comparison data
-const SHOPIFY_YEAR_1 = 468;
 const SHOPIFY_YEAR_3 = 1404;
 const GOSOVEREIGN_COST = 149;
 
@@ -40,12 +30,16 @@ export function Pricing({
   headline,
   anchor,
   plans,
-  variant,
 }: PricingProps): React.ReactElement {
+  const router = useRouter();
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const [shopifyCost, setShopifyCost] = useState(0);
   const [hasAnimated, setHasAnimated] = useState(false);
+
+  const handleGetStarted = () => {
+    router.push("/templates");
+  };
 
   // Animate the cost comparison when in view
   useEffect(() => {
@@ -219,15 +213,14 @@ export function Pricing({
                   ))}
                 </ul>
 
-                <CheckoutButton
-                  plan={PLAN_TYPE_MAP[plan.name] || "starter"}
-                  variant={variant}
-                  buttonVariant={plan.highlighted ? "primary" : "secondary"}
+                <Button
+                  variant={plan.highlighted ? "primary" : "secondary"}
                   size="lg"
                   className="w-full"
+                  onClick={handleGetStarted}
                 >
                   {plan.cta}
-                </CheckoutButton>
+                </Button>
               </Card>
             </motion.div>
           ))}

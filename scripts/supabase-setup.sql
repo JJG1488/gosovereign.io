@@ -83,6 +83,11 @@ ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS github_repo TEXT;
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS vercel_project_id TEXT;
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS vercel_deployment_id TEXT;
 
+-- Admin password management (allows resetting password without redeploying)
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS admin_password_hash TEXT;
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS admin_password_reset_token TEXT;
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS admin_password_reset_expires TIMESTAMPTZ;
+
 -- ----------------------------------------------------------------------------
 -- PRODUCTS TABLE
 -- ----------------------------------------------------------------------------

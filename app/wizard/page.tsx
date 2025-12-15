@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { WizardProvider, WizardContainer, useWizard } from "@/components/wizard";
 import {
@@ -59,8 +59,17 @@ function WizardLoader() {
   const [error, setError] = useState<string | null>(null);
   const { isPaid, tier, isLoading: isPaymentLoading } = usePaymentStatus();
 
+  // Guard against double initialization (React StrictMode)
+  const initializingRef = useRef(false);
+
   useEffect(() => {
     async function initializeWizard() {
+      // Prevent double initialization from StrictMode
+      if (initializingRef.current) {
+        return;
+      }
+      initializingRef.current = true;
+
       try {
         // Check if store ID is in URL
         const urlStoreId = searchParams.get("store");
@@ -85,7 +94,8 @@ function WizardLoader() {
         // Get current user
         const user = await getCurrentUser();
         if (!user) {
-          router.push("/auth/login?next=/wizard");
+          // Redirect to signup for new users (not login)
+          router.push("/auth/signup?next=/wizard");
           return;
         }
 

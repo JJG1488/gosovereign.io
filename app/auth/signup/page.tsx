@@ -33,7 +33,7 @@ function SignupForm() {
 
     const supabase = createClient();
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -46,6 +46,14 @@ function SignupForm() {
 
     if (error) {
       setError(error.message);
+      setIsLoading(false);
+      return;
+    }
+
+    // Check if user already exists (Supabase returns empty identities array)
+    // This happens when email confirmation is enabled and user already exists
+    if (data.user && data.user.identities && data.user.identities.length === 0) {
+      setError("An account with this email already exists. Please sign in instead.");
       setIsLoading(false);
       return;
     }
