@@ -88,6 +88,18 @@ ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS admin_password_hash TEXT;
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS admin_password_reset_token TEXT;
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS admin_password_reset_expires TIMESTAMPTZ;
 
+-- Payment tier for feature gating
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS payment_tier TEXT; -- 'starter', 'pro', 'hosted'
+
+-- Subscription tracking for Hosted tier
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS subscription_status TEXT; -- 'active', 'past_due', 'cancelled', 'none'
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS subscription_ends_at TIMESTAMPTZ;
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS can_deploy BOOLEAN DEFAULT true;
+
+-- Index for subscription queries
+CREATE INDEX IF NOT EXISTS idx_stores_payment_tier ON public.stores(payment_tier);
+CREATE INDEX IF NOT EXISTS idx_stores_subscription_status ON public.stores(subscription_status);
+
 -- ----------------------------------------------------------------------------
 -- PRODUCTS TABLE
 -- ----------------------------------------------------------------------------

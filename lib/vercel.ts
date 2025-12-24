@@ -427,6 +427,52 @@ function buildEnvironmentVariables(store: Store) {
     type: "plain",
   });
 
+  // ========================================
+  // Tier-based environment variables
+  // ========================================
+
+  // Payment tier for feature gating
+  const paymentTier = store.payment_tier || "starter";
+  envVars.push({
+    key: "PAYMENT_TIER",
+    value: paymentTier,
+    target: ["production", "preview", "development"],
+    type: "plain",
+  });
+
+  // Tier-specific product limits
+  const maxProducts = paymentTier === "starter" ? "10" : "unlimited";
+  envVars.push({
+    key: "MAX_PRODUCTS",
+    value: maxProducts,
+    target: ["production", "preview", "development"],
+    type: "plain",
+  });
+
+  // Feature flags based on tier (Pro and Hosted get premium features)
+  const isPro = paymentTier === "pro" || paymentTier === "hosted";
+
+  envVars.push({
+    key: "CUSTOM_DOMAIN_ENABLED",
+    value: isPro ? "true" : "false",
+    target: ["production", "preview", "development"],
+    type: "plain",
+  });
+
+  envVars.push({
+    key: "ANALYTICS_ENABLED",
+    value: isPro ? "true" : "false",
+    target: ["production", "preview", "development"],
+    type: "plain",
+  });
+
+  envVars.push({
+    key: "PREMIUM_THEMES_ENABLED",
+    value: isPro ? "true" : "false",
+    target: ["production", "preview", "development"],
+    type: "plain",
+  });
+
   return envVars;
 }
 

@@ -32,6 +32,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Store not found" }, { status: 404 });
     }
 
+    // Check if deployment is restricted (subscription lapsed)
+    if (store.can_deploy === false) {
+      const reason = store.subscription_status === "past_due"
+        ? "Payment failed. Please update your payment method to deploy updates."
+        : store.subscription_status === "cancelled"
+        ? "Subscription cancelled. Resubscribe to deploy updates."
+        : "Deployment is currently restricted for this store.";
+
+      return NextResponse.json(
+        {
+          error: "Deployment restricted",
+          reason,
+          subscription_status: store.subscription_status,
+        },
+        { status: 403 }
+      );
+    }
+
     // Prevent re-deployment if already deployed
     if (store.status === "deployed" && store.deployment_url) {
       return NextResponse.json({

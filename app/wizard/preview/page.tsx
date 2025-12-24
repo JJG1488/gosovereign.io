@@ -13,12 +13,14 @@ import {
   Rocket,
   AlertCircle,
   PartyPopper,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import type { Store, Product, ProductImage } from "@/types/database";
 import { getStore, getStoreProducts } from "@/lib/supabase";
 import { formatPrice } from "@/components/wizard/WizardContext";
 import { usePaymentStatus } from "@/hooks/usePaymentStatus";
+import { useSubscriptionStatus, getSubscriptionWarningMessage } from "@/hooks/useSubscriptionStatus";
 import { UpgradeModal, PaymentStatusBadge } from "@/components/payment";
 
 type DeploymentState =
@@ -42,6 +44,8 @@ function PreviewContent() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const { isPaid, tier, isLoading: isPaymentLoading } = usePaymentStatus();
+  const { subscriptionStatus, canDeploy, subscriptionEndsAt } = useSubscriptionStatus(storeId);
+  const subscriptionWarning = getSubscriptionWarningMessage(subscriptionStatus, subscriptionEndsAt);
 
   useEffect(() => {
     async function loadData() {
@@ -229,6 +233,31 @@ function PreviewContent() {
           isLoading={isPaymentLoading}
         />
       </div>
+
+      {/* Subscription warning banner */}
+      {subscriptionWarning && (
+        <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-amber-200">{subscriptionWarning}</p>
+              {!canDeploy && (
+                <p className="text-sm text-amber-400/80 mt-1">
+                  Deployments are currently disabled.
+                </p>
+              )}
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => router.push("/billing")}
+              className="flex-shrink-0 border-amber-500/50 text-amber-200 hover:bg-amber-500/10"
+            >
+              Manage Billing
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       <div className="text-center mb-12">

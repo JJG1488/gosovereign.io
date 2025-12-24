@@ -33,7 +33,7 @@ const PLAN_CONFIG: Record<
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { plan, variant } = body as { plan: PaymentTier; variant?: string };
+    const { plan, variant, store_id } = body as { plan: PaymentTier; variant?: string; store_id?: string };
 
     if (!plan || !PLAN_CONFIG[plan]) {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
         plan,
         variant: variant || "",
         user_id: user?.id || "",
+        store_id: store_id || "",
       },
       billing_address_collection: "auto",
     };

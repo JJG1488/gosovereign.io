@@ -38,6 +38,12 @@ export interface Store {
   stripe_account_id: string | null;
   deployment_id: string | null;
   deployment_url: string | null;
+  // Payment tier for feature gating
+  payment_tier: PaymentTier | null;
+  // Subscription tracking for Hosted tier
+  subscription_status: "active" | "past_due" | "cancelled" | "none" | null;
+  subscription_ends_at: string | null;
+  can_deploy: boolean;
   // GitHub/Vercel deployment
   github_repo: string | null;
   vercel_project_id: string | null;

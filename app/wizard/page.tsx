@@ -15,6 +15,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Loader2, LogOut } from "lucide-react";
 import { usePaymentStatus } from "@/hooks/usePaymentStatus";
 import { UpgradeModal, PaymentStatusBadge } from "@/components/payment";
+import { slugifyStoreName } from "@/lib/slugify";
 
 function WizardContent() {
   const router = useRouter();
@@ -164,24 +165,91 @@ function WizardLoader() {
           }
         }
 
-        // Check if user has an existing store
+        // Check if user has existing stores
         const existingStore = await getUserStore(user.id);
 
+        // BOGO deal: 2 stores allowed until Feb 1, 2026
+        const BOGO_DEADLINE = new Date("2026-02-01T00:00:00Z");
+        const isBogoPeriod = Date.now() < BOGO_DEADLINE.getTime();
+        const MAX_STORES = isBogoPeriod ? 2 : 1;
+
+        // Count user's stores
+        const { count: storeCount } = await supabase
+          .from("stores")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id);
+
         if (existingStore) {
+          // Check if trying to create a new store beyond limit
+          if ((storeCount || 0) >= MAX_STORES && !urlStoreId) {
+            // Already at store limit, redirect to existing store
+            setTemplate(existingStore.template || "goods");
+            setStoreId(existingStore.id);
+            router.replace(`/wizard?store=${existingStore.id}`);
+            setIsLoading(false);
+            return;
+          }
+
           // Resume existing store - use its template
           setTemplate(existingStore.template || "goods");
           setStoreId(existingStore.id);
           router.replace(`/wizard?store=${existingStore.id}`);
         } else {
           // Create new store with selected template
-          const subdomain = `store-${Date.now()}`;
           const storeName = selectedTemplate === "brochure" ? "My Site" :
                            selectedTemplate === "services" ? "My Business" : "My Store";
+
+          // Generate subdomain from store name (will be updated when user changes store name)
+          let subdomain = slugifyStoreName(storeName);
+
+          // Check availability and add suffix if needed
+          try {
+            const checkRes = await fetch(`/api/subdomain/check?subdomain=${encodeURIComponent(subdomain)}`);
+            const checkData = await checkRes.json();
+            if (!checkData.available) {
+              // Add timestamp suffix if default name is taken
+              subdomain = `${subdomain}-${Date.now().toString(36).slice(-4)}`;
+            }
+          } catch {
+            // If check fails, add unique suffix anyway
+            subdomain = `${subdomain}-${Date.now().toString(36).slice(-4)}`;
+          }
+
           const newStore = await createStore(user.id, storeName, subdomain, selectedTemplate);
 
           if (newStore) {
             // Create wizard progress record
             await createWizardProgress(newStore.id);
+
+            // Propagate user's payment tier to new store if they paid before creating a store
+            const supabase = createClient();
+            const { data: userProfile } = await supabase
+              .from("users")
+              .select("payment_tier")
+              .eq("id", user.id)
+              .single();
+
+            if (userProfile?.payment_tier) {
+              // Check if any existing stores already have this tier applied
+              const { data: storesWithTier } = await supabase
+                .from("stores")
+                .select("id")
+                .eq("user_id", user.id)
+                .not("payment_tier", "is", null);
+
+              // If no stores have tier applied yet, apply to this new store
+              if (!storesWithTier || storesWithTier.length === 0) {
+                await supabase
+                  .from("stores")
+                  .update({
+                    payment_tier: userProfile.payment_tier,
+                    subscription_status: userProfile.payment_tier === "hosted" ? "active" : "none",
+                    can_deploy: true,
+                  })
+                  .eq("id", newStore.id);
+                console.log("Propagated payment tier to new store:", userProfile.payment_tier);
+              }
+            }
 
             setStoreId(newStore.id);
             router.replace(`/wizard?store=${newStore.id}`);
@@ -207,8 +275,8 @@ function WizardLoader() {
     router.push("/auth/login");
   };
 
-  // Shared header component for all states
-  const Header = () => (
+  // Inline header JSX to avoid component-during-render issue
+  const headerJSX = (
     <header className="border-b border-navy-700 bg-navy-800/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
@@ -232,7 +300,7 @@ function WizardLoader() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-navy-900">
-        <Header />
+        {headerJSX}
         <div className="flex items-center justify-center" style={{ minHeight: "calc(100vh - 64px)" }}>
           <div className="text-center">
             <Loader2 className="w-8 h-8 text-emerald-500 animate-spin mx-auto mb-4" />
@@ -246,7 +314,7 @@ function WizardLoader() {
   if (error) {
     return (
       <div className="min-h-screen bg-navy-900">
-        <Header />
+        {headerJSX}
         <div className="flex items-center justify-center" style={{ minHeight: "calc(100vh - 64px)" }}>
           <div className="text-center">
             <p className="text-red-400 mb-4">{error}</p>
@@ -265,7 +333,7 @@ function WizardLoader() {
   if (!storeId) {
     return (
       <div className="min-h-screen bg-navy-900">
-        <Header />
+        {headerJSX}
         <div className="flex items-center justify-center" style={{ minHeight: "calc(100vh - 64px)" }}>
           <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
         </div>
@@ -275,7 +343,7 @@ function WizardLoader() {
 
   return (
     <div className="min-h-screen bg-navy-900">
-      <Header />
+      {headerJSX}
       <main className="py-8 px-4">
         <WizardProvider storeId={storeId} template={template}>
           <WizardContent />
