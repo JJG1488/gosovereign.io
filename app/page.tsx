@@ -10,6 +10,7 @@ import {
   FAQ,
   FinalCTA,
   Footer,
+  BogoPromo,
 } from "@/components/landing";
 
 export const metadata = {
@@ -24,6 +25,7 @@ export default function HomePage(): React.ReactElement {
   return (
     <>
       <Navigation logo={copy.nav.logo} cta={copy.nav.cta} />
+      <BogoPromo />
 
       <main>
         <Hero

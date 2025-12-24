@@ -16,6 +16,8 @@ import { Loader2, LogOut } from "lucide-react";
 import { usePaymentStatus } from "@/hooks/usePaymentStatus";
 import { UpgradeModal, PaymentStatusBadge } from "@/components/payment";
 import { slugifyStoreName } from "@/lib/slugify";
+import { BogoBadge, StoreLimitModal } from "@/components/ui";
+import { isBogoPeriod, getMaxStores } from "@/lib/bogo";
 
 function WizardContent() {
   const router = useRouter();
@@ -59,6 +61,8 @@ function WizardLoader() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { isPaid, tier, isLoading: isPaymentLoading } = usePaymentStatus();
+  const [userStoreCount, setUserStoreCount] = useState<number>(0);
+  const [showStoreLimitModal, setShowStoreLimitModal] = useState(false);
 
   // Guard against double initialization (React StrictMode)
   const initializingRef = useRef(false);
@@ -169,9 +173,7 @@ function WizardLoader() {
         const existingStore = await getUserStore(user.id);
 
         // BOGO deal: 2 stores allowed until Feb 1, 2026
-        const BOGO_DEADLINE = new Date("2026-02-01T00:00:00Z");
-        const isBogoPeriod = Date.now() < BOGO_DEADLINE.getTime();
-        const MAX_STORES = isBogoPeriod ? 2 : 1;
+        const MAX_STORES = getMaxStores();
 
         // Count user's stores
         const { count: storeCount } = await supabase
@@ -179,13 +181,16 @@ function WizardLoader() {
           .select("id", { count: "exact", head: true })
           .eq("user_id", user.id);
 
+        // Track store count for UI
+        setUserStoreCount(storeCount || 0);
+
         if (existingStore) {
           // Check if trying to create a new store beyond limit
           if ((storeCount || 0) >= MAX_STORES && !urlStoreId) {
-            // Already at store limit, redirect to existing store
+            // Show store limit modal instead of silent redirect
             setTemplate(existingStore.template || "goods");
             setStoreId(existingStore.id);
-            router.replace(`/wizard?store=${existingStore.id}`);
+            setShowStoreLimitModal(true);
             setIsLoading(false);
             return;
           }
@@ -284,6 +289,7 @@ function WizardLoader() {
             <span className="text-xl font-bold text-white">GoSovereign</span>
             <span className="text-xs text-gray-500 bg-navy-700 px-2 py-1 rounded">Setup</span>
             <PaymentStatusBadge isPaid={isPaid} tier={tier} isLoading={isPaymentLoading} />
+            {isBogoPeriod() && <BogoBadge storeCount={userStoreCount} maxStores={getMaxStores()} />}
           </div>
           <button
             onClick={handleSignOut}
@@ -341,6 +347,14 @@ function WizardLoader() {
     );
   }
 
+  const handleManageStores = () => {
+    // Close modal and redirect to first store
+    setShowStoreLimitModal(false);
+    if (storeId) {
+      router.replace(`/wizard?store=${storeId}`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-navy-900">
       {headerJSX}
@@ -349,6 +363,19 @@ function WizardLoader() {
           <WizardContent />
         </WizardProvider>
       </main>
+
+      {/* Store Limit Modal */}
+      <StoreLimitModal
+        isOpen={showStoreLimitModal}
+        onClose={() => {
+          setShowStoreLimitModal(false);
+          if (storeId) {
+            router.replace(`/wizard?store=${storeId}`);
+          }
+        }}
+        onManageStores={handleManageStores}
+        storeCount={userStoreCount}
+      />
     </div>
   );
 }
