@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 import type { PaymentTier } from "@/types/database";
+import { sendPlatformPaymentNotification } from "@/lib/email";
 
 // Use service role client to bypass RLS
 function getSupabaseAdmin() {
@@ -324,6 +325,34 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
     } else {
       console.log("Recorded purchase in database");
     }
+
+    // Step 3.5: Send payment notification to platform owner
+    const targetStoreId = selectedStoreId || (userStores?.length === 1 ? userStores[0].id : null);
+    let storeName: string | null = null;
+    let storeUrl: string | null = null;
+
+    if (targetStoreId) {
+      const { data: storeData } = await supabase
+        .from("stores")
+        .select("name, deployment_url, config")
+        .eq("id", targetStoreId)
+        .single();
+
+      if (storeData) {
+        storeName = storeData.config?.storeName || storeData.name || null;
+        storeUrl = storeData.deployment_url || null;
+      }
+    }
+
+    await sendPlatformPaymentNotification({
+      userId: userId!,
+      storeId: targetStoreId,
+      storeName,
+      userEmail: email,
+      tier: plan,
+      amount: session.amount_total || 0,
+      storeUrl,
+    });
 
     // Step 4: Send magic link for passwordless login (only for new users or direct purchases)
     if (!existingUserId) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@/lib/supabase/server";
 import type { PaymentTier } from "@/types/database";
+import { getStarterPrice, isDiscountActive } from "@/lib/discount";
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -9,39 +10,46 @@ function getStripe() {
   });
 }
 
-const PLAN_CONFIG: Record<
-  PaymentTier,
-  { amount: number; name: string; description: string }
-> = {
-  starter: {
-    amount: 14900, // $149
-    name: "GoSovereign Starter",
-    description: "One-time purchase - Full ownership of your e-commerce store",
-  },
-  pro: {
-    amount: 29900, // $299
-    name: "GoSovereign Pro",
-    description: "One-time purchase - Premium features & priority support",
-  },
-  hosted: {
-    amount: 14900, // $149 setup fee
-    name: "GoSovereign Hosted",
-    description: "One-time setup fee - Includes managed hosting",
-  },
-};
+// Get plan configuration with dynamic pricing for Starter tier
+function getPlanConfig(): Record<PaymentTier, { amount: number; name: string; description: string }> {
+  const starterPrice = getStarterPrice();
+  const discountActive = isDiscountActive();
+
+  return {
+    starter: {
+      amount: starterPrice,
+      name: discountActive ? "GoSovereign Starter (Flash Sale)" : "GoSovereign Starter",
+      description: discountActive
+        ? "Limited time offer - Full ownership of your e-commerce store"
+        : "One-time purchase - Full ownership of your e-commerce store",
+    },
+    pro: {
+      amount: 29900, // $299
+      name: "GoSovereign Pro",
+      description: "One-time purchase - Premium features & priority support",
+    },
+    hosted: {
+      amount: 14900, // $149 setup fee
+      name: "GoSovereign Hosted",
+      description: "One-time setup fee - Includes managed hosting",
+    },
+  };
+}
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { plan, variant, store_id } = body as { plan: PaymentTier; variant?: string; store_id?: string };
 
-    if (!plan || !PLAN_CONFIG[plan]) {
+    const planConfig = getPlanConfig();
+
+    if (!plan || !planConfig[plan]) {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
     }
 
     const origin =
       request.headers.get("origin") || process.env.NEXT_PUBLIC_APP_URL;
-    const config = PLAN_CONFIG[plan];
+    const config = planConfig[plan];
 
     // Check if user is logged in (for linking purchase to existing account)
     const supabase = await createClient();

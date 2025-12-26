@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { deployStore } from "@/lib/vercel";
+import { generateResetToken, sendStorePasswordResetEmail } from "@/lib/email";
 
 /**
  * One-click deployment endpoint.
@@ -127,6 +128,50 @@ export async function POST(req: NextRequest) {
         updated_at: new Date().toISOString(),
       })
       .eq("id", store.id);
+
+    // Step: Trigger admin password reset for store owner
+    try {
+      const resetToken = generateResetToken();
+      const resetExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+      // Store reset token in database
+      await supabase
+        .from("stores")
+        .update({
+          admin_password_reset_token: resetToken,
+          admin_password_reset_expires: resetExpires.toISOString(),
+        })
+        .eq("id", store.id);
+
+      // Get store owner email
+      const ownerEmail = store.config?.contactEmail || user.email;
+      const storeName = store.config?.storeName || store.name || "Your Store";
+
+      if (ownerEmail && deployResult.storeUrl) {
+        await sendStorePasswordResetEmail({
+          toEmail: ownerEmail,
+          storeName,
+          storeUrl: deployResult.storeUrl,
+          resetToken,
+        });
+
+        await supabase.from("deployment_logs").insert({
+          store_id: store.id,
+          step: "password_reset_email",
+          status: "completed",
+          message: `Password reset email sent to ${ownerEmail}`,
+        });
+      }
+    } catch (emailError) {
+      console.error("Failed to send password reset email:", emailError);
+      // Don't fail deployment if email fails
+      await supabase.from("deployment_logs").insert({
+        store_id: store.id,
+        step: "password_reset_email",
+        status: "failed",
+        message: "Failed to send password reset email",
+      });
+    }
 
     return NextResponse.json({
       success: true,

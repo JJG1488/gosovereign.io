@@ -257,6 +257,58 @@ CREATE TABLE IF NOT EXISTS public.deployment_logs (
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
+-- ----------------------------------------------------------------------------
+-- STORE SETTINGS TABLE (for admin-configurable content)
+-- ----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS public.store_settings (
+  store_id UUID PRIMARY KEY REFERENCES public.stores(id) ON DELETE CASCADE,
+  settings JSONB DEFAULT '{}'::jsonb,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ----------------------------------------------------------------------------
+-- NEWSLETTER SUBSCRIBERS TABLE
+-- ----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS public.newsletter_subscribers (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  store_id UUID NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  subscribed_at TIMESTAMPTZ DEFAULT NOW(),
+  unsubscribed_at TIMESTAMPTZ,
+  UNIQUE(store_id, email)
+);
+
+-- ----------------------------------------------------------------------------
+-- ADMIN SESSIONS TABLE (replaces in-memory token storage)
+-- ----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS public.admin_sessions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  store_id UUID NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
+  token TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  expires_at TIMESTAMPTZ NOT NULL
+);
+
+-- ----------------------------------------------------------------------------
+-- PRODUCT REVIEWS TABLE
+-- ----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS public.product_reviews (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  store_id UUID NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
+  product_id UUID REFERENCES public.products(id) ON DELETE CASCADE,
+  author_name TEXT NOT NULL,
+  rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  title TEXT,
+  body TEXT,
+  is_featured BOOLEAN DEFAULT false,
+  is_verified BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ============================================================================
 -- 3. INDEXES (IF NOT EXISTS)
 -- ============================================================================
@@ -292,6 +344,22 @@ CREATE INDEX IF NOT EXISTS idx_users_github_username ON public.users(github_user
 CREATE INDEX IF NOT EXISTS idx_deployment_logs_store ON public.deployment_logs(store_id);
 CREATE INDEX IF NOT EXISTS idx_deployment_logs_created ON public.deployment_logs(created_at DESC);
 
+-- Store Settings
+CREATE INDEX IF NOT EXISTS idx_store_settings_store ON public.store_settings(store_id);
+
+-- Newsletter Subscribers
+CREATE INDEX IF NOT EXISTS idx_newsletter_subscribers_store ON public.newsletter_subscribers(store_id);
+CREATE INDEX IF NOT EXISTS idx_newsletter_subscribers_email ON public.newsletter_subscribers(email);
+
+-- Admin Sessions
+CREATE INDEX IF NOT EXISTS idx_admin_sessions_store ON public.admin_sessions(store_id);
+CREATE INDEX IF NOT EXISTS idx_admin_sessions_token ON public.admin_sessions(token);
+CREATE INDEX IF NOT EXISTS idx_admin_sessions_expires ON public.admin_sessions(expires_at);
+
+-- Product Reviews
+CREATE INDEX IF NOT EXISTS idx_product_reviews_store ON public.product_reviews(store_id);
+CREATE INDEX IF NOT EXISTS idx_product_reviews_product ON public.product_reviews(product_id);
+
 -- ============================================================================
 -- 4. ROW LEVEL SECURITY
 -- ============================================================================
@@ -306,6 +374,10 @@ ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.wizard_progress ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.purchases ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.deployment_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.store_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.newsletter_subscribers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.admin_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.product_reviews ENABLE ROW LEVEL SECURITY;
 
 -- ----------------------------------------------------------------------------
 -- Users Policies (drop and recreate)
@@ -460,6 +532,65 @@ CREATE POLICY "Users can view own deployment logs"
   USING (
     store_id IN (SELECT id FROM public.stores WHERE user_id = auth.uid())
   );
+
+-- ----------------------------------------------------------------------------
+-- Store Settings Policies
+-- Note: Deployed stores use service role to access these
+-- ----------------------------------------------------------------------------
+
+DROP POLICY IF EXISTS "Service role full access to store_settings" ON public.store_settings;
+DROP POLICY IF EXISTS "Users can view own store settings" ON public.store_settings;
+
+CREATE POLICY "Service role full access to store_settings"
+  ON public.store_settings FOR ALL
+  TO service_role
+  USING (true);
+
+CREATE POLICY "Users can view own store settings"
+  ON public.store_settings FOR SELECT
+  USING (
+    store_id IN (SELECT id FROM public.stores WHERE user_id = auth.uid())
+  );
+
+-- ----------------------------------------------------------------------------
+-- Newsletter Subscribers Policies
+-- Note: Deployed stores use service role to insert subscribers
+-- ----------------------------------------------------------------------------
+
+DROP POLICY IF EXISTS "Service role full access to newsletter_subscribers" ON public.newsletter_subscribers;
+
+CREATE POLICY "Service role full access to newsletter_subscribers"
+  ON public.newsletter_subscribers FOR ALL
+  TO service_role
+  USING (true);
+
+-- ----------------------------------------------------------------------------
+-- Admin Sessions Policies
+-- Note: Deployed stores use service role for session management
+-- ----------------------------------------------------------------------------
+
+DROP POLICY IF EXISTS "Service role full access to admin_sessions" ON public.admin_sessions;
+
+CREATE POLICY "Service role full access to admin_sessions"
+  ON public.admin_sessions FOR ALL
+  TO service_role
+  USING (true);
+
+-- ----------------------------------------------------------------------------
+-- Product Reviews Policies
+-- ----------------------------------------------------------------------------
+
+DROP POLICY IF EXISTS "Service role full access to product_reviews" ON public.product_reviews;
+DROP POLICY IF EXISTS "Public can view reviews" ON public.product_reviews;
+
+CREATE POLICY "Service role full access to product_reviews"
+  ON public.product_reviews FOR ALL
+  TO service_role
+  USING (true);
+
+CREATE POLICY "Public can view reviews"
+  ON public.product_reviews FOR SELECT
+  USING (true);
 
 -- ============================================================================
 -- 5. FUNCTIONS (CREATE OR REPLACE)

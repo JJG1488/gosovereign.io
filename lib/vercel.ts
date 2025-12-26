@@ -416,6 +416,13 @@ function buildEnvironmentVariables(store: Store) {
       target: ["production", "preview", "development"],
       type: "plain",
     });
+    // Public contact email for client-side display on contact page
+    envVars.push({
+      key: "NEXT_PUBLIC_CONTACT_EMAIL",
+      value: store.config.branding.contactEmail,
+      target: ["production", "preview", "development"],
+      type: "plain",
+    });
   }
 
   // App URL for the deployed store (for email links)

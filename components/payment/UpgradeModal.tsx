@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Check, Rocket, Crown, Cloud, ChevronLeft, Loader2 } from "lucide-react";
+import { X, Check, Rocket, Crown, Cloud, ChevronLeft, Loader2, Zap } from "lucide-react";
 import type { PaymentTier } from "@/types/database";
 import { StoreSelector } from "./StoreSelector";
 import { createClient } from "@/lib/supabase/client";
+import { isDiscountActive, getStarterPrice, NORMAL_STARTER_PRICE, getDiscountDaysRemaining } from "@/lib/discount";
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -16,61 +17,72 @@ interface UpgradeModalProps {
 
 type ModalStep = "store-selection" | "plan-selection";
 
-const PLANS: {
+interface PlanConfig {
   tier: PaymentTier;
   name: string;
   price: number;
+  originalPrice?: number;
   description: string;
   icon: React.ReactNode;
   features: string[];
   popular?: boolean;
-}[] = [
-  {
-    tier: "starter",
-    name: "Starter",
-    price: 149,
-    description: "Perfect for getting started",
-    icon: <Rocket className="w-6 h-6" />,
-    features: [
-      "Full store ownership",
-      "All core features",
-      "3 template options",
-      "Stripe integration",
-      "Email support",
-    ],
-  },
-  {
-    tier: "pro",
-    name: "Pro",
-    price: 299,
-    description: "For serious entrepreneurs",
-    icon: <Crown className="w-6 h-6" />,
-    features: [
-      "Everything in Starter",
-      "Priority support",
-      "Custom domain setup",
-      "Advanced analytics",
-      "Premium templates",
-      "1-on-1 setup call",
-    ],
-    popular: true,
-  },
-  {
-    tier: "hosted",
-    name: "Hosted",
-    price: 149,
-    description: "$149 setup + $19/mo hosting",
-    icon: <Cloud className="w-6 h-6" />,
-    features: [
-      "Everything in Starter",
-      "Managed hosting",
-      "Automatic updates",
-      "Daily backups",
-      "SSL included",
-      "99.9% uptime SLA",
-    ],
-  },
-];
+  flashSale?: boolean;
+}
+
+function getPlans(): PlanConfig[] {
+  const discountActive = isDiscountActive();
+  const starterPrice = getStarterPrice() / 100; // Convert cents to dollars
+
+  return [
+    {
+      tier: "starter",
+      name: "Starter",
+      price: starterPrice,
+      originalPrice: discountActive ? NORMAL_STARTER_PRICE / 100 : undefined,
+      description: discountActive ? "Flash Sale - Limited Time!" : "Perfect for getting started",
+      icon: <Rocket className="w-6 h-6" />,
+      features: [
+        "Full store ownership",
+        "All core features",
+        "3 template options",
+        "Stripe integration",
+        "Email support",
+      ],
+      flashSale: discountActive,
+    },
+    {
+      tier: "pro",
+      name: "Pro",
+      price: 299,
+      description: "For serious entrepreneurs",
+      icon: <Crown className="w-6 h-6" />,
+      features: [
+        "Everything in Starter",
+        "Priority support",
+        "Custom domain setup",
+        "Advanced analytics",
+        "Premium templates",
+        "1-on-1 setup call",
+      ],
+      popular: true,
+    },
+    {
+      tier: "hosted",
+      name: "Hosted",
+      price: 149,
+      description: "$149 setup + $19/mo hosting",
+      icon: <Cloud className="w-6 h-6" />,
+      features: [
+        "Everything in Starter",
+        "Managed hosting",
+        "Automatic updates",
+        "Daily backups",
+        "SSL included",
+        "99.9% uptime SLA",
+      ],
+    },
+  ];
+}
 
 export function UpgradeModal({ isOpen, onClose, context = "generate", storeId: propStoreId }: UpgradeModalProps) {
   const [isLoading, setIsLoading] = useState<PaymentTier | null>(null);
@@ -275,16 +287,26 @@ export function UpgradeModal({ isOpen, onClose, context = "generate", storeId: p
             {/* Plans */}
             <div className="p-8 pt-4">
               <div className="grid md:grid-cols-3 gap-6">
-                {PLANS.map((plan) => (
+                {getPlans().map((plan) => (
                   <div
                     key={plan.tier}
                     className={`relative rounded-xl p-6 transition-all ${
-                      plan.popular
+                      plan.flashSale
+                        ? "bg-amber-500/10 border-2 border-amber-500"
+                        : plan.popular
                         ? "bg-emerald-500/10 border-2 border-emerald-500"
                         : "bg-navy-700/50 border border-navy-600 hover:border-navy-500"
                     }`}
                   >
-                    {plan.popular && (
+                    {plan.flashSale && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                        <span className="bg-amber-500 text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
+                          <Zap className="w-3 h-3" />
+                          Flash Sale - {getDiscountDaysRemaining()}d left
+                        </span>
+                      </div>
+                    )}
+                    {plan.popular && !plan.flashSale && (
                       <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                         <span className="bg-emerald-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
                           Most Popular
@@ -295,7 +317,9 @@ export function UpgradeModal({ isOpen, onClose, context = "generate", storeId: p
                     <div className="flex items-center gap-3 mb-4">
                       <div
                         className={`p-2 rounded-lg ${
-                          plan.popular
+                          plan.flashSale
+                            ? "bg-amber-500/20 text-amber-400"
+                            : plan.popular
                             ? "bg-emerald-500/20 text-emerald-400"
                             : "bg-navy-600 text-gray-300"
                         }`}
@@ -304,12 +328,17 @@ export function UpgradeModal({ isOpen, onClose, context = "generate", storeId: p
                       </div>
                       <div>
                         <h3 className="font-semibold text-white">{plan.name}</h3>
-                        <p className="text-sm text-gray-400">{plan.description}</p>
+                        <p className={`text-sm ${plan.flashSale ? "text-amber-400" : "text-gray-400"}`}>{plan.description}</p>
                       </div>
                     </div>
 
                     <div className="mb-6">
-                      <span className="text-3xl font-bold text-white">
+                      {plan.originalPrice && (
+                        <span className="text-lg text-gray-500 line-through mr-2">
+                          ${plan.originalPrice}
+                        </span>
+                      )}
+                      <span className={`text-3xl font-bold ${plan.flashSale ? "text-amber-400" : "text-white"}`}>
                         ${plan.price}
                       </span>
                       {plan.tier !== "hosted" && (
@@ -330,7 +359,9 @@ export function UpgradeModal({ isOpen, onClose, context = "generate", storeId: p
                       onClick={() => handleSelectPlan(plan.tier)}
                       disabled={isLoading !== null}
                       className={`w-full py-3 rounded-lg font-semibold transition-all ${
-                        plan.popular
+                        plan.flashSale
+                          ? "bg-amber-500 hover:bg-amber-600 text-white"
+                          : plan.popular
                           ? "bg-emerald-500 hover:bg-emerald-600 text-white"
                           : "bg-navy-600 hover:bg-navy-500 text-white"
                       } disabled:opacity-50 disabled:cursor-not-allowed`}
