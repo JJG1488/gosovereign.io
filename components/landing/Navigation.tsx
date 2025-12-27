@@ -7,6 +7,7 @@ import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui";
 import { Container } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 interface NavigationProps {
   logo: string;
@@ -49,12 +50,12 @@ export function Navigation({ logo, cta, ctaHref = "/templates" }: NavigationProp
         <Container>
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <a
+            <Link
               href="/"
               className="text-xl md:text-2xl font-bold text-gray-100 hover:text-emerald-400 transition-colors"
             >
               {logo}
-            </a>
+            </Link>
 
             {/* Desktop CTA */}
             <div className="hidden md:block">

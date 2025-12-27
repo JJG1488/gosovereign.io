@@ -1,21 +1,27 @@
 "use client";
 
 import { Mail, Check, AlertCircle } from "lucide-react";
-import { useState, useEffect } from "react";
+// import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useWizard } from "../WizardContext";
+import { useMemo } from "react";
+
+// Simple email regex for validation
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function ContactStep() {
   const { state, updateConfig } = useWizard();
-  const [isValid, setIsValid] = useState(false);
+  // const [isValid, setIsValid] = useState(false);
 
+  // useEffect(() => {
+  //   // Simple email validation
+  //   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  //   setIsValid(emailRegex.test(email));
+  // }, [email]);
+
+  // Render the contact form step
   const email = state.config.contactEmail ?? "";
-
-  useEffect(() => {
-    // Simple email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    setIsValid(emailRegex.test(email));
-  }, [email]);
+  const isValid = useMemo(() => EMAIL_REGEX.test(email), [email]);
 
   return (
     <div className="space-y-6">

@@ -3,8 +3,15 @@
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useInView, animate } from "framer-motion";
-import { Check, Sparkles } from "lucide-react";
+import { Check, Sparkles, Zap } from "lucide-react";
 import { Container, Card, Badge, Button } from "@/components/ui";
+import {
+  isDiscountActive,
+  getStarterPrice,
+  getStarterPriceDisplay,
+  getDiscountDaysRemaining,
+  NORMAL_STARTER_PRICE,
+} from "@/lib/discount";
 
 interface Plan {
   name: string;
@@ -24,7 +31,6 @@ interface PricingProps {
 
 // 3-year cost comparison data
 const SHOPIFY_YEAR_3 = 1404;
-const GOSOVEREIGN_COST = 149;
 
 export function Pricing({
   headline,
@@ -37,18 +43,36 @@ export function Pricing({
   const [shopifyCost, setShopifyCost] = useState(0);
   const [hasAnimated, setHasAnimated] = useState(false);
 
+  // Flash sale state
+  const discountActive = isDiscountActive();
+  const currentStarterPrice = getStarterPrice() / 100; // Convert cents to dollars
+  const daysRemaining = getDiscountDaysRemaining();
+
   const handleGetStarted = () => {
     router.push("/templates");
   };
 
-  // Animate the cost comparison when in view
+  // // Animate the cost comparison when in view
+  // useEffect(() => {
+  //   if (isInView && !hasAnimated) {
+  //     setHasAnimated(true);
+  //     const controls = animate(0, SHOPIFY_YEAR_3, {
+  //       duration: 2,
+  //       ease: "easeOut",
+  //       onUpdate: (value) => setShopifyCost(Math.round(value)),
+  //     });
+  //     return () => controls.stop();
+  //   }
+  // }, [isInView, hasAnimated]);
+
+
   useEffect(() => {
     if (isInView && !hasAnimated) {
-      setHasAnimated(true);
       const controls = animate(0, SHOPIFY_YEAR_3, {
         duration: 2,
         ease: "easeOut",
         onUpdate: (value) => setShopifyCost(Math.round(value)),
+        onComplete: () => setHasAnimated(true),
       });
       return () => controls.stop();
     }
@@ -113,9 +137,21 @@ export function Pricing({
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-gray-400">GoSovereign</span>
-                  <span className="text-2xl font-bold text-emerald-400">
-                    ${GOSOVEREIGN_COST}
-                  </span>
+                  <div className="flex items-baseline gap-2">
+                    {discountActive && (
+                      <span className="text-lg text-gray-500 line-through">
+                        ${NORMAL_STARTER_PRICE / 100}
+                      </span>
+                    )}
+                    <span className="text-2xl font-bold text-emerald-400">
+                      ${currentStarterPrice}
+                    </span>
+                    {discountActive && (
+                      <span className="text-sm text-amber-400 font-medium">
+                        SALE
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="h-8 bg-navy-900 rounded-lg overflow-hidden">
                   <motion.div
@@ -124,7 +160,7 @@ export function Pricing({
                       isInView
                         ? {
                             width: `${
-                              (GOSOVEREIGN_COST / SHOPIFY_YEAR_3) * 100
+                              (currentStarterPrice / SHOPIFY_YEAR_3) * 100
                             }%`,
                           }
                         : {}
@@ -149,7 +185,7 @@ export function Pricing({
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/30">
                 <Sparkles className="w-4 h-4 text-emerald-400" />
                 <span className="text-emerald-400 font-semibold">
-                  Save ${(SHOPIFY_YEAR_3 - GOSOVEREIGN_COST).toLocaleString()}+
+                  Save ${(SHOPIFY_YEAR_3 - currentStarterPrice).toLocaleString()}+
                   over 3 years
                 </span>
               </div>
@@ -159,7 +195,18 @@ export function Pricing({
 
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-3 gap-6 lg:gap-8 mb-12">
-          {plans.map((plan, index) => (
+          {plans.map((plan, index) => {
+            // Check if this is the Starter plan and apply flash sale pricing
+            const isStarter = plan.name === "Starter";
+            const showFlashSale = isStarter && discountActive;
+            const displayPrice = showFlashSale
+              ? getStarterPriceDisplay()
+              : plan.price;
+            const badge = showFlashSale
+              ? `${daysRemaining}d left`
+              : plan.badge;
+
+            return (
             <motion.div
               key={plan.name}
               initial={{ opacity: 0, y: 40 }}
@@ -173,10 +220,20 @@ export function Pricing({
               <Card
                 variant={plan.highlighted ? "highlighted" : "default"}
                 className={`h-full flex flex-col ${
-                  plan.highlighted ? "relative" : ""
+                  plan.highlighted || showFlashSale ? "relative" : ""
                 }`}
               >
-                {plan.badge && (
+                {/* Flash sale badge for Starter */}
+                {showFlashSale && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-full shadow-lg">
+                      <Zap className="w-3 h-3" />
+                      FLASH SALE • {daysRemaining}d left
+                    </div>
+                  </div>
+                )}
+                {/* Regular badge for other plans */}
+                {plan.badge && !showFlashSale && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <Badge variant="success">{plan.badge}</Badge>
                   </div>
@@ -186,13 +243,23 @@ export function Pricing({
                   <h3 className="text-xl font-semibold text-gray-100 mb-2">
                     {plan.name}
                   </h3>
-                  <div className="flex items-baseline justify-center gap-1">
+                  <div className="flex items-baseline justify-center gap-2">
+                    {/* Strikethrough original price during flash sale */}
+                    {showFlashSale && (
+                      <span className="text-2xl text-gray-500 line-through">
+                        {plan.price}
+                      </span>
+                    )}
                     <span
                       className={`text-4xl md:text-5xl font-bold ${
-                        plan.highlighted ? "text-emerald-400" : "text-gray-100"
+                        showFlashSale
+                          ? "text-amber-400"
+                          : plan.highlighted
+                          ? "text-emerald-400"
+                          : "text-gray-100"
                       }`}
                     >
-                      {plan.price}
+                      {displayPrice}
                     </span>
                   </div>
                   <span className="text-sm text-gray-500">{plan.priceNote}</span>
@@ -223,7 +290,8 @@ export function Pricing({
                 </Button>
               </Card>
             </motion.div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Anchor line */}

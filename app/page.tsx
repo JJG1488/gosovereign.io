@@ -24,9 +24,10 @@ export default function HomePage(): React.ReactElement {
 
   return (
     <>
-      <Navigation logo={copy.nav.logo} cta={copy.nav.cta} />
-      <BogoPromo />
+      <BogoPromo className="bogopromo" />
 
+      <Navigation logo={copy.nav.logo} cta={copy.nav.cta} />
+     
       <main>
         <Hero
           headline={copy.hero.headline}

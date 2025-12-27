@@ -6,18 +6,21 @@ import { WizardProvider, WizardContainer, useWizard } from "@/components/wizard"
 import {
   createStore,
   getUserStore,
+  getUserStores,
   createWizardProgress,
   getCurrentUser,
   getStore,
 } from "@/lib/supabase";
-import type { StoreTemplate } from "@/types/database";
+import type { StoreTemplate, PaymentTier } from "@/types/database";
 import { createClient } from "@/lib/supabase/client";
-import { Loader2, LogOut } from "lucide-react";
+import { Loader2, ExternalLink, Copy, Check } from "lucide-react";
 import { usePaymentStatus } from "@/hooks/usePaymentStatus";
-import { UpgradeModal, PaymentStatusBadge } from "@/components/payment";
+import { UpgradeModal } from "@/components/payment";
 import { slugifyStoreName } from "@/lib/slugify";
-import { BogoBadge, StoreLimitModal } from "@/components/ui";
-import { isBogoPeriod, getMaxStores } from "@/lib/bogo";
+import { StoreLimitModal, NewStoreModal } from "@/components/ui";
+import { AppHeader } from "@/components/layout";
+import type { StoreOption } from "@/components/layout";
+import { getMaxStores } from "@/lib/bogo";
 
 function WizardContent() {
   const router = useRouter();
@@ -62,7 +65,11 @@ function WizardLoader() {
   const [error, setError] = useState<string | null>(null);
   const { isPaid, tier, isLoading: isPaymentLoading } = usePaymentStatus();
   const [userStoreCount, setUserStoreCount] = useState<number>(0);
+  const [userStores, setUserStores] = useState<StoreOption[]>([]);
+  const [userEmail, setUserEmail] = useState<string>("");
   const [showStoreLimitModal, setShowStoreLimitModal] = useState(false);
+  const [showNewStoreModal, setShowNewStoreModal] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState(false);
 
   // Guard against double initialization (React StrictMode)
   const initializingRef = useRef(false);
@@ -169,20 +176,30 @@ function WizardLoader() {
           }
         }
 
-        // Check if user has existing stores
-        const existingStore = await getUserStore(user.id);
+        // Track user email
+        setUserEmail(user.email || "");
+
+        // Get ALL user stores for StoreSwitcher
+        const allStores = await getUserStores(user.id);
+        const storeCount = allStores.length;
+
+        // Track store count and stores for UI
+        setUserStoreCount(storeCount);
+        setUserStores(allStores.map(s => ({
+          id: s.id,
+          name: (s.config as { branding?: { storeName?: string } })?.branding?.storeName || s.name || "Unnamed Store",
+          subdomain: s.subdomain || "unknown",
+          payment_tier: s.payment_tier as PaymentTier | null,
+          template: s.template || "goods",
+          status: s.status || "draft",
+          deployment_url: s.deployment_url || null,
+        })));
 
         // BOGO deal: 2 stores allowed until Feb 1, 2026
         const MAX_STORES = getMaxStores();
 
-        // Count user's stores
-        const { count: storeCount } = await supabase
-          .from("stores")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", user.id);
-
-        // Track store count for UI
-        setUserStoreCount(storeCount || 0);
+        // Get most recent store for existing user
+        const existingStore = allStores.length > 0 ? allStores[allStores.length - 1] : null;
 
         if (existingStore) {
           // Check if trying to create a new store beyond limit
@@ -274,34 +291,169 @@ function WizardLoader() {
     initializeWizard();
   }, [router, searchParams]);
 
-  const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/auth/login");
+  // Store switching handler
+  const handleSwitchStore = (newStoreId: string) => {
+    if (newStoreId !== storeId) {
+      router.replace(`/wizard?store=${newStoreId}`);
+    }
   };
 
-  // Inline header JSX to avoid component-during-render issue
+  // Open template selection modal for new store
+  const handleCreateNewStore = () => {
+    setShowNewStoreModal(true);
+  };
+
+  // Handle template selection and create new store directly
+  const handleTemplateSelect = async (selectedTemplate: StoreTemplate) => {
+    setShowNewStoreModal(false);
+    setIsLoading(true);
+
+    try {
+      const user = await getCurrentUser();
+      if (!user) {
+        router.push("/auth/signup?next=/wizard");
+        return;
+      }
+
+      // Generate store name based on template
+      const storeName = selectedTemplate === "brochure" ? "My New Site" :
+                       selectedTemplate === "services" ? "My New Business" : "My New Store";
+
+      // Generate subdomain
+      let subdomain = slugifyStoreName(storeName);
+
+      // Check availability and add suffix if needed
+      try {
+        const checkRes = await fetch(`/api/subdomain/check?subdomain=${encodeURIComponent(subdomain)}`);
+        const checkData = await checkRes.json();
+        if (!checkData.available) {
+          subdomain = `${subdomain}-${Date.now().toString(36).slice(-4)}`;
+        }
+      } catch {
+        subdomain = `${subdomain}-${Date.now().toString(36).slice(-4)}`;
+      }
+
+      // Create the new store
+      const newStore = await createStore(user.id, storeName, subdomain, selectedTemplate);
+
+      if (newStore) {
+        await createWizardProgress(newStore.id);
+
+        // Update local state with new store
+        setUserStores(prev => [...prev, {
+          id: newStore.id,
+          name: storeName,
+          subdomain: subdomain,
+          payment_tier: null,
+          template: selectedTemplate,
+          status: "draft",
+        }]);
+        setUserStoreCount(prev => prev + 1);
+
+        // Navigate to the new store
+        setStoreId(newStore.id);
+        setTemplate(selectedTemplate);
+        router.replace(`/wizard?store=${newStore.id}`);
+      } else {
+        setError("Failed to create store. Please try again.");
+      }
+    } catch (err) {
+      console.error("Error creating new store:", err);
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // AppHeader component for consistent navigation
   const headerJSX = (
-    <header className="border-b border-navy-700 bg-navy-800/50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex items-center gap-3">
-            <span className="text-xl font-bold text-white">GoSovereign</span>
-            <span className="text-xs text-gray-500 bg-navy-700 px-2 py-1 rounded">Setup</span>
-            <PaymentStatusBadge isPaid={isPaid} tier={tier} isLoading={isPaymentLoading} />
-            {isBogoPeriod() && <BogoBadge storeCount={userStoreCount} maxStores={getMaxStores()} />}
+    <AppHeader
+      stores={userStores}
+      currentStoreId={storeId}
+      onSwitchStore={handleSwitchStore}
+      onCreateStore={handleCreateNewStore}
+      showStoreSwitcher={userStores.length > 0}
+      isPaid={isPaid}
+      tier={tier}
+      isPaymentLoading={isPaymentLoading}
+      userEmail={userEmail}
+    />
+  );
+
+  // Get current store for deployed banner
+  const currentStore = userStores.find(s => s.id === storeId);
+  const isDeployed = currentStore?.status === "deployed" && currentStore?.deployment_url;
+
+  // Copy URL handler
+  const handleCopyUrl = async () => {
+    if (!currentStore?.deployment_url) return;
+    try {
+      await navigator.clipboard.writeText(currentStore.deployment_url);
+      setCopiedUrl(true);
+      setTimeout(() => setCopiedUrl(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy URL:", err);
+    }
+  };
+
+  // Visit store handler
+  const handleVisitStore = () => {
+    if (currentStore?.deployment_url) {
+      window.open(currentStore.deployment_url, "_blank");
+    }
+  };
+
+  // Deployed store banner (mobile-first)
+  const deployedBannerJSX = isDeployed ? (
+    <div className="mx-4 mt-4 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        {/* Store info */}
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+            <Check className="w-5 h-5 text-emerald-400" />
           </div>
+          <div className="min-w-0">
+            <p className="text-sm text-emerald-400 font-medium">Store is live</p>
+            <a
+              href={currentStore.deployment_url!}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white hover:text-emerald-400 text-sm truncate block transition-colors"
+            >
+              {currentStore.deployment_url!.replace("https://", "")}
+            </a>
+          </div>
+        </div>
+
+        {/* Action buttons - stack on mobile, inline on sm+ */}
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <button
-            onClick={handleSignOut}
-            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm"
+            onClick={handleVisitStore}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-navy-900 font-medium rounded-lg transition-colors text-sm"
           >
-            <LogOut className="w-4 h-4" />
-            Sign Out
+            <ExternalLink className="w-4 h-4" />
+            Visit Store
+          </button>
+          <button
+            onClick={handleCopyUrl}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-navy-700 hover:bg-navy-600 text-white font-medium rounded-lg border border-navy-600 transition-colors text-sm"
+          >
+            {copiedUrl ? (
+              <>
+                <Check className="w-4 h-4 text-emerald-400" />
+                <span className="text-emerald-400">Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-4 h-4" />
+                Copy URL
+              </>
+            )}
           </button>
         </div>
       </div>
-    </header>
-  );
+    </div>
+  ) : null;
 
   if (isLoading) {
     return (
@@ -358,6 +510,7 @@ function WizardLoader() {
   return (
     <div className="min-h-screen bg-navy-900">
       {headerJSX}
+      {deployedBannerJSX}
       <main className="py-8 px-4">
         <WizardProvider storeId={storeId} template={template}>
           <WizardContent />
@@ -375,6 +528,13 @@ function WizardLoader() {
         }}
         onManageStores={handleManageStores}
         storeCount={userStoreCount}
+      />
+
+      {/* New Store Template Selection Modal */}
+      <NewStoreModal
+        isOpen={showNewStoreModal}
+        onClose={() => setShowNewStoreModal(false)}
+        onCreateStore={handleTemplateSelect}
       />
     </div>
   );

@@ -16,12 +16,14 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui";
-import type { Store, Product, ProductImage } from "@/types/database";
-import { getStore, getStoreProducts } from "@/lib/supabase";
+import type { Store, Product, ProductImage, PaymentTier } from "@/types/database";
+import { getStore, getStoreProducts, getUserStores, getCurrentUser } from "@/lib/supabase";
 import { formatPrice } from "@/components/wizard/WizardContext";
 import { usePaymentStatus } from "@/hooks/usePaymentStatus";
 import { useSubscriptionStatus, getSubscriptionWarningMessage } from "@/hooks/useSubscriptionStatus";
-import { UpgradeModal, PaymentStatusBadge } from "@/components/payment";
+import { UpgradeModal } from "@/components/payment";
+import { AppHeader } from "@/components/layout";
+import type { StoreOption } from "@/components/layout";
 
 type DeploymentState =
   | "idle"
@@ -43,6 +45,8 @@ function PreviewContent() {
   const [error, setError] = useState<string | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [userStores, setUserStores] = useState<StoreOption[]>([]);
+  const [userEmail, setUserEmail] = useState<string>("");
   const { isPaid, tier, isLoading: isPaymentLoading } = usePaymentStatus();
   const { subscriptionStatus, canDeploy, subscriptionEndsAt } = useSubscriptionStatus(storeId);
   const subscriptionWarning = getSubscriptionWarningMessage(subscriptionStatus, subscriptionEndsAt);
@@ -55,9 +59,19 @@ function PreviewContent() {
       }
 
       try {
-        const [storeData, productsData] = await Promise.all([
+        // Load current user for header
+        const user = await getCurrentUser();
+        if (!user) {
+          router.push("/auth/login");
+          return;
+        }
+        setUserEmail(user.email || "");
+
+        // Load store data and user stores in parallel
+        const [storeData, productsData, allStores] = await Promise.all([
           getStore(storeId),
           getStoreProducts(storeId),
+          getUserStores(user.id),
         ]);
 
         if (!storeData) {
@@ -67,6 +81,17 @@ function PreviewContent() {
 
         setStore(storeData);
         setProducts(productsData);
+
+        // Map stores for header
+        setUserStores(allStores.map(s => ({
+          id: s.id,
+          name: (s.config as { branding?: { storeName?: string } })?.branding?.storeName || s.name || "Unnamed Store",
+          subdomain: s.subdomain || "unknown",
+          payment_tier: s.payment_tier as PaymentTier | null,
+          template: s.template || "goods",
+          status: s.status || "draft",
+          deployment_url: s.deployment_url || null,
+        })));
 
         // Check if store is already deployed
         if (storeData.status === "deployed" && storeData.deployment_url) {
@@ -89,7 +114,7 @@ function PreviewContent() {
   // Poll deployment status
   const pollStatus = useCallback(async () => {
     try {
-      const res = await fetch("/api/deploy/status");
+      const res = await fetch(`/api/deploy/status?store_id=${storeId}`);
       const data = await res.json();
 
       if (data.status === "READY") {
@@ -105,7 +130,7 @@ function PreviewContent() {
     } catch {
       return false; // Continue polling on network error
     }
-  }, []);
+  }, [storeId]);
 
   useEffect(() => {
     if (deployState !== "polling") return;
@@ -137,6 +162,8 @@ function PreviewContent() {
     try {
       const res = await fetch("/api/deploy/execute", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ store_id: storeId }),
       });
 
       const data = await res.json();
@@ -202,19 +229,46 @@ function PreviewContent() {
     }
   };
 
+  // Store switching handler
+  const handleSwitchStore = (newStoreId: string) => {
+    if (newStoreId !== storeId) {
+      router.push(`/wizard?store=${newStoreId}`);
+    }
+  };
+
+  // Header component
+  const headerJSX = (
+    <AppHeader
+      stores={userStores}
+      currentStoreId={storeId}
+      onSwitchStore={handleSwitchStore}
+      showStoreSwitcher={userStores.length > 0}
+      isPaid={isPaid}
+      tier={tier}
+      isPaymentLoading={isPaymentLoading}
+      userEmail={userEmail}
+    />
+  );
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
+      <div className="min-h-screen bg-navy-900">
+        {headerJSX}
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
+        </div>
       </div>
     );
   }
 
   if (!store) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-        <p className="text-red-400 mb-4">{error || "Store not found"}</p>
-        <Button onClick={() => router.push("/wizard")}>Back to Wizard</Button>
+      <div className="min-h-screen bg-navy-900">
+        {headerJSX}
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+          <p className="text-red-400 mb-4">{error || "Store not found"}</p>
+          <Button onClick={() => router.push("/wizard")}>Back to Wizard</Button>
+        </div>
       </div>
     );
   }
@@ -224,17 +278,10 @@ function PreviewContent() {
   const isDeployed = deployState === "success";
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Payment status indicator */}
-      <div className="flex justify-end mb-4">
-        <PaymentStatusBadge
-          isPaid={isPaid}
-          tier={tier}
-          isLoading={isPaymentLoading}
-        />
-      </div>
-
-      {/* Subscription warning banner */}
+    <div className="min-h-screen bg-navy-900">
+      {headerJSX}
+      <div className="max-w-4xl mx-auto py-8 px-4">
+        {/* Subscription warning banner */}
       {subscriptionWarning && (
         <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
           <div className="flex items-start gap-3">
@@ -564,12 +611,13 @@ function PreviewContent() {
         </div>
       )}
 
-      {/* Upgrade Modal */}
-      <UpgradeModal
-        isOpen={showUpgradeModal}
-        onClose={() => setShowUpgradeModal(false)}
-        context="download"
-      />
+        {/* Upgrade Modal */}
+        <UpgradeModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          context="download"
+        />
+      </div>
     </div>
   );
 }

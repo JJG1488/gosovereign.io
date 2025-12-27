@@ -28,14 +28,30 @@ export function Hero({
   const [counter, setCounter] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
 
+  // useEffect(() => {
+  //   setIsVisible(true);
+  //   const interval = setInterval(() => {
+  //     setCounter((prev) => prev + DOLLARS_PER_SECOND / 10);
+  //   }, 100);
+
+  //   return () => clearInterval(interval);
+  // }, []);
+
+
   useEffect(() => {
-    setIsVisible(true);
+
+    const raf = requestAnimationFrame(() => setIsVisible(true));
+
     const interval = setInterval(() => {
-      setCounter((prev) => prev + DOLLARS_PER_SECOND / 10);
+      setCounter((prev) => prev + DOLLARS_PER_SECOND / 1);
     }, 100);
 
-    return () => clearInterval(interval);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearInterval(interval);
+    };
   }, []);
+ 
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
@@ -66,7 +82,7 @@ export function Hero({
           >
             <div className="inline-flex flex-col items-center gap-2 px-6 py-4 rounded-2xl bg-navy-800/50 border border-bleed-500/30 backdrop-blur-sm">
               <span className="text-sm text-gray-400">
-                Since you opened this page, Shopify collected
+                Since you opened this page, alternative platforms have collected
               </span>
               <span className="text-3xl md:text-4xl font-bold text-bleed-400 animate-counter-glow tabular-nums">
                 ${counter.toFixed(2)}

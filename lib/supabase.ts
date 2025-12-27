@@ -105,6 +105,28 @@ export async function getUserStore(userId: string): Promise<Store | null> {
   return data as Store | null;
 }
 
+export async function getUserStores(userId: string): Promise<Store[]> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("stores")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    // PGRST116 = no rows found (expected for new users)
+    // 42P01 = table doesn't exist (database not set up)
+    if (error.code === "PGRST116" || error.code === "42P01") {
+      return [];
+    }
+    console.error("Error fetching user stores:", error);
+    return [];
+  }
+
+  return (data as Store[]) || [];
+}
+
 export async function updateStore(
   storeId: string,
   updates: Partial<Store>

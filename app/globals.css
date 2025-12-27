@@ -44,6 +44,7 @@
   --color-danger: var(--color-bleed-500);
 }
 
+
 /* Base Styles */
 html {
   scroll-behavior: smooth;
@@ -155,4 +156,16 @@ body {
 
 .animate-float {
   animation: float 6s ease-in-out infinite;
+}
+
+
+.bogopromo {
+  background-color: var(--color-navy-800);
+  border: 2px solid var(--color-emerald-500);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  position: sticky;
+
+  z-index: 1000;
 }

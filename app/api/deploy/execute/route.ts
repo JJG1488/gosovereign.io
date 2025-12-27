@@ -22,15 +22,37 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // Get user's store
-    const { data: store, error: storeError } = await supabase
+    // Get store_id from request body (required for multi-store support)
+    let storeId: string | null = null;
+    try {
+      const body = await req.json();
+      storeId = body.store_id;
+    } catch {
+      // Body might be empty for backwards compatibility
+    }
+
+    // Get user's store - use store_id if provided, otherwise get most recent
+    let storeQuery = supabase
       .from("stores")
       .select("*")
-      .eq("user_id", user.id)
-      .single();
+      .eq("user_id", user.id);
+
+    if (storeId) {
+      storeQuery = storeQuery.eq("id", storeId);
+    } else {
+      storeQuery = storeQuery.order("created_at", { ascending: false }).limit(1);
+    }
+
+    const { data: stores, error: storeError } = await storeQuery;
+    const store = stores?.[0];
 
     if (storeError || !store) {
       return NextResponse.json({ error: "Store not found" }, { status: 404 });
+    }
+
+    // Verify user owns this store
+    if (store.user_id !== user.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     // Check if deployment is restricted (subscription lapsed)

@@ -83,9 +83,10 @@ export interface CopyVariant {
 // VARIANT A — Price-Forward
 export const variantA: CopyVariant = {
   hero: {
-    headline: "Shopify costs $468/year. Your store shouldn't.",
+    // headline: "Shopify costs $468/year. Your store shouldn't.",
+    headline: "A website shouldn't cost a fortune and everyone should own one.",
     subheadline:
-      "Launch a beautiful, fully-owned e-commerce store in 15 minutes. One price. No subscriptions. No code. No permission needed.",
+      "Launch a beautiful, fully-owned e-commerce, service-based, or gallery style website or store in 15 minutes. One price. No subscriptions. No code. No permission needed. (Download your website and build on it if you want. It's yours!)",
     cta: "Try it Now",
     microProof:
       '"Replaced my $39/month Shopify store in an afternoon." — Early adopter',

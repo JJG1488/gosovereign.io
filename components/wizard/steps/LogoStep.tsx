@@ -162,7 +162,7 @@ export function LogoStep() {
           <div className="text-left">
             <p className="font-medium text-white">Use text logo</p>
             <p className="text-sm text-gray-400">
-              Display "{state.config.storeName || "Store Name"}" as your logo
+              Display &quote;{state.config.storeName || "Store Name"}&quote; as your logo
             </p>
           </div>
         </button>

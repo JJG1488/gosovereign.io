@@ -17,12 +17,23 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Get user's store
-  const { data: store } = await supabase
+  // Get store_id from query params (required for multi-store support)
+  const storeId = req.nextUrl.searchParams.get("store_id");
+
+  // Get user's store - use store_id if provided, otherwise get most recent
+  let storeQuery = supabase
     .from("stores")
-    .select("id, vercel_deployment_id, deployment_url, status")
-    .eq("user_id", user.id)
-    .single();
+    .select("id, vercel_deployment_id, deployment_url, status, user_id")
+    .eq("user_id", user.id);
+
+  if (storeId) {
+    storeQuery = storeQuery.eq("id", storeId);
+  } else {
+    storeQuery = storeQuery.order("created_at", { ascending: false }).limit(1);
+  }
+
+  const { data: stores } = await storeQuery;
+  const store = stores?.[0];
 
   if (!store?.vercel_deployment_id) {
     return NextResponse.json({ status: "not_started" });
@@ -49,7 +60,7 @@ export async function GET(req: NextRequest) {
         deployed_at: new Date().toISOString(),
         // Don't update deployment_url - it already has the branded subdomain
       })
-      .eq("user_id", user.id);
+      .eq("id", store.id);
 
     await supabase.from("deployment_logs").insert({
       store_id: store.id,
@@ -64,7 +75,7 @@ export async function GET(req: NextRequest) {
     await supabase
       .from("stores")
       .update({ status: "failed" })
-      .eq("user_id", user.id);
+      .eq("id", store.id);
 
     await supabase.from("deployment_logs").insert({
       store_id: store.id,

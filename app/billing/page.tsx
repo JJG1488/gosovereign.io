@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   CreditCard,
-  ArrowLeft,
   ExternalLink,
   Loader2,
   AlertTriangle,
@@ -15,7 +14,10 @@ import {
 import { Container, Button } from "@/components/ui";
 import { PaymentStatusBadge } from "@/components/payment";
 import { createClient } from "@/lib/supabase/client";
+import { getUserStores } from "@/lib/supabase";
 import type { PaymentTier } from "@/types/database";
+import { AppHeader } from "@/components/layout";
+import type { StoreOption } from "@/components/layout";
 
 interface BillingInfo {
   paymentTier: PaymentTier | null;
@@ -32,6 +34,8 @@ export default function BillingPage() {
   const [isPortalLoading, setIsPortalLoading] = useState(false);
   const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [userStores, setUserStores] = useState<StoreOption[]>([]);
+  const [userEmail, setUserEmail] = useState<string>("");
 
   useEffect(() => {
     async function fetchBillingInfo() {
@@ -45,6 +49,21 @@ export default function BillingPage() {
           router.push("/auth/login");
           return;
         }
+
+        // Set user email for header
+        setUserEmail(user.email || "");
+
+        // Fetch user stores for header
+        const allStores = await getUserStores(user.id);
+        setUserStores(allStores.map(s => ({
+          id: s.id,
+          name: (s.config as { branding?: { storeName?: string } })?.branding?.storeName || s.name || "Unnamed Store",
+          subdomain: s.subdomain || "unknown",
+          payment_tier: s.payment_tier as PaymentTier | null,
+          template: s.template || "goods",
+          status: s.status || "draft",
+          deployment_url: s.deployment_url || null,
+        })));
 
         // Fetch user profile with payment info
         const { data: userProfile, error: userError } = await supabase
@@ -157,26 +176,43 @@ export default function BillingPage() {
     }
   };
 
+  // Store switching handler
+  const handleSwitchStore = (newStoreId: string) => {
+    router.push(`/wizard?store=${newStoreId}`);
+  };
+
+  // AppHeader component - no store switcher on billing page
+  const headerJSX = (
+    <AppHeader
+      stores={userStores}
+      currentStoreId={null}
+      onSwitchStore={handleSwitchStore}
+      showStoreSwitcher={false}
+      isPaid={billingInfo?.hasPaid || false}
+      tier={billingInfo?.paymentTier || null}
+      isPaymentLoading={isLoading}
+      userEmail={userEmail}
+    />
+  );
+
   if (isLoading) {
     return (
-      <main className="min-h-screen bg-navy-900 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+      <main className="min-h-screen bg-navy-900">
+        {headerJSX}
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+        </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-navy-900 py-12">
-      <Container size="sm">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <button
-            onClick={() => router.back()}
-            className="p-2 rounded-lg bg-navy-800 border border-navy-700 text-gray-400 hover:text-white hover:border-navy-600 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div>
+    <main className="min-h-screen bg-navy-900">
+      {headerJSX}
+      <div className="py-12">
+        <Container size="sm">
+          {/* Header */}
+          <div className="mb-8">
             <h1 className="text-2xl font-bold text-white">
               Billing & Subscription
             </h1>
@@ -184,7 +220,6 @@ export default function BillingPage() {
               Manage your plan and payment method
             </p>
           </div>
-        </div>
 
         {/* Error Alert */}
         {error && (
@@ -326,17 +361,18 @@ export default function BillingPage() {
           </div>
         )}
 
-        {/* Footer Note */}
-        <p className="text-center text-gray-500 text-sm mt-6">
-          Secure billing powered by Stripe. Questions? Contact{" "}
-          <a
-            href="mailto:info@gosovereign.io"
-            className="text-emerald-400 hover:underline"
-          >
-            info@gosovereign.io
-          </a>
-        </p>
-      </Container>
+          {/* Footer Note */}
+          <p className="text-center text-gray-500 text-sm mt-6">
+            Secure billing powered by Stripe. Questions? Contact{" "}
+            <a
+              href="mailto:info@gosovereign.io"
+              className="text-emerald-400 hover:underline"
+            >
+              info@gosovereign.io
+            </a>
+          </p>
+        </Container>
+      </div>
     </main>
   );
 }
