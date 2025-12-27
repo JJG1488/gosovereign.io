@@ -408,6 +408,15 @@ function buildEnvironmentVariables(store: Store) {
     });
   }
 
+  // Email "from" address - use platform's verified domain
+  // Without this, deployed stores would use the Resend sandbox domain
+  envVars.push({
+    key: "EMAIL_FROM",
+    value: "noreply@gosovereign.io",
+    target: ["production", "preview", "development"],
+    type: "plain",
+  });
+
   // Store owner email (from wizard configuration)
   if (store.config.branding?.contactEmail) {
     envVars.push({

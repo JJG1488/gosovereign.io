@@ -88,6 +88,10 @@ ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS admin_password_hash TEXT;
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS admin_password_reset_token TEXT;
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS admin_password_reset_expires TIMESTAMPTZ;
 
+-- Rate limiting for password reset (max 3 attempts per hour)
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS password_reset_attempts INTEGER DEFAULT 0;
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS password_reset_window_start TIMESTAMPTZ;
+
 -- Payment tier for feature gating
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS payment_tier TEXT; -- 'starter', 'pro', 'hosted'
 
