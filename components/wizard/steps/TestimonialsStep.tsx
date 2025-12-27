@@ -164,7 +164,7 @@ function TestimonialCard({ testimonial, onEdit, onRemove }: TestimonialCardProps
           </p>
         )}
         <p className="text-sm text-gray-300 mt-1 line-clamp-2">
-          "{testimonial.quote || "No quote yet..."}"
+          &quot;{testimonial.quote || "No quote yet..."}&quot;
         </p>
       </div>
 

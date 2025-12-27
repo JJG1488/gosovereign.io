@@ -31,7 +31,7 @@ export default function ResetPasswordPage() {
 
     // Listen for auth state changes (recovery link sets up a session)
     const supabase = createClient();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string) => {
       if (event === "PASSWORD_RECOVERY") {
         setIsValidSession(true);
       }
