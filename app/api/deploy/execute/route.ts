@@ -165,9 +165,9 @@ export async function POST(req: NextRequest) {
         })
         .eq("id", store.id);
 
-      // Get store owner email
-      const ownerEmail = store.config?.contactEmail || user.email;
-      const storeName = store.config?.storeName || store.name || "Your Store";
+      // Get store owner email (from branding config or user email as fallback)
+      const ownerEmail = store.config?.branding?.contactEmail || user.email;
+      const storeName = store.config?.branding?.storeName || store.name || "Your Store";
 
       if (ownerEmail && deployResult.storeUrl) {
         await sendStorePasswordResetEmail({
