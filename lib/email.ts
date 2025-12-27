@@ -124,17 +124,18 @@ interface PasswordResetEmailData {
 }
 
 /**
- * Send password reset email to store owner after deployment
+ * Send password setup email to store owner after deployment
  */
 export async function sendStorePasswordResetEmail(data: PasswordResetEmailData): Promise<boolean> {
   const resendApiKey = process.env.RESEND_API_KEY;
 
   if (!resendApiKey) {
-    console.warn("RESEND_API_KEY not set - skipping password reset email");
+    console.warn("RESEND_API_KEY not set - skipping password setup email");
     return false;
   }
 
-  const resetUrl = `${data.storeUrl}/admin/reset-password?token=${data.resetToken}`;
+  // Include setup=true to show welcoming "Set Password" UI instead of "Reset Password"
+  const resetUrl = `${data.storeUrl}/admin/reset-password?token=${data.resetToken}&setup=true`;
 
   const emailHtml = `
     <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
