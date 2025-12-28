@@ -271,8 +271,8 @@ export type NewProduct = Omit<Product, "id" | "created_at" | "updated_at">;
 // Default values for new stores
 export const defaultStoreConfig: StoreConfig = {
   branding: {
-    primaryColor: "#10b981",
-    themePreset: "minimal-light",
+    primaryColor: "#6366f1",
+    themePreset: "default",
   },
   features: {
     shippingEnabled: true,

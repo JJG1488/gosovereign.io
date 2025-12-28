@@ -34,8 +34,8 @@ export async function createStore(
       template,
       config: {
         branding: {
-          primaryColor: "#10b981",
-          themePreset: "minimal-light",
+          primaryColor: "#6366f1",
+          themePreset: "default",
         },
         features: {
           shippingEnabled: true,

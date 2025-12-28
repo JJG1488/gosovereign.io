@@ -295,7 +295,7 @@ export function WizardProvider({ children, storeId, template = "goods" }: Wizard
       await updateStoreConfig(storeId, {
         branding: {
           primaryColor: state.config.primaryColor,
-          themePreset: "minimal-light",
+          themePreset: "default",
           tagline: state.config.tagline,
           logoUrl: state.config.logoUrl,
           aboutText: state.config.aboutText,
