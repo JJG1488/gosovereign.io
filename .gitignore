@@ -24,6 +24,10 @@
 .DS_Store
 *.pem
 
+# working notes
+next_steps-*.md
+*-latest.txt
+
 # debug
 npm-debug.log*
 yarn-debug.log*
