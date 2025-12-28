@@ -65,6 +65,7 @@ export interface StoreConfig {
   };
   features: {
     shippingEnabled: boolean;
+    shippingCountries?: string; // Comma-separated ISO country codes (e.g., "US,CA,GB")
     taxEnabled: boolean;
     blogEnabled: boolean;
     leadgenEnabled: boolean;

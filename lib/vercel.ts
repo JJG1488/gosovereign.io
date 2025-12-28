@@ -331,6 +331,12 @@ function buildEnvironmentVariables(store: Store) {
       type: "plain",
     },
     {
+      key: "SHIPPING_COUNTRIES",
+      value: store.config.features.shippingCountries || "US,CA,GB,AU",
+      target: ["production", "preview", "development"],
+      type: "plain",
+    },
+    {
       key: "TAX_ENABLED",
       value: store.config.features.taxEnabled ? "true" : "false",
       target: ["production", "preview", "development"],
