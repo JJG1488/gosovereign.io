@@ -16,6 +16,7 @@
 | 6.0 | Dec 28, 2024 | Analytics dashboard (Pro), Premium themes (6 presets), GitHub template sync verified |
 | 7.0 | Dec 27, 2025 | Codebase cleanup: removed debug logs, unused imports, ESLint fixes, Next.js Link migration |
 | 8.0 | Dec 28, 2025 | Pre-launch polish: password UX, spam warnings, Stripe URL modal, template legal pages, testimonials, reviews fixes |
+| 8.1 | Dec 28, 2025 | **CRITICAL FIX:** Tier feature flags now use NEXT_PUBLIC_ prefix for client-side access |
 
 ---
 
@@ -56,9 +57,9 @@
   - [x] Real-time deployment status polling
   - [x] Removed user OAuth requirements (no GitHub/Vercel auth needed)
   - [x] Download ZIP as secondary option for self-hosting
-- [x] **Tier-Based Feature Gating** (Dec 22, 2024)
-  - [x] Tier environment variables in `vercel.ts` (`PAYMENT_TIER`, `MAX_PRODUCTS`, etc.)
-  - [x] `useFeatureFlags()` hook in template
+- [x] **Tier-Based Feature Gating** (Dec 22, 2024, FIXED Dec 28, 2025)
+  - [x] Tier environment variables in `vercel.ts` (uses `NEXT_PUBLIC_*` prefix for client access)
+  - [x] `useFeatureFlags()` hook in template (reads `NEXT_PUBLIC_*` env vars)
   - [x] `canAddProduct()` and related functions in `lib/products.ts`
   - [x] `UpgradePrompt` component for tier upsells
   - [x] Password reset email bug fix (proper error handling)
@@ -179,14 +180,15 @@ The webhook now properly updates `store.payment_tier` in addition to `user.payme
 
 ### Feature Flags (Environment Variables)
 
-Set during deployment based on `store.payment_tier`:
+Set during deployment based on `store.payment_tier`.
+**IMPORTANT:** All use `NEXT_PUBLIC_` prefix so they're accessible in client components:
 
 ```env
-PAYMENT_TIER=starter|pro|hosted
-MAX_PRODUCTS=10|unlimited
-CUSTOM_DOMAIN_ENABLED=true|false
-ANALYTICS_ENABLED=true|false
-PREMIUM_THEMES_ENABLED=true|false
+NEXT_PUBLIC_PAYMENT_TIER=starter|pro|hosted
+NEXT_PUBLIC_MAX_PRODUCTS=10|unlimited
+NEXT_PUBLIC_CUSTOM_DOMAIN_ENABLED=true|false
+NEXT_PUBLIC_ANALYTICS_ENABLED=true|false
+NEXT_PUBLIC_PREMIUM_THEMES_ENABLED=true|false
 ```
 
 ### Implementation Files
@@ -602,6 +604,21 @@ SHIPPING_COUNTRIES=US,CA,GB,AU      # Comma-separated ISO codes for Stripe check
 
 ## Session Summary (Dec 28, 2025)
 
+### Session 2 - Tier Fix (v8.1)
+
+**What was done:**
+- **CRITICAL FIX:** Tier feature flags now accessible in client components
+  - Root cause: `useFeatureFlags()` was reading `process.env.PAYMENT_TIER` but this env var was NOT prefixed with `NEXT_PUBLIC_`, making it undefined on the client side
+  - All tier env vars in `lib/vercel.ts` now use `NEXT_PUBLIC_` prefix
+  - Updated `useFeatureFlags()` hook in template to read `NEXT_PUBLIC_*` vars
+  - Fixes: Pro stores showing "Upgrade" on Analytics page, premium themes locked incorrectly
+
+**Files changed:**
+- `lib/vercel.ts` - Changed all tier env var keys to use `NEXT_PUBLIC_` prefix
+- `templates/hosted/hooks/useFeatureFlags.ts` - Updated to read `NEXT_PUBLIC_*` env vars
+
+### Session 1 - Pre-Launch Polish (v8.0)
+
 **What was done:**
 - Password UX improvements (visibility toggle, confirm field)
 - Spam folder warnings on signup and purchase success screens
@@ -612,24 +629,15 @@ SHIPPING_COUNTRIES=US,CA,GB,AU      # Comma-separated ISO codes for Stripe check
 - Footer logo brightness fix and Apple Pay icon SVG fix
 - Dynamic caching for featured reviews API
 
-**Issues discovered:**
-- Pro tier stores showing "Upgrade" on Analytics page (tier not propagating correctly)
-- Need to investigate `buildEnvironmentVariables()` and webhook tier assignment
-
 **Where to pick up:**
-1. **CRITICAL: Tier propagation investigation** - Pro stores not getting correct feature flags
-2. Custom Domain Settings UI for Pro tier
-3. Email notifications (order confirmation, shipping updates)
-
-**Commits:**
-- `bc0ef81` - fix: Update hosted template with reviews fixes
-- `b01e75f` - fix: Update hosted template with legal content fix
-- `972c1d8` - feat: Pre-launch polish - password UX, spam warnings, Stripe modal
+1. Custom Domain Settings UI for Pro tier
+2. Email notifications (order confirmation, shipping updates)
+3. End-to-end tier testing (deploy Starter vs Pro stores to verify fix)
 
 ---
 
 *Last Updated: December 28, 2025*
-*Version: 8.0*
-*Status: Production Ready (Pre-Launch Polish Complete)*
-*Next: Tier propagation fix, custom domain settings UI*
+*Version: 8.1*
+*Status: Production Ready (Tier Fix Complete)*
+*Next: Custom domain settings UI, email notifications*
 *This file is the source of truth for all project context.*

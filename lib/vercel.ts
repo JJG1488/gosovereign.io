@@ -451,12 +451,13 @@ function buildEnvironmentVariables(store: Store) {
 
   // ========================================
   // Tier-based environment variables
+  // IMPORTANT: These use NEXT_PUBLIC_ prefix so they're available to client components
   // ========================================
 
   // Payment tier for feature gating
   const paymentTier = store.payment_tier || "starter";
   envVars.push({
-    key: "PAYMENT_TIER",
+    key: "NEXT_PUBLIC_PAYMENT_TIER",
     value: paymentTier,
     target: ["production", "preview", "development"],
     type: "plain",
@@ -465,7 +466,7 @@ function buildEnvironmentVariables(store: Store) {
   // Tier-specific product limits
   const maxProducts = paymentTier === "starter" ? "10" : "unlimited";
   envVars.push({
-    key: "MAX_PRODUCTS",
+    key: "NEXT_PUBLIC_MAX_PRODUCTS",
     value: maxProducts,
     target: ["production", "preview", "development"],
     type: "plain",
@@ -475,21 +476,21 @@ function buildEnvironmentVariables(store: Store) {
   const isPro = paymentTier === "pro" || paymentTier === "hosted";
 
   envVars.push({
-    key: "CUSTOM_DOMAIN_ENABLED",
+    key: "NEXT_PUBLIC_CUSTOM_DOMAIN_ENABLED",
     value: isPro ? "true" : "false",
     target: ["production", "preview", "development"],
     type: "plain",
   });
 
   envVars.push({
-    key: "ANALYTICS_ENABLED",
+    key: "NEXT_PUBLIC_ANALYTICS_ENABLED",
     value: isPro ? "true" : "false",
     target: ["production", "preview", "development"],
     type: "plain",
   });
 
   envVars.push({
-    key: "PREMIUM_THEMES_ENABLED",
+    key: "NEXT_PUBLIC_PREMIUM_THEMES_ENABLED",
     value: isPro ? "true" : "false",
     target: ["production", "preview", "development"],
     type: "plain",
