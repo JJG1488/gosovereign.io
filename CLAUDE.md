@@ -15,6 +15,7 @@
 | 5.0 | Dec 27, 2024 | Static pages (FAQ, Contact, Terms, Privacy), Wishlist, Stripe shipping, Custom domain docs, Reviews fix |
 | 6.0 | Dec 28, 2024 | Analytics dashboard (Pro), Premium themes (6 presets), GitHub template sync verified |
 | 7.0 | Dec 27, 2025 | Codebase cleanup: removed debug logs, unused imports, ESLint fixes, Next.js Link migration |
+| 8.0 | Dec 28, 2025 | Pre-launch polish: password UX, spam warnings, Stripe URL modal, template legal pages, testimonials, reviews fixes |
 
 ---
 
@@ -132,10 +133,23 @@
   - [x] Fixed unescaped apostrophes in JSX (cancel, payments pages)
   - [x] Replaced `<a>` tags with Next.js `<Link>` for proper client-side navigation
   - [x] ESLint error count reduced significantly
+- [x] **Pre-Launch Polish** (Dec 28, 2025)
+  - [x] Password visibility toggle (eye icon) on signup
+  - [x] Confirm password field with match validation
+  - [x] Spam folder warning on signup and purchase success screens
+  - [x] Stripe Connect URL modal (explains subdomain, copy button)
+  - [x] Terms & Privacy pages in template (`/terms`, `/privacy`)
+  - [x] Store-specific legal content module (`content/legal.ts`)
+  - [x] Testimonials component for featured store-wide reviews
+  - [x] `/api/reviews/featured` endpoint with dynamic caching
+  - [x] Reviews admin product dropdown fixed (auth token)
+  - [x] Footer logo brightness fix (removed `brightness-0`)
+  - [x] Apple Pay icon SVG fix
 
 **In Progress:**
 - [ ] End-to-end tier flow testing (deploy Starter vs Pro stores)
 - [ ] Custom domain settings UI (Pro tier)
+- [ ] Investigate tier not propagating (Analytics showing upgrade for Pro)
 
 **Known Tech Debt:**
 - `WizardContext.tsx:455` - React hooks ref mutation pattern (non-blocking)
@@ -586,26 +600,36 @@ SHIPPING_COUNTRIES=US,CA,GB,AU      # Comma-separated ISO codes for Stripe check
 
 ---
 
-## Session Summary (Dec 27, 2025)
+## Session Summary (Dec 28, 2025)
 
 **What was done:**
-- Codebase cleanup across 15 files
-- Removed sensitive debug logging from Stripe webhook
-- Removed unused imports (12+ instances)
-- Fixed ESLint issues (apostrophes, Link components)
-- Build verified passing
+- Password UX improvements (visibility toggle, confirm field)
+- Spam folder warnings on signup and purchase success screens
+- Stripe Connect URL modal with subdomain explanation and copy button
+- Template Terms & Privacy pages with store-specific legal content
+- Testimonials component displaying featured store-wide reviews
+- Reviews admin product dropdown fix (was missing auth token)
+- Footer logo brightness fix and Apple Pay icon SVG fix
+- Dynamic caching for featured reviews API
+
+**Issues discovered:**
+- Pro tier stores showing "Upgrade" on Analytics page (tier not propagating correctly)
+- Need to investigate `buildEnvironmentVariables()` and webhook tier assignment
 
 **Where to pick up:**
-1. Start with End-to-End Tier Testing (deploy Starter vs Pro stores)
-2. Then build Custom Domain Settings UI for Pro tier
-3. Email notifications are ready to implement (infrastructure exists)
+1. **CRITICAL: Tier propagation investigation** - Pro stores not getting correct feature flags
+2. Custom Domain Settings UI for Pro tier
+3. Email notifications (order confirmation, shipping updates)
 
-**Commit:** `cbd17b1` - chore: Clean up debug logs, unused imports, and ESLint issues
+**Commits:**
+- `bc0ef81` - fix: Update hosted template with reviews fixes
+- `b01e75f` - fix: Update hosted template with legal content fix
+- `972c1d8` - feat: Pre-launch polish - password UX, spam warnings, Stripe modal
 
 ---
 
-*Last Updated: December 27, 2025*
-*Version: 7.0*
-*Status: Production Ready (Codebase Cleanup Complete)*
-*Next: End-to-end tier testing, custom domain settings UI*
+*Last Updated: December 28, 2025*
+*Version: 8.0*
+*Status: Production Ready (Pre-Launch Polish Complete)*
+*Next: Tier propagation fix, custom domain settings UI*
 *This file is the source of truth for all project context.*
