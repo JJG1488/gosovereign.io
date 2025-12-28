@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Image, Plus, Trash2, GripVertical, Loader2, ImagePlus } from "lucide-react";
+import { Image, Plus, Trash2, Loader2, ImagePlus } from "lucide-react";
 import { Button } from "@/components/ui";
 import type { Product, ProductImage } from "@/types/database";
 import { useWizard, createEmptyProduct } from "../WizardContext";

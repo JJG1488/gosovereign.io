@@ -7,7 +7,7 @@ import type { Product } from "@/types/database";
 import { useWizard, formatPrice, createEmptyProduct } from "../WizardContext";
 
 export function ServicesStep() {
-  const { state, storeId, addProduct, updateProductData, removeProduct } = useWizard();
+  const { state, addProduct, updateProductData, removeProduct } = useWizard();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
 

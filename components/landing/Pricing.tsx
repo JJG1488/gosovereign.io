@@ -202,9 +202,6 @@ export function Pricing({
             const displayPrice = showFlashSale
               ? getStarterPriceDisplay()
               : plan.price;
-            const badge = showFlashSale
-              ? `${daysRemaining}d left`
-              : plan.badge;
 
             return (
             <motion.div

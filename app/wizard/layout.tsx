@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Build Your Store | GoSovereign",
@@ -16,9 +17,9 @@ export default function WizardLayout({
       {/* Header */}
       <header className="border-b border-navy-700 bg-navy-900/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-          <a href="/" className="text-xl font-bold text-white">
+          <Link href="/" className="text-xl font-bold text-white">
             GoSovereign
-          </a>
+          </Link>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-400 hidden sm:block">
               Building your store

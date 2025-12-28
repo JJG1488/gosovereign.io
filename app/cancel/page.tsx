@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ArrowLeft, HelpCircle } from "lucide-react";
 import { Container, Button } from "@/components/ui";
 
@@ -22,7 +23,7 @@ export default function CancelPage(): React.ReactElement {
           </h1>
 
           <p className="text-lg text-gray-400 mb-8 max-w-md mx-auto">
-            Changed your mind? That's okay. Your store will be here when you're ready.
+            Changed your mind? That&apos;s okay. Your store will be here when you&apos;re ready.
           </p>
 
           {/* Reminder */}
@@ -37,20 +38,20 @@ export default function CancelPage(): React.ReactElement {
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="/">
+            <Link href="/">
               <Button variant="primary" size="lg">
                 <ArrowLeft className="mr-2 w-4 h-4" />
                 Try Again
               </Button>
-            </a>
+            </Link>
           </div>
 
           {/* FAQ link */}
           <p className="mt-8 text-gray-600 text-sm">
             Have questions?{" "}
-            <a href="/#faq" className="text-emerald-400 hover:underline">
+            <Link href="/#faq" className="text-emerald-400 hover:underline">
               Check our FAQ
-            </a>
+            </Link>
           </p>
         </div>
       </Container>

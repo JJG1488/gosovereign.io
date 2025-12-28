@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Package, Plus, Trash2, ImagePlus, GripVertical, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui";
 import type { Product, ProductImage } from "@/types/database";
 import { useWizard, formatPrice, createEmptyProduct } from "../WizardContext";

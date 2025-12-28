@@ -207,7 +207,7 @@ export function PaymentsStep() {
             <div>
               <h4 className="font-medium text-amber-400 mb-1">No Stripe account?</h4>
               <p className="text-sm text-gray-400">
-                You'll be guided through creating one. It takes about 5 minutes and requires basic business information.
+                You&apos;ll be guided through creating one. It takes about 5 minutes and requires basic business information.
               </p>
             </div>
           </div>

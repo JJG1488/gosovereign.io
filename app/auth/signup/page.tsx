@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -10,7 +10,6 @@ import { Navigation } from "@/components/landing/Navigation";
 import { Mail, Lock, User, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 
 function SignupForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const nextUrl = searchParams.get("next") || "/templates";
   const [email, setEmail] = useState("");

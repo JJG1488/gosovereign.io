@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { CheckCircle, ArrowRight, Loader2, Sparkles } from "lucide-react";
 import { Container, Button } from "@/components/ui";
 
@@ -115,22 +116,22 @@ function SuccessContent() {
           </div>
 
           {/* Primary CTA */}
-          <a href="/wizard">
+          <Link href="/wizard">
             <Button variant="primary" size="lg">
               Build Your Store Now
               <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
-          </a>
+          </Link>
 
           <p className="text-gray-500 text-sm mt-6 mb-4">
             Questions? Reply to your confirmation email. Real human on the other end.
           </p>
 
-          <a href="/">
+          <Link href="/">
             <Button variant="secondary" size="sm">
               Back to Home
             </Button>
-          </a>
+          </Link>
 
           {/* Signature */}
           <p className="mt-12 text-gray-600 text-sm">

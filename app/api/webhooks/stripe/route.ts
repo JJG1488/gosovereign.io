@@ -38,12 +38,6 @@ export async function POST(request: NextRequest) {
 
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-  // DEBUG: Log what's being used for signature verification
-  console.log("=== WEBHOOK DEBUG ===");
-  console.log("Secret loaded:", webhookSecret ? webhookSecret.substring(0, 15) + "..." : "NOT SET");
-  console.log("Signature header:", signature?.substring(0, 30) + "...");
-  console.log("Body length:", body.length);
-
   if (!webhookSecret) {
     console.error("STRIPE_WEBHOOK_SECRET not configured");
     return NextResponse.json(

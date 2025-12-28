@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Gift, ChevronDown, Store, Check, Plus, Rocket, FileText, ExternalLink, Copy } from "lucide-react";
+import { Gift, ChevronDown, Store, Check, Plus, ExternalLink, Copy } from "lucide-react";
 import { isBogoPeriod, formatCountdownShort, getMaxStores } from "@/lib/bogo";
 import type { PaymentTier } from "@/types/database";
 

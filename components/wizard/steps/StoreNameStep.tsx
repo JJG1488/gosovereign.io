@@ -89,7 +89,6 @@ export function StoreNameStep() {
       console.error("Failed to update subdomain:", error);
     } else {
       lastSavedSubdomain.current = subdomain;
-      console.log("Updated subdomain to:", subdomain);
     }
   }, [subdomain, subdomainStatus, storeId]);
 

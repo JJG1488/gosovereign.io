@@ -10,10 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import type {
-  Store,
-  StoreConfig,
   Product,
-  WizardProgress,
   StoreTemplate,
   WizardStep,
 } from "@/types/database";

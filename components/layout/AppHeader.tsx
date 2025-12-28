@@ -11,7 +11,6 @@ import {
   ExternalLink,
   Copy,
   Check,
-  Pencil,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { StoreSwitcher } from "@/components/ui";
@@ -113,10 +112,6 @@ export function AppHeader({
     if (store.deployment_url) {
       window.open(store.deployment_url, "_blank");
     }
-  };
-
-  const handleEditStore = (storeId: string) => {
-    router.push(`/wizard?store=${storeId}`);
   };
 
   // Get current store for quick actions

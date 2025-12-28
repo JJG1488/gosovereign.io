@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { WizardProvider, WizardContainer, useWizard } from "@/components/wizard";
 import {
   createStore,
-  getUserStore,
   getUserStores,
   createWizardProgress,
   getCurrentUser,
@@ -25,7 +24,7 @@ import { getMaxStores } from "@/lib/bogo";
 function WizardContent() {
   const router = useRouter();
   const { storeId, saveProgress } = useWizard();
-  const { isPaid, tier, isLoading: isPaymentLoading } = usePaymentStatus();
+  const { isPaid } = usePaymentStatus();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const handleGenerate = async () => {
@@ -119,8 +118,6 @@ function WizardLoader() {
           .eq("id", user.id)
           .single();
 
-        console.log("Profile check result:", { userProfile, profileCheckError });
-
         // Handle various error cases
         if (profileCheckError) {
           // 42P01 = table doesn't exist
@@ -138,9 +135,8 @@ function WizardLoader() {
         }
 
         if (!userProfile) {
-          console.log("No user profile found, attempting to create one...");
           // Manually create user profile if trigger hasn't fired yet
-          const { data: newProfile, error: profileError } = await supabase
+          const { error: profileError } = await supabase
             .from("users")
             .insert({
               id: user.id,
@@ -148,8 +144,6 @@ function WizardLoader() {
             })
             .select()
             .single();
-
-          console.log("Profile creation result:", { newProfile, profileError });
 
           if (profileError) {
             // Ignore "already exists" error (23505 = unique_violation)
@@ -172,7 +166,6 @@ function WizardLoader() {
               setIsLoading(false);
               return;
             }
-            console.log("Profile already exists (created by trigger), continuing...");
           }
         }
 
@@ -269,7 +262,6 @@ function WizardLoader() {
                     can_deploy: true,
                   })
                   .eq("id", newStore.id);
-                console.log("Propagated payment tier to new store:", userProfile.payment_tier);
               }
             }
 
