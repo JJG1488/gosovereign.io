@@ -24,6 +24,7 @@ import { useSubscriptionStatus, getSubscriptionWarningMessage } from "@/hooks/us
 import { UpgradeModal } from "@/components/payment";
 import { AppHeader } from "@/components/layout";
 import type { StoreOption } from "@/components/layout";
+import { getMaxStores } from "@/lib/bogo";
 
 type DeploymentState =
   | "idle"
@@ -604,9 +605,14 @@ function PreviewContent() {
           <Button
             variant="secondary"
             onClick={() => router.push("/wizard")}
+            disabled={userStores.length >= getMaxStores()}
+            title={userStores.length >= getMaxStores() ? "Store limit reached" : undefined}
           >
             <RefreshCw className="w-4 h-4 mr-2" />
             Create Another Store
+            <span className="ml-2 text-xs opacity-70">
+              ({userStores.length}/{getMaxStores()})
+            </span>
           </Button>
         </div>
       )}
