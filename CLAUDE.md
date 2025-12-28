@@ -18,6 +18,7 @@
 | 8.0 | Dec 28, 2025 | Pre-launch polish: password UX, spam warnings, Stripe URL modal, template legal pages, testimonials, reviews fixes |
 | 8.1 | Dec 28, 2025 | **CRITICAL FIX:** Tier feature flags now use NEXT_PUBLIC_ prefix for client-side access |
 | 8.2 | Dec 28, 2025 | Analytics API fix (`unit_price` column), force-dynamic on API routes, Pro tier verified working |
+| 8.3 | Dec 28, 2025 | Custom Domain Settings UI (Pro feature) - Domain tab in admin Settings |
 
 ---
 
@@ -147,10 +148,18 @@
   - [x] Reviews admin product dropdown fixed (auth token)
   - [x] Footer logo brightness fix (removed `brightness-0`)
   - [x] Apple Pay icon SVG fix
+- [x] **Custom Domain Settings UI** (Dec 28, 2025)
+  - [x] Domain tab in `/admin/settings` (Pro/Hosted only)
+  - [x] `/api/admin/domain` endpoint (GET/POST/DELETE)
+  - [x] Current subdomain URL display
+  - [x] Custom domain input with save functionality
+  - [x] DNS configuration instructions inline
+  - [x] Domain status indicator (pending/configured)
+  - [x] Gated behind `customDomainEnabled` feature flag
 
 **In Progress:**
 - [x] End-to-end tier flow testing - Pro tier verified working ✅
-- [ ] Custom domain settings UI (Pro tier)
+- [x] Custom domain settings UI (Pro tier) ✅ DONE (v8.3)
 - [x] ~~Investigate tier not propagating~~ - FIXED (NEXT_PUBLIC_ prefix + unit_price column)
 
 **Known Tech Debt:**
@@ -605,6 +614,29 @@ SHIPPING_COUNTRIES=US,CA,GB,AU      # Comma-separated ISO codes for Stripe check
 
 ## Session Summary (Dec 28, 2025)
 
+### Session 4 - Custom Domain Settings UI (v8.3)
+
+**What was done:**
+- Built Custom Domain Settings UI for Pro/Hosted tier users
+  - New "Domain" tab in `/admin/settings` page (only visible for Pro/Hosted)
+  - `/api/admin/domain` endpoint with GET/POST/DELETE methods
+  - Saves `custom_domain` to `stores` table in database
+  - Current subdomain URL display with external link
+  - Custom domain input with validation and save functionality
+  - Domain status indicator (pending configuration)
+  - Inline DNS configuration instructions (CNAME and A records)
+  - Download guide button (reuses existing markdown guide)
+  - Feature gated behind `customDomainEnabled` flag
+
+**Files created:**
+- `templates/hosted/app/api/admin/domain/route.ts` - Domain management API
+
+**Files modified:**
+- `templates/hosted/app/admin/settings/page.tsx` - Added Domain tab with full UI
+
+**Testing:**
+- TypeScript check passed on both template and main project
+
 ### Session 3 - Analytics Fix (v8.2)
 
 **What was done:**
@@ -663,33 +695,27 @@ SHIPPING_COUNTRIES=US,CA,GB,AU      # Comma-separated ISO codes for Stripe check
 
 ### Medium Priority (Post-Launch)
 
-3. **Custom Domain Settings UI** (Pro Feature)
-   - Build UI at `/admin/settings` for Pro users
-   - Add custom domain via Vercel API
-   - Show DNS verification status
-   - Currently only documented in Guides tab
-
-4. **Email Notifications**
+3. **Email Notifications**
    - Order confirmation emails (infrastructure exists in `lib/email.ts`)
    - Shipping update notifications
    - Low stock alerts
 
-5. **Platform Admin Dashboard**
+4. **Platform Admin Dashboard**
    - Internal tool to manage all deployed stores
    - View deployment status, tier breakdown, revenue
 
 ### Lower Priority (Future)
 
-6. Digital products support
-7. Customer accounts
-8. Multi-currency
-9. Coupon/discount system
-10. Store migration (Shopify/WooCommerce import)
+5. Digital products support
+6. Customer accounts
+7. Multi-currency
+8. Coupon/discount system
+9. Store migration (Shopify/WooCommerce import)
 
 ---
 
 *Last Updated: December 28, 2025*
-*Version: 8.2*
-*Status: Production Ready (Pro Tier Verified)*
-*Next: Deploy Starter store to verify limits, Custom domain UI*
+*Version: 8.3*
+*Status: Production Ready (Pro Tier Verified, Custom Domain UI Complete)*
+*Next: Email notifications, Platform admin dashboard*
 *This file is the source of truth for all project context.*
