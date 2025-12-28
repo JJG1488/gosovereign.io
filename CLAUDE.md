@@ -33,7 +33,7 @@
 
 ## Current State (December 2025)
 
-### Phase: Production Ready (v7.0)
+### Phase: LAUNCH READY (v8.3)
 
 **What's Built:**
 - [x] Landing page with A/B variants (`/a`, `/b`)
@@ -157,8 +157,9 @@
   - [x] Domain status indicator (pending/configured)
   - [x] Gated behind `customDomainEnabled` feature flag
 
-**In Progress:**
+**Completed This Session:**
 - [x] End-to-end tier flow testing - Pro tier verified working ✅
+- [x] Starter tier verified working (product limits, theme locks) ✅
 - [x] Custom domain settings UI (Pro tier) ✅ DONE (v8.3)
 - [x] ~~Investigate tier not propagating~~ - FIXED (NEXT_PUBLIC_ prefix + unit_price column)
 
@@ -680,42 +681,52 @@ SHIPPING_COUNTRIES=US,CA,GB,AU      # Comma-separated ISO codes for Stripe check
 
 ## Recommendations for Next Session
 
-### High Priority (Launch Blockers)
+### High Priority (Launch Ready)
 
-1. **Deploy a Starter Tier Store** - Verify product limits work
-   - Deploy store with `payment_tier: starter`
-   - Confirm `NEXT_PUBLIC_MAX_PRODUCTS=10` is set
-   - Test adding 11th product shows upgrade prompt
-   - Confirm premium themes are locked
+All launch blockers are complete:
+- ✅ Tier-based feature gating working (Pro + Starter verified)
+- ✅ Custom domain settings UI (Pro feature)
+- ✅ Analytics dashboard (Pro feature)
+- ✅ Premium themes (Pro feature)
+- ✅ Product limits enforcement (Starter: 10 max)
 
-2. **Redeploy Platform (gosovereign.io)** - If not done already
-   - The `lib/vercel.ts` changes need to be live on the platform
-   - New store deployments will then get correct `NEXT_PUBLIC_*` env vars automatically
-   - Existing stores need manual env var updates OR redeploy
+### Medium Priority (Post-Launch Enhancements)
 
-### Medium Priority (Post-Launch)
-
-3. **Email Notifications**
-   - Order confirmation emails (infrastructure exists in `lib/email.ts`)
+1. **Email Notifications**
+   - Order confirmation emails to customers
    - Shipping update notifications
-   - Low stock alerts
+   - Low stock alerts to store owners
+   - Infrastructure exists: `lib/email.ts` in template, Resend configured
 
-4. **Platform Admin Dashboard**
+2. **Platform Admin Dashboard**
    - Internal tool to manage all deployed stores
-   - View deployment status, tier breakdown, revenue
+   - View deployment status, tier breakdown, revenue metrics
+   - Customer support interface
+   - Bulk operations (redeploy, update env vars)
 
-### Lower Priority (Future)
+3. **Automated Domain Verification**
+   - Currently: User saves domain → contacts support → manual Vercel setup
+   - Future: Auto-check DNS → Auto-add to Vercel via API → Show verification status
+   - Requires: Platform API endpoint to handle domain provisioning
 
-5. Digital products support
-6. Customer accounts
-7. Multi-currency
-8. Coupon/discount system
-9. Store migration (Shopify/WooCommerce import)
+4. **Inventory Management**
+   - Low stock warnings in admin dashboard
+   - Out-of-stock auto-hide option
+   - Restock notifications
+
+### Lower Priority (Future Growth)
+
+5. **Digital Products Support** - Download delivery for digital goods
+6. **Customer Accounts** - Optional login for order history, saved addresses
+7. **Multi-currency** - International store support with currency conversion
+8. **Coupon/Discount System** - Promo codes, percentage/fixed discounts
+9. **Store Migration** - Import from Shopify/WooCommerce/Etsy
+10. **Advanced Analytics** - Conversion funnels, customer cohorts, A/B testing
 
 ---
 
 *Last Updated: December 28, 2025*
 *Version: 8.3*
-*Status: Production Ready (Pro Tier Verified, Custom Domain UI Complete)*
-*Next: Email notifications, Platform admin dashboard*
+*Status: LAUNCH READY - All tier features verified working*
+*Next: Email notifications, Platform admin dashboard, Automated domain verification*
 *This file is the source of truth for all project context.*
