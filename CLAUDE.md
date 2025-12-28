@@ -17,6 +17,7 @@
 | 7.0 | Dec 27, 2025 | Codebase cleanup: removed debug logs, unused imports, ESLint fixes, Next.js Link migration |
 | 8.0 | Dec 28, 2025 | Pre-launch polish: password UX, spam warnings, Stripe URL modal, template legal pages, testimonials, reviews fixes |
 | 8.1 | Dec 28, 2025 | **CRITICAL FIX:** Tier feature flags now use NEXT_PUBLIC_ prefix for client-side access |
+| 8.2 | Dec 28, 2025 | Analytics API fix (`unit_price` column), force-dynamic on API routes, Pro tier verified working |
 
 ---
 
@@ -148,9 +149,9 @@
   - [x] Apple Pay icon SVG fix
 
 **In Progress:**
-- [ ] End-to-end tier flow testing (deploy Starter vs Pro stores)
+- [x] End-to-end tier flow testing - Pro tier verified working ✅
 - [ ] Custom domain settings UI (Pro tier)
-- [ ] Investigate tier not propagating (Analytics showing upgrade for Pro)
+- [x] ~~Investigate tier not propagating~~ - FIXED (NEXT_PUBLIC_ prefix + unit_price column)
 
 **Known Tech Debt:**
 - `WizardContext.tsx:455` - React hooks ref mutation pattern (non-blocking)
@@ -546,8 +547,8 @@ SHIPPING_COUNTRIES=US,CA,GB,AU      # Comma-separated ISO codes for Stripe check
 - [ ] Deploy Starter store → `MAX_PRODUCTS=10` env var set
 - [ ] Deploy Pro store → `MAX_PRODUCTS=unlimited` env var set
 - [ ] Starter store → Adding 11th product shows upgrade prompt
-- [ ] Pro store → Analytics page accessible (not gated)
-- [ ] Pro store → All 6 themes available in Appearance tab
+- [x] Pro store → Analytics page accessible (not gated) ✅ VERIFIED
+- [x] Pro store → All 6 themes available in Appearance tab ✅ VERIFIED
 - [ ] Starter store → Premium themes locked with upgrade prompt
 
 ### Subdomain Naming
@@ -604,6 +605,21 @@ SHIPPING_COUNTRIES=US,CA,GB,AU      # Comma-separated ISO codes for Stripe check
 
 ## Session Summary (Dec 28, 2025)
 
+### Session 3 - Analytics Fix (v8.2)
+
+**What was done:**
+- Fixed Analytics API 500 error - database query used wrong column name
+  - Changed `price_at_time` → `unit_price` to match actual `order_items` schema
+  - File: `templates/hosted/app/api/admin/analytics/route.ts`
+- Added `export const dynamic = "force-dynamic"` to prevent static rendering errors:
+  - `templates/hosted/app/api/products/search/route.ts`
+  - `templates/hosted/app/api/admin/analytics/route.ts`
+- **Pro tier fully verified working**: Analytics page loads, premium themes unlocked
+
+**Commits:**
+- `dff9809` - fix: Use correct column name in analytics query
+- `6575bb2` - chore: Update hosted template submodule
+
 ### Session 2 - Tier Fix (v8.1)
 
 **What was done:**
@@ -611,7 +627,6 @@ SHIPPING_COUNTRIES=US,CA,GB,AU      # Comma-separated ISO codes for Stripe check
   - Root cause: `useFeatureFlags()` was reading `process.env.PAYMENT_TIER` but this env var was NOT prefixed with `NEXT_PUBLIC_`, making it undefined on the client side
   - All tier env vars in `lib/vercel.ts` now use `NEXT_PUBLIC_` prefix
   - Updated `useFeatureFlags()` hook in template to read `NEXT_PUBLIC_*` vars
-  - Fixes: Pro stores showing "Upgrade" on Analytics page, premium themes locked incorrectly
 
 **Files changed:**
 - `lib/vercel.ts` - Changed all tier env var keys to use `NEXT_PUBLIC_` prefix
@@ -629,15 +644,52 @@ SHIPPING_COUNTRIES=US,CA,GB,AU      # Comma-separated ISO codes for Stripe check
 - Footer logo brightness fix and Apple Pay icon SVG fix
 - Dynamic caching for featured reviews API
 
-**Where to pick up:**
-1. Custom Domain Settings UI for Pro tier
-2. Email notifications (order confirmation, shipping updates)
-3. End-to-end tier testing (deploy Starter vs Pro stores to verify fix)
+---
+
+## Recommendations for Next Session
+
+### High Priority (Launch Blockers)
+
+1. **Deploy a Starter Tier Store** - Verify product limits work
+   - Deploy store with `payment_tier: starter`
+   - Confirm `NEXT_PUBLIC_MAX_PRODUCTS=10` is set
+   - Test adding 11th product shows upgrade prompt
+   - Confirm premium themes are locked
+
+2. **Redeploy Platform (gosovereign.io)** - If not done already
+   - The `lib/vercel.ts` changes need to be live on the platform
+   - New store deployments will then get correct `NEXT_PUBLIC_*` env vars automatically
+   - Existing stores need manual env var updates OR redeploy
+
+### Medium Priority (Post-Launch)
+
+3. **Custom Domain Settings UI** (Pro Feature)
+   - Build UI at `/admin/settings` for Pro users
+   - Add custom domain via Vercel API
+   - Show DNS verification status
+   - Currently only documented in Guides tab
+
+4. **Email Notifications**
+   - Order confirmation emails (infrastructure exists in `lib/email.ts`)
+   - Shipping update notifications
+   - Low stock alerts
+
+5. **Platform Admin Dashboard**
+   - Internal tool to manage all deployed stores
+   - View deployment status, tier breakdown, revenue
+
+### Lower Priority (Future)
+
+6. Digital products support
+7. Customer accounts
+8. Multi-currency
+9. Coupon/discount system
+10. Store migration (Shopify/WooCommerce import)
 
 ---
 
 *Last Updated: December 28, 2025*
-*Version: 8.1*
-*Status: Production Ready (Tier Fix Complete)*
-*Next: Custom domain settings UI, email notifications*
+*Version: 8.2*
+*Status: Production Ready (Pro Tier Verified)*
+*Next: Deploy Starter store to verify limits, Custom domain UI*
 *This file is the source of truth for all project context.*
