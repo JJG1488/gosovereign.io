@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Container } from "@/components/ui";
 
 interface FooterProps {
@@ -8,29 +9,37 @@ interface FooterProps {
   copyright: string;
 }
 
+// Map link labels to actual routes
+const linkRoutes: Record<string, string> = {
+  FAQ: "/faq",
+  Contact: "/contact",
+  Terms: "/terms",
+  Privacy: "/privacy",
+};
+
 export function Footer({ logo, links, copyright }: FooterProps): React.ReactElement {
   return (
     <footer className="py-12 bg-navy-950 border-t border-navy-800">
       <Container>
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           {/* Logo */}
-          <a
-            href="#"
+          <Link
+            href="/"
             className="text-xl font-bold text-gray-100 hover:text-emerald-400 transition-colors"
           >
             {logo}
-          </a>
+          </Link>
 
           {/* Links */}
           <nav className="flex items-center gap-6">
             {links.map((link) => (
-              <a
+              <Link
                 key={link}
-                href={`#${link.toLowerCase()}`}
+                href={linkRoutes[link] || `#${link.toLowerCase()}`}
                 className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
               >
                 {link}
-              </a>
+              </Link>
             ))}
           </nav>
 
