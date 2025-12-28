@@ -1,16 +1,33 @@
 "use client";
 
-import { CreditCard, Check, ExternalLink, AlertCircle, Loader2 } from "lucide-react";
+import { CreditCard, Check, ExternalLink, AlertCircle, Loader2, X, Copy, CheckCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui";
 import { useWizard } from "../WizardContext";
 
+// Utility to generate subdomain from store name
+function slugifyStoreName(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .slice(0, 50);
+}
+
 export function PaymentsStep() {
   const { state, storeId, updateConfig } = useWizard();
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showUrlModal, setShowUrlModal] = useState(false);
+  const [copied, setCopied] = useState(false);
   const searchParams = useSearchParams();
+
+  const storeName = state.config.storeName || "my-store";
+  const subdomain = slugifyStoreName(storeName);
+  const storeUrl = `https://${subdomain}.gosovereign.io`;
 
   const isConnected = state.config.stripeConnected;
 
@@ -28,14 +45,31 @@ export function PaymentsStep() {
     }
   }, [searchParams, updateConfig]);
 
-  const handleConnect = async () => {
+  const handleCopyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(storeUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
+  const handleConnectClick = () => {
+    // Show the URL info modal first
+    setShowUrlModal(true);
+  };
+
+  const handleProceedToStripe = async () => {
     if (!storeId) {
       setError("Store not initialized. Please refresh and try again.");
+      setShowUrlModal(false);
       return;
     }
 
     setIsConnecting(true);
     setError(null);
+    setShowUrlModal(false);
 
     try {
       // Get the Stripe Connect OAuth URL from our API
@@ -157,7 +191,7 @@ export function PaymentsStep() {
             </div>
 
             <Button
-              onClick={handleConnect}
+              onClick={handleConnectClick}
               disabled={isConnecting}
               className="w-full bg-[#635BFF] hover:bg-[#5851e0]"
             >
@@ -173,6 +207,76 @@ export function PaymentsStep() {
                 </>
               )}
             </Button>
+          </div>
+        )}
+
+        {/* URL Info Modal */}
+        {showUrlModal && (
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+            <div className="bg-navy-800 rounded-2xl max-w-md w-full border border-navy-700 shadow-2xl">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-white">Before you continue</h3>
+                  <button
+                    onClick={() => setShowUrlModal(false)}
+                    className="p-1 text-gray-400 hover:text-white transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <p className="text-gray-400 text-sm">
+                    Stripe will ask for your <strong className="text-white">website URL</strong> during setup.
+                    Use the URL below - this is where your store will be hosted:
+                  </p>
+
+                  <div className="bg-navy-900 border border-navy-600 rounded-lg p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <code className="text-emerald-400 text-sm break-all">
+                        {storeUrl}
+                      </code>
+                      <button
+                        onClick={handleCopyUrl}
+                        className="flex-shrink-0 p-2 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-navy-700"
+                        title="Copy to clipboard"
+                      >
+                        {copied ? (
+                          <CheckCircle className="w-5 h-5 text-emerald-400" />
+                        ) : (
+                          <Copy className="w-5 h-5" />
+                        )}
+                      </button>
+                    </div>
+                    {copied && (
+                      <p className="text-emerald-400 text-xs mt-2">Copied to clipboard!</p>
+                    )}
+                  </div>
+
+                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+                    <p className="text-amber-400 text-xs">
+                      <strong>Tip:</strong> If you have your own domain name, you can add it later in your store settings after purchase.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={() => setShowUrlModal(false)}
+                    className="flex-1 px-4 py-2 border border-navy-600 text-gray-300 rounded-lg hover:bg-navy-700 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <Button
+                    onClick={handleProceedToStripe}
+                    className="flex-1 bg-[#635BFF] hover:bg-[#5851e0]"
+                  >
+                    Continue to Stripe
+                    <ExternalLink className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

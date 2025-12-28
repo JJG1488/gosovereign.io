@@ -46,10 +46,10 @@ export default function ContactPage() {
                 </div>
                 <h3 className="font-semibold text-gray-100 mb-1">Email</h3>
                 <a
-                  href="mailto:support@gosovereign.io"
+                  href="mailto:info@gosovereign.io"
                   className="text-emerald-400 hover:text-emerald-300 transition-colors"
                 >
-                  support@gosovereign.io
+                  info@gosovereign.io
                 </a>
               </div>
 

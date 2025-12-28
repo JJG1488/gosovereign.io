@@ -76,6 +76,9 @@ function SuccessContent() {
               <p className="text-gray-400 text-sm">
                 Confirmation sent to <span className="text-white font-medium">{sessionInfo.email}</span>
               </p>
+              <p className="text-amber-400 text-xs mt-2">
+                Didn&apos;t receive it? Check your spam folder or promotions tab.
+              </p>
             </div>
           ) : null}
 

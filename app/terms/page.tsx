@@ -55,7 +55,7 @@ export default function TermsPage() {
               <p className="text-gray-400">
                 Questions about these terms?{" "}
                 <a
-                  href="mailto:support@gosovereign.io"
+                  href="mailto:info@gosovereign.io"
                   className="text-emerald-400 hover:text-emerald-300 transition-colors"
                 >
                   Contact us

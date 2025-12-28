@@ -71,7 +71,7 @@ export const termsOfService: LegalDocument = {
     },
     {
       title: "14. Contact Information",
-      content: `For questions about these terms, please contact us at support@gosovereign.io.`,
+      content: `For questions about these terms, please contact us at info@gosovereign.io.`,
     },
   ],
 };
