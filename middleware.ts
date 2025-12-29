@@ -4,6 +4,24 @@ import { updateSession } from "@/lib/supabase/middleware";
 export async function middleware(request: NextRequest) {
   const { supabaseResponse, user } = await updateSession(request);
 
+  // Platform admin routes - restricted to specific emails
+  const isPlatformAdminPath = request.nextUrl.pathname.startsWith("/platform-admin");
+  if (isPlatformAdminPath) {
+    if (!user) {
+      const redirectUrl = new URL("/auth/login", request.url);
+      redirectUrl.searchParams.set("next", request.nextUrl.pathname);
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    const adminEmails = (process.env.PLATFORM_ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
+    const userEmail = user.email?.toLowerCase() || "";
+
+    if (!adminEmails.includes(userEmail)) {
+      // Unauthorized - redirect to home
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+  }
+
   // Protected routes that require authentication
   const protectedPaths = ["/wizard", "/dashboard", "/billing"];
   const isProtectedPath = protectedPaths.some((path) =>
