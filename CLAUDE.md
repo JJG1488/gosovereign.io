@@ -21,6 +21,10 @@
 | 8.3 | Dec 28, 2025 | Custom Domain Settings UI (Pro feature) - Domain tab in admin Settings |
 | 8.4 | Dec 28, 2025 | Email notifications verified complete - order confirmations, shipping notifications, all wired up |
 | 8.5 | Dec 28, 2025 | Platform Admin Dashboard - internal tool for managing all deployed stores, revenue tracking |
+| 8.6 | Dec 29, 2025 | Media Banner feature - YouTube/video/image support, admin settings UI, autoplay muted + loop |
+| 8.7 | Dec 29, 2025 | Admin Mobile UX - hamburger nav, settings tab dropdown, clickable product rows, natural aspect ratios |
+| 8.8 | Dec 29, 2025 | Storefront Mobile UX - reviews/orders mobile layouts, cart optimization, centered nav store name, footer fixes |
+| 8.9 | Dec 30, 2025 | Reviews mobile fix, **Runtime Settings System** - all store settings now update without redeploy |
 
 ---
 
@@ -35,7 +39,7 @@
 
 ## Current State (December 2025)
 
-### Phase: LAUNCHED + ADMIN TOOLS (v8.5)
+### Phase: LAUNCHED + FULL RUNTIME SETTINGS (v8.9)
 
 **What's Built:**
 - [x] Landing page with A/B variants (`/a`, `/b`)
@@ -178,9 +182,34 @@
   - [x] Middleware auth gate restricting access to `PLATFORM_ADMIN_EMAILS`
   - [x] `createAdminClient()` using service role key to bypass RLS
   - [x] Server Components only (no client-side data fetching for security)
+- [x] **Media Banner** (Dec 29, 2025)
+  - [x] `VideoBanner` component with YouTube embed + HTML5 video + image support
+  - [x] `VideoUpload` component for drag-drop video uploads
+  - [x] `/api/admin/upload-video` endpoint (MP4/WebM, 50MB max)
+  - [x] `/lib/video-banner.ts` server-side settings fetcher
+  - [x] Settings UI in Appearance tab (3 options: YouTube, Video, Image)
+  - [x] Videos autoplay muted + loop, images display static
+  - [x] YouTube URL parsing (youtube.com/watch, youtu.be, shorts, embed)
+  - [x] Conditional rendering - only shows if enabled with valid media
+  - [x] Natural aspect ratios (YouTube 16:9, video/image preserve original)
+- [x] **Admin Mobile UX** (Dec 29, 2025)
+  - [x] Hamburger menu in admin layout (mobile nav with all links)
+  - [x] Mobile tab dropdown in Settings page (replaces horizontal scroll)
+  - [x] Clickable product rows (tap anywhere to edit on mobile)
+  - [x] Menu closes on route change for better UX
+- [x] **Storefront Mobile UX** (Dec 29, 2025)
+  - [x] Reviews page: header stacking, clickable cards, larger touch targets
+  - [x] Orders page: mobile card view, clickable desktop rows
+  - [x] Admin buttons full-width on mobile (Add Product, Save, Download Guide)
+  - [x] Video Source tabs wrapping fix
+  - [x] Header 3-column CSS Grid with centered uppercase store name
+  - [x] MenuButton breakpoint fix (md→lg) for 768-1024px range
+  - [x] Cart page two-row layout with Trash icon
+  - [x] Duplicate stock message fix (kept in AddToCartButton only)
+  - [x] Footer payment icons with flex-wrap
 
 **Completed This Session:**
-- [x] Platform Admin Dashboard - complete internal tool for managing stores ✅ (v8.5)
+- [x] Storefront Mobile UX - comprehensive mobile audit and fixes ✅ (v8.8)
 
 **Known Tech Debt:**
 - `WizardContext.tsx:455` - React hooks ref mutation pattern (non-blocking)
@@ -616,13 +645,151 @@ SHIPPING_COUNTRIES=US,CA,GB,AU      # Comma-separated ISO codes for Stripe check
 
 | File | Purpose | Last Updated |
 |------|---------|--------------|
-| `CLAUDE.md` | Project context and version history (this file) | Dec 27, 2025 |
+| `CLAUDE.md` | Project context and version history (this file) | Dec 29, 2025 |
 | `PROMPTS.md` | Granular implementation prompts (v3.0) | Dec 22, 2024 |
 | `PROMPTS_v2.md` | Architecture documentation and runbook | Dec 22, 2024 |
 
 ---
 
-## Session Summary (Dec 28, 2025)
+## Session Summary (Dec 30, 2025)
+
+### Session 10 - Runtime Settings System (v8.9)
+
+**What was done:**
+
+1. **Reviews Admin Mobile Fix**
+   - Edit/Delete buttons were invisible on mobile (pushed off-screen)
+   - Fixed by changing card layout from `flex items-start justify-between` to `flex flex-col sm:flex-row`
+   - Action buttons now appear in their own row at bottom on mobile
+
+2. **Full Runtime Settings System** (Major Feature)
+   - **Problem:** All settings were read from env vars (build-time), requiring redeploy to update
+   - **Solution:** Created `RuntimeSettings` interface and `getStoreSettingsFromDB()` to fetch from database
+   - **Settings now runtime-updateable:**
+     - `themePreset` - Premium themes
+     - `logoUrl` - Store logo
+     - `announcementBar` - Announcement banner (great for flash sales!)
+     - `tagline` - Hero section tagline
+     - `aboutText` - Footer about text
+     - `shippingPromise` - Trust badge text
+     - `returnPolicy` - Trust badge text
+     - `instagramUrl`, `facebookUrl`, `twitterUrl`, `tiktokUrl` - Social links
+   - All components updated to receive settings as props from Server Components
+   - Falls back to env vars if database unavailable
+
+**Files created:**
+- `templates/hosted/lib/settings.ts` - `RuntimeSettings` interface + `getStoreSettingsFromDB()`
+
+**Files modified:**
+- `templates/hosted/app/layout.tsx` - Fetches all settings, passes to Header/Footer
+- `templates/hosted/app/page.tsx` - Fetches settings, passes to Hero
+- `templates/hosted/components/Header.tsx` - Accepts settings prop for announcementBar
+- `templates/hosted/components/Footer.tsx` - Accepts settings prop for logo, about, social links
+- `templates/hosted/components/Hero.tsx` - Accepts settings prop for tagline, policies
+- `templates/hosted/components/MobileMenu.tsx` - Accepts settings prop for logo, social links
+- `templates/hosted/app/admin/reviews/page.tsx` - Mobile stacking layout fix
+
+**Architecture Pattern:**
+```
+Server Component (layout.tsx, page.tsx)
+  ↓ fetches settings from DB
+  ↓ passes as props
+Client Component (Header, Footer, Hero, MobileMenu)
+  ↓ receives settings prop
+  ↓ renders with runtime values
+```
+
+**Testing:**
+- TypeScript check passed
+- All settings changes now apply immediately without redeploy
+
+---
+
+### Session 9 - Storefront Mobile UX (v8.8)
+
+**What was done:**
+- Comprehensive mobile UX audit and fixes across admin and storefront:
+  1. **Reviews page mobile layout** - Header stacking, clickable cards, larger touch targets
+  2. **Orders page mobile layout** - Added card view for mobile, clickable rows on desktop
+  3. **Admin buttons full-width** - Add Product, Save Changes, Add Question, Download Guide buttons
+  4. **Video Source tabs** - Fixed overflow with `flex-wrap`
+  5. **Header 3-column grid** - Store name centered at all screen sizes using CSS Grid
+  6. **Uppercase store name** - Store name displayed in all caps in nav
+  7. **MenuButton breakpoint fix** - Changed `md:hidden` to `lg:hidden` to fix 768-1024px gap
+  8. **Cart page optimization** - Two-row layout, trash icon, mobile-friendly sizing
+  9. **Duplicate stock message fix** - Removed duplicate from product page (kept in AddToCartButton)
+  10. **Footer payment icons** - Added `flex-wrap` and `flex-shrink-0` for mobile layout
+
+**Files modified:**
+- `templates/hosted/app/admin/reviews/page.tsx` - Header stacking, clickable cards, touch targets
+- `templates/hosted/app/admin/orders/page.tsx` - Mobile card view, clickable rows, useRouter
+- `templates/hosted/app/admin/products/page.tsx` - Add Product button full-width on mobile
+- `templates/hosted/app/admin/settings/page.tsx` - Video tabs wrap, buttons full-width
+- `templates/hosted/components/Header.tsx` - 3-column grid layout, uppercase store name
+- `templates/hosted/components/MobileMenu.tsx` - Breakpoint fix (`lg:hidden`)
+- `templates/hosted/components/Hero.tsx` - Removed store name h1 (moved to Header)
+- `templates/hosted/app/cart/page.tsx` - Mobile-optimized layout with Trash2 icon
+- `templates/hosted/app/products/[id]/page.tsx` - Removed duplicate stock message
+- `templates/hosted/components/Footer.tsx` - Payment icons mobile layout fix
+
+**Key patterns applied:**
+- CSS Grid with `grid-cols-3` for true 3-column centering
+- `flex-wrap` for responsive content wrapping
+- `w-full sm:w-auto` pattern for mobile-first buttons
+- `stopPropagation` for nested click handlers
+- Mobile card layouts replacing tables
+
+---
+
+### Session 8 - Admin Mobile UX (v8.7)
+
+**What was done:**
+- Made admin center fully mobile-friendly with multiple improvements:
+  1. **Hamburger menu in admin layout** - Mobile nav with all admin links
+  2. **Settings tab dropdown** - Replaced horizontal scroll with vertical dropdown on mobile
+  3. **Clickable product rows** - Tap anywhere on a product to edit (solves cut-off Edit button)
+  4. **Natural aspect ratios** - Fixed media banner proportions (removed fixed height constraints)
+
+**Files modified:**
+- `templates/hosted/app/admin/layout.tsx` - Added hamburger menu with Menu/X icons, mobileMenuOpen state
+- `templates/hosted/app/admin/settings/page.tsx` - Added ChevronDown import, mobile tab dropdown selector
+- `templates/hosted/app/admin/products/page.tsx` - Added useRouter, clickable tr with cursor-pointer
+- `templates/hosted/components/VideoBanner.tsx` - Natural proportions (aspect-video for YouTube, w-full h-auto for video/image)
+
+**Testing:**
+- TypeScript check passed
+
+---
+
+### Session 7 - Media Banner Feature (v8.6)
+
+**What was done:**
+- Added Media Banner feature for deployed stores
+  - Store admins can add YouTube URL, upload video (MP4/WebM), OR upload image
+  - Banner appears below header, above hero section
+  - Full width with natural aspect ratios
+  - Videos autoplay muted and loop continuously
+  - Images display as static banner
+  - Conditional rendering - only shows if enabled with valid media
+
+**Files created:**
+- `templates/hosted/components/VideoBanner.tsx` - Display component with YouTube/video/image support
+- `templates/hosted/components/VideoUpload.tsx` - Drag-drop video upload component
+- `templates/hosted/app/api/admin/upload-video/route.ts` - Video upload endpoint (50MB max)
+- `templates/hosted/lib/video-banner.ts` - Server-side settings fetcher
+
+**Files modified:**
+- `templates/hosted/app/page.tsx` - Added VideoBanner rendering above Hero
+- `templates/hosted/app/admin/settings/page.tsx` - Added Media Banner UI to Appearance tab (3 options: YouTube, Video, Image)
+
+**Testing:**
+- TypeScript check passed on both template and main project
+
+**Storage requirement:**
+- Supabase Storage bucket `store-videos` needed for video uploads (create manually)
+- Images use existing `product-images` bucket (no new bucket needed)
+
+---
 
 ### Session 6 - Platform Admin Dashboard (v8.5)
 
@@ -746,47 +913,64 @@ SHIPPING_COUNTRIES=US,CA,GB,AU      # Comma-separated ISO codes for Stripe check
 
 ## Recommendations for Next Session
 
-### Completed (v8.5)
+### Completed (v8.9)
 
-All launch blockers + operational tools complete:
+All launch blockers + operational tools + full mobile UX + **complete runtime settings** system:
 - ✅ Tier-based feature gating working (Pro + Starter verified)
 - ✅ Custom domain settings UI (Pro feature)
 - ✅ Analytics dashboard (Pro feature)
-- ✅ Premium themes (Pro feature)
+- ✅ Premium themes (Pro feature) + runtime switching
 - ✅ Product limits enforcement (Starter: 10 max)
 - ✅ Email notifications (order confirmations, shipping updates, all working)
 - ✅ Platform Admin Dashboard (stores overview, revenue tracking)
+- ✅ Media Banner (YouTube/video/image with natural aspect ratios)
+- ✅ Admin Mobile UX (hamburger nav, tab dropdown, clickable product rows)
+- ✅ Storefront Mobile UX (reviews, orders, cart, header, footer all mobile-optimized)
+- ✅ Reviews admin Edit/Delete buttons visible on mobile
+- ✅ **ALL settings now update at runtime** (no redeploy needed):
+  - Theme, logo, announcement bar, tagline, about text
+  - Shipping/return policies, all social links
 
 ### High Priority (Post-Launch Enhancements)
 
-1. **Automated Domain Verification**
-   - Currently: User saves domain → manual Vercel setup
-   - Build: Auto-check DNS → Auto-add to Vercel via API → Show verification status
-   - Integrate with Vercel Domains API for SSL provisioning
+1. **Sync Template to GitHub** ⚠️ CRITICAL
+   - Push latest changes to `gosovereign/storefront-template`
+   - Critical for new store deployments to get v8.9 runtime settings system
+   - Without this, new stores won't have runtime settings
 
 2. **Inventory Management**
    - Low stock warnings in admin dashboard
    - Out-of-stock auto-hide option
    - Restock email notifications
 
+3. **Automated Domain Verification**
+   - Currently: User saves domain → manual Vercel setup
+   - Build: Auto-check DNS → Auto-add to Vercel via API → Show verification status
+   - Integrate with Vercel Domains API for SSL provisioning
+
 ### Medium Priority
 
-3. **Coupon/Discount System** - Promo codes, percentage/fixed discounts
-4. **Account Settings Page** - User profile, email change, account deletion
-5. **Bulk Operations in Admin** - Redeploy stores, update env vars
+4. **Coupon/Discount System** - Promo codes, percentage/fixed discounts
+5. **Account Settings Page** - User profile, email change, account deletion
+6. **Order Detail Page Mobile** - Check if order detail page needs mobile fixes
+7. **Product Detail Page Mobile** - Image gallery, variant selector mobile UX
 
 ### Lower Priority (Future Growth)
 
-6. **Digital Products Support** - Download delivery for digital goods
-7. **Customer Accounts** - Optional login for order history, saved addresses
-8. **Multi-currency** - International store support with currency conversion
-9. **Store Migration** - Import from Shopify/WooCommerce/Etsy
-10. **Advanced Analytics** - Conversion funnels, customer cohorts, A/B testing
+8. **Digital Products Support** - Download delivery for digital goods
+9. **Customer Accounts** - Optional login for order history, saved addresses
+10. **Multi-currency** - International store support with currency conversion
+11. **Store Migration** - Import from Shopify/WooCommerce/Etsy
+12. **Advanced Analytics** - Conversion funnels, customer cohorts, A/B testing
+
+### Storage Setup Reminder
+
+- Create `store-videos` bucket in Supabase Storage for video uploads (if not done)
 
 ---
 
-*Last Updated: December 28, 2025*
-*Version: 8.5*
-*Status: LAUNCHED + ADMIN TOOLS - Platform admin dashboard complete*
-*Next: Automated domain verification, Inventory management, Coupon system*
+*Last Updated: December 30, 2025*
+*Version: 8.9*
+*Status: LAUNCHED + FULL RUNTIME SETTINGS - All store settings update without redeploy*
+*Next: Sync template to GitHub (critical!), Inventory management, Automated domain verification*
 *This file is the source of truth for all project context.*
