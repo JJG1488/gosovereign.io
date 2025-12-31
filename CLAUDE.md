@@ -25,7 +25,8 @@
 | 8.7 | Dec 29, 2025 | Admin Mobile UX - hamburger nav, settings tab dropdown, clickable product rows, natural aspect ratios |
 | 8.8 | Dec 29, 2025 | Storefront Mobile UX - reviews/orders mobile layouts, cart optimization, centered nav store name, footer fixes |
 | 8.9 | Dec 30, 2025 | Reviews mobile fix, **Runtime Settings System** - all store settings now update without redeploy |
-| 9.0 | Dec 30, 2025 | **CRITICAL FIX:** Supabase `.single()` caching bug - settings now persist correctly, Trust Badges moved below Reviews |
+| 9.0 | Dec 30, 2025 | Trust Badges moved below Reviews, initial Supabase caching investigation |
+| 9.1 | Dec 31, 2025 | **CRITICAL FIX:** Supabase PostgREST caching - custom fetch with cache-busting headers, settings now persist correctly |
 
 ---
 
@@ -40,7 +41,7 @@
 
 ## Current State (December 2025)
 
-### Phase: LAUNCHED + SETTINGS PERSISTENCE FIXED (v9.0)
+### Phase: LAUNCHED + SETTINGS PERSISTENCE FIXED (v9.1)
 
 **What's Built:**
 - [x] Landing page with A/B variants (`/a`, `/b`)
@@ -546,6 +547,7 @@ SHIPPING_COUNTRIES=US,CA,GB,AU      # Comma-separated ISO codes for Stripe check
 | 2024-12-28 | **Preset-based themes** | 6 curated palettes vs custom color picker - simpler, more polished |
 | 2025-12-30 | **Use `.limit(1)` not `.single()` for Supabase** | `.single()` causes PostgREST caching issues returning stale data |
 | 2025-12-30 | **Fresh Supabase client for settings API** | Singleton pattern can cache stale data in serverless environments |
+| 2025-12-31 | **Custom fetch with cache-busting headers** | Override Supabase client's fetch to add `cache: 'no-store'` and `Cache-Control` headers - the definitive fix for PostgREST caching |
 
 ---
 
@@ -654,47 +656,80 @@ SHIPPING_COUNTRIES=US,CA,GB,AU      # Comma-separated ISO codes for Stripe check
 
 ---
 
-## Session Summary (Dec 30, 2025)
+## Session Summary (Dec 31, 2025)
 
-### Session 11 - Supabase Caching Fix (v9.0)
+### Session 12 - Supabase Caching FINAL Fix (v9.1)
+
+**What was done:**
+
+**CRITICAL FIX: Custom Fetch with Cache-Busting Headers**
+
+The v9.0 fix (`.limit(1)` + fresh client) was **not sufficient**. PostgREST was still caching at a deeper level.
+
+**Root Cause Discovery:**
+- PUT saved data with timestamp `2025-12-31T17:24:57`
+- GET returned data with timestamp `2025-12-30T12:01:21` (24 hours old!)
+- Even with fresh client + `.limit(1)`, Supabase PostgREST cached responses
+
+**The Real Fix:** Override the Supabase client's internal fetch function to inject cache-busting headers:
+
+```typescript
+export function createFreshAdminClient(): SupabaseClient | null {
+  return createClient(supabaseUrl, key, {
+    global: {
+      fetch: (url, options = {}) => {
+        // Handle Headers object properly
+        const existingHeaders = options.headers instanceof Headers
+          ? Object.fromEntries(options.headers.entries())
+          : (options.headers || {});
+
+        return fetch(url, {
+          ...options,
+          cache: 'no-store',  // Critical!
+          headers: {
+            ...existingHeaders,
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+          },
+        });
+      },
+    },
+  });
+}
+```
+
+**Gotcha:** When overriding fetch, `options.headers` can be a `Headers` object (not plain object). Must convert with `Object.fromEntries(headers.entries())` before spreading, otherwise Supabase's `apikey` header gets lost.
+
+**Files modified:**
+- `templates/hosted/lib/supabase.ts` - Custom fetch with cache-busting headers
+- `templates/hosted/lib/settings.ts` - Use fresh client + `.limit(1)`
+- `templates/hosted/app/api/admin/settings/route.ts` - Debug logging (to be removed)
+
+**Documentation created:**
+- `docs/supabase-caching-fix-pattern.md` - Complete pattern guide for reuse
+
+**Key Learnings:**
+- Supabase PostgREST caching is aggressive and persists across serverless invocations
+- Neither fresh client nor `.limit(1)` alone is sufficient
+- Must inject `cache: 'no-store'` at the fetch level to guarantee fresh data
+- Always verify with timestamps in logs during debugging
+
+---
+
+### Session 11 - Supabase Caching Investigation (v9.0)
 
 **What was done:**
 
 1. **Trust Badges Moved Below Reviews**
    - Moved Free Shipping, Secure Checkout, Easy Returns section from Hero to below Testimonials
-   - Now appears just before Footer for better visual flow
 
-2. **CRITICAL FIX: Supabase `.single()` Caching Bug**
-   - **Problem:** Admin settings saved successfully but values disappeared on page refresh
-   - **Root Cause:** Supabase PostgREST was caching results for `.single()` queries, returning stale data from Dec 28 even though DB had fresh data from Dec 30
-   - **Discovery:** Two queries to same table/store_id returned different `updated_at` timestamps:
-     - `.select("store_id, updated_at")` → Correct timestamp (Dec 30)
-     - `.select("*").single()` → Stale timestamp (Dec 28)
-   - **Solution:** Replace `.single()` with `.limit(1)` + array extraction
+2. **Initial Caching Fix Attempts (incomplete)**
+   - Changed `||` to `??` for optional fields - didn't fix it
+   - Created `createFreshAdminClient()` function - didn't fix it alone
+   - Changed `.single()` to `.limit(1)` - didn't fix it alone
+   - Added extensive debug logging to trace the issue
 
-   ```typescript
-   // OLD (cached stale data):
-   const { data } = await supabase.from("store_settings").select("*").eq("store_id", storeId).single();
-
-   // NEW (always fresh):
-   const { data: rows } = await supabase.from("store_settings").select("*").eq("store_id", storeId).limit(1);
-   const data = rows?.[0] || null;
-   ```
-
-3. **Fresh Supabase Client for Settings**
-   - Created `createFreshAdminClient()` function that creates new client per request
-   - Avoids potential singleton caching in serverless environments
-
-**Files modified:**
-- `templates/hosted/lib/supabase.ts` - Added `createFreshAdminClient()`
-- `templates/hosted/app/api/admin/settings/route.ts` - Use fresh client + `.limit(1)` pattern
-- `templates/hosted/components/Hero.tsx` - Removed Trust Badges section
-- `templates/hosted/app/page.tsx` - Added Trust Badges after Testimonials
-
-**Key Learnings:**
-- Supabase PostgREST can cache `.single()` query results in unexpected ways
-- `.limit(1)` uses a different query path and bypasses this caching
-- Always test with timestamps to verify data freshness
+**Discovery:** Logs revealed GET was returning `updated_at` timestamps from days ago, proving the cache was at Supabase's level, not ours.
 
 ---
 
@@ -1014,8 +1049,8 @@ All launch blockers + operational tools + full mobile UX + **complete runtime se
 
 ---
 
-*Last Updated: December 30, 2025*
-*Version: 8.9*
-*Status: LAUNCHED + FULL RUNTIME SETTINGS - All store settings update without redeploy*
-*Next: Sync template to GitHub (critical!), Inventory management, Automated domain verification*
+*Last Updated: December 31, 2025*
+*Version: 9.1*
+*Status: LAUNCHED + SETTINGS PERSISTENCE FIXED - Supabase caching issue resolved*
+*Next: Remove debug logging, Sync template to GitHub, Inventory management, Automated domain verification*
 *This file is the source of truth for all project context.*
