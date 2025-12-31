@@ -25,6 +25,7 @@
 | 8.7 | Dec 29, 2025 | Admin Mobile UX - hamburger nav, settings tab dropdown, clickable product rows, natural aspect ratios |
 | 8.8 | Dec 29, 2025 | Storefront Mobile UX - reviews/orders mobile layouts, cart optimization, centered nav store name, footer fixes |
 | 8.9 | Dec 30, 2025 | Reviews mobile fix, **Runtime Settings System** - all store settings now update without redeploy |
+| 9.0 | Dec 30, 2025 | **CRITICAL FIX:** Supabase `.single()` caching bug - settings now persist correctly, Trust Badges moved below Reviews |
 
 ---
 
@@ -39,7 +40,7 @@
 
 ## Current State (December 2025)
 
-### Phase: LAUNCHED + FULL RUNTIME SETTINGS (v8.9)
+### Phase: LAUNCHED + SETTINGS PERSISTENCE FIXED (v9.0)
 
 **What's Built:**
 - [x] Landing page with A/B variants (`/a`, `/b`)
@@ -543,6 +544,8 @@ SHIPPING_COUNTRIES=US,CA,GB,AU      # Comma-separated ISO codes for Stripe check
 | 2024-12-27 | **Downloadable domain docs** | Markdown guide in admin Settings, works offline |
 | 2024-12-28 | **Recharts for analytics** | Lightweight, React-native API, good Tailwind integration |
 | 2024-12-28 | **Preset-based themes** | 6 curated palettes vs custom color picker - simpler, more polished |
+| 2025-12-30 | **Use `.limit(1)` not `.single()` for Supabase** | `.single()` causes PostgREST caching issues returning stale data |
+| 2025-12-30 | **Fresh Supabase client for settings API** | Singleton pattern can cache stale data in serverless environments |
 
 ---
 
@@ -645,13 +648,55 @@ SHIPPING_COUNTRIES=US,CA,GB,AU      # Comma-separated ISO codes for Stripe check
 
 | File | Purpose | Last Updated |
 |------|---------|--------------|
-| `CLAUDE.md` | Project context and version history (this file) | Dec 29, 2025 |
+| `CLAUDE.md` | Project context and version history (this file) | Dec 30, 2025 |
 | `PROMPTS.md` | Granular implementation prompts (v3.0) | Dec 22, 2024 |
 | `PROMPTS_v2.md` | Architecture documentation and runbook | Dec 22, 2024 |
 
 ---
 
 ## Session Summary (Dec 30, 2025)
+
+### Session 11 - Supabase Caching Fix (v9.0)
+
+**What was done:**
+
+1. **Trust Badges Moved Below Reviews**
+   - Moved Free Shipping, Secure Checkout, Easy Returns section from Hero to below Testimonials
+   - Now appears just before Footer for better visual flow
+
+2. **CRITICAL FIX: Supabase `.single()` Caching Bug**
+   - **Problem:** Admin settings saved successfully but values disappeared on page refresh
+   - **Root Cause:** Supabase PostgREST was caching results for `.single()` queries, returning stale data from Dec 28 even though DB had fresh data from Dec 30
+   - **Discovery:** Two queries to same table/store_id returned different `updated_at` timestamps:
+     - `.select("store_id, updated_at")` → Correct timestamp (Dec 30)
+     - `.select("*").single()` → Stale timestamp (Dec 28)
+   - **Solution:** Replace `.single()` with `.limit(1)` + array extraction
+
+   ```typescript
+   // OLD (cached stale data):
+   const { data } = await supabase.from("store_settings").select("*").eq("store_id", storeId).single();
+
+   // NEW (always fresh):
+   const { data: rows } = await supabase.from("store_settings").select("*").eq("store_id", storeId).limit(1);
+   const data = rows?.[0] || null;
+   ```
+
+3. **Fresh Supabase Client for Settings**
+   - Created `createFreshAdminClient()` function that creates new client per request
+   - Avoids potential singleton caching in serverless environments
+
+**Files modified:**
+- `templates/hosted/lib/supabase.ts` - Added `createFreshAdminClient()`
+- `templates/hosted/app/api/admin/settings/route.ts` - Use fresh client + `.limit(1)` pattern
+- `templates/hosted/components/Hero.tsx` - Removed Trust Badges section
+- `templates/hosted/app/page.tsx` - Added Trust Badges after Testimonials
+
+**Key Learnings:**
+- Supabase PostgREST can cache `.single()` query results in unexpected ways
+- `.limit(1)` uses a different query path and bypasses this caching
+- Always test with timestamps to verify data freshness
+
+---
 
 ### Session 10 - Runtime Settings System (v8.9)
 
