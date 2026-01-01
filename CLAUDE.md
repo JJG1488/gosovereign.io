@@ -3,7 +3,7 @@
 > **IMPORTANT:** This file is the source of truth for active development.
 > For version history and session logs, see `CLAUDE-HISTORY.md`.
 
-**Current Version: 9.7** | **Last Updated: January 1, 2026**
+**Current Version: 9.8** | **Last Updated: January 1, 2026**
 
 ---
 
@@ -18,7 +18,7 @@
 
 ## Current State (January 2026)
 
-### Phase: LAUNCHED + FEATURE EXPANSION (v9.7)
+### Phase: LAUNCHED + FEATURE EXPANSION (v9.8)
 
 **Core Platform:**
 - Landing page with A/B variants (`/a`, `/b`)
@@ -59,10 +59,14 @@
 - Bulk store redeploy
 - Bulk product import via CSV
 
+**User Account Features:**
+- Account Settings page (`/account/settings`)
+- Change email with re-verification
+- Change password (requires current password)
+- Delete account with GDPR compliance (cascading deletion)
+
 **Completed This Session:**
-- Product Variants (v9.6)
-- Bulk Product Import (v9.7)
-- Subscription Billing Verification (v9.7)
+- Account Settings Page (v9.8)
 
 **Known Tech Debt:**
 - `WizardContext.tsx:455` - React hooks ref mutation pattern (non-blocking)
