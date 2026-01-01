@@ -29,6 +29,7 @@
 | 9.1 | Dec 31, 2025 | **CRITICAL FIX:** Supabase PostgREST caching - custom fetch with cache-busting headers, settings now persist correctly |
 | 9.2 | Jan 1, 2026 | Digital goods support, AI product copywriting, video mute/unmute, Platform Admin redeploy stores feature |
 | 9.3 | Jan 1, 2026 | **Inventory Management** - Low stock email alerts, configurable thresholds, auto-hide out-of-stock products |
+| 9.4 | Jan 1, 2026 | **Automated Domain Verification** - Platform API proxies Vercel Domains, DNS records in Settings UI, verification status |
 
 ---
 
@@ -43,7 +44,7 @@
 
 ## Current State (January 2026)
 
-### Phase: LAUNCHED + FEATURE EXPANSION (v9.3)
+### Phase: LAUNCHED + FEATURE EXPANSION (v9.4)
 
 **What's Built:**
 - [x] Landing page with A/B variants (`/a`, `/b`)
@@ -158,14 +159,20 @@
   - [x] Reviews admin product dropdown fixed (auth token)
   - [x] Footer logo brightness fix (removed `brightness-0`)
   - [x] Apple Pay icon SVG fix
-- [x] **Custom Domain Settings UI** (Dec 28, 2025)
+- [x] **Custom Domain Settings UI** (Dec 28, 2025, **ENHANCED** Jan 1, 2026)
   - [x] Domain tab in `/admin/settings` (Pro/Hosted only)
   - [x] `/api/admin/domain` endpoint (GET/POST/DELETE)
   - [x] Current subdomain URL display
   - [x] Custom domain input with save functionality
-  - [x] DNS configuration instructions inline
-  - [x] Domain status indicator (pending/configured)
   - [x] Gated behind `customDomainEnabled` feature flag
+  - [x] **Automated Vercel Integration** (v9.4)
+    - [x] Platform API `/api/stores/[storeId]/domain` proxies Vercel Domains API
+    - [x] Add domain to Vercel project automatically on save
+    - [x] Fetch DNS verification records from Vercel response
+    - [x] Display required TXT/CNAME records in Settings UI
+    - [x] Status indicators: pending (amber), verifying (blue), configured (green)
+    - [x] Refresh button to check DNS propagation status
+    - [x] `PLATFORM_API_URL` env var for store → platform communication
 - [x] **Email Notifications** (Dec 28, 2025 - Verified Complete)
   - [x] Order confirmation email to customer (auto on checkout)
   - [x] New order alert to store owner (auto on checkout)
@@ -703,6 +710,50 @@ SHIPPING_COUNTRIES=US,CA,GB,AU      # Comma-separated ISO codes for Stripe check
 
 ## Session Summary (Jan 1, 2026)
 
+### Session 15 - Automated Domain Verification (v9.4)
+
+**What was done:**
+
+Automated custom domain verification using Vercel Domains API, replacing manual "contact support" flow.
+
+**Platform API:**
+- Created `/api/stores/[storeId]/domain/route.ts`
+  - POST: Add domain to store's Vercel project, return DNS records
+  - GET: Check domain verification status from Vercel
+  - DELETE: Remove domain from Vercel project
+- Authentication: Store's admin password (`${storeId.slice(0,8)}-admin`)
+- Uses platform's `VERCEL_API_TOKEN` to call Vercel (stores don't have direct access)
+
+**Template Changes:**
+- Updated `/api/admin/domain/route.ts` to call platform API
+- Added `getAdminPassword()` helper to `lib/admin-tokens.ts`
+- `PLATFORM_API_URL` env var added to store deployments
+
+**Settings UI Enhancements:**
+- Status indicators with colors: pending (amber), verifying (blue), configured (green)
+- Displays DNS verification records from Vercel response
+- Refresh button to check DNS propagation
+- Records show type (TXT/CNAME), host, and value for easy copy
+
+**Files created:**
+- `app/api/stores/[storeId]/domain/route.ts` - Platform domain proxy API
+
+**Files modified:**
+- `lib/vercel.ts` - Added `PLATFORM_API_URL` to store env vars
+- `templates/hosted/app/api/admin/domain/route.ts` - Calls platform API
+- `templates/hosted/lib/admin-tokens.ts` - Added `getAdminPassword()`
+- `templates/hosted/app/admin/settings/page.tsx` - Enhanced Domain tab UI
+
+**User Flow:**
+1. Store admin enters custom domain in Settings
+2. Clicks "Add Domain" → API calls platform → platform calls Vercel
+3. Vercel returns required DNS records
+4. UI displays records with copy-friendly format
+5. Admin configures DNS at registrar
+6. Clicks refresh → platform checks Vercel → status updates to "configured"
+
+---
+
 ### Session 14 - Inventory Management (v9.3)
 
 **What was done:**
@@ -1152,7 +1203,7 @@ Client Component (Header, Footer, Hero, MobileMenu)
 
 ## Recommendations for Next Session
 
-### Completed (v9.3)
+### Completed (v9.4)
 
 All launch blockers + operational tools + full mobile UX + **complete runtime settings** + new features:
 - ✅ Tier-based feature gating working (Pro + Starter verified)
@@ -1171,48 +1222,40 @@ All launch blockers + operational tools + full mobile UX + **complete runtime se
 - ✅ **AI Product Copywriting** - Claude 3.5 Haiku description generation
 - ✅ **Platform Admin Redeploy** - Single store + bulk redeploy from admin dashboard
 - ✅ **Inventory Management** - Low stock alerts, configurable thresholds, auto-hide out-of-stock
+- ✅ **Template synced to GitHub** - v9.4 features available for new deployments
+- ✅ **Automated Domain Verification** - Vercel API integration, DNS records in UI, status tracking
 
 ### High Priority (Post-Launch Enhancements)
 
-1. **Sync Template to GitHub** ⚠️ CRITICAL
-   - Push latest changes to `gosovereign/storefront-template`
-   - Critical for new store deployments to get v9.3 features
-   - Without this, new stores won't have inventory management, AI copywriting, or digital products
-
-2. **Automated Domain Verification**
-   - Currently: User saves domain → manual Vercel setup
-   - Build: Auto-check DNS → Auto-add to Vercel via API → Show verification status
-   - Integrate with Vercel Domains API for SSL provisioning
-
-3. **Coupon/Discount System**
+1. **Coupon/Discount System**
    - Promo codes for stores
    - Percentage and fixed amount discounts
    - Usage limits and expiration dates
    - Apply at checkout via Stripe
 
-### Medium Priority
-
-4. **Product Variants**
+2. **Product Variants**
    - Size, color, and other product variations
    - Variant-specific inventory tracking
    - Variant pricing and images
 
-5. **Account Settings Page**
+### Medium Priority
+
+3. **Account Settings Page**
    - User profile management on platform side
    - Email change, password update
    - Account deletion (GDPR compliance)
 
-6. **Order Detail Page Mobile**
+4. **Order Detail Page Mobile**
    - Check if order detail page needs mobile fixes
    - Shipping notification button mobile UX
 
 ### Lower Priority (Future Growth)
 
-7. **Customer Accounts** - Optional login for order history, saved addresses
-8. **Multi-currency** - International store support with currency conversion
-9. **Store Migration** - Import from Shopify/WooCommerce/Etsy
-10. **Advanced Analytics** - Conversion funnels, customer cohorts, A/B testing
-11. **Abandoned Cart Recovery** - Email reminders for incomplete checkouts
+5. **Customer Accounts** - Optional login for order history, saved addresses
+6. **Multi-currency** - International store support with currency conversion
+7. **Store Migration** - Import from Shopify/WooCommerce/Etsy
+8. **Advanced Analytics** - Conversion funnels, customer cohorts, A/B testing
+9. **Abandoned Cart Recovery** - Email reminders for incomplete checkouts
 
 ### Storage Setup Reminder
 
@@ -1222,7 +1265,7 @@ All launch blockers + operational tools + full mobile UX + **complete runtime se
 ---
 
 *Last Updated: January 1, 2026*
-*Version: 9.3*
-*Status: LAUNCHED + FEATURE EXPANSION - Inventory management, digital products, AI copywriting*
-*Next: Sync template to GitHub, Automated domain verification, Coupon system, Product variants*
+*Version: 9.4*
+*Status: LAUNCHED + FEATURE EXPANSION - Automated domain verification, inventory management, digital products*
+*Next: Coupon/discount system, Product variants, Account settings page*
 *This file is the source of truth for all project context.*
