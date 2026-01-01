@@ -40,6 +40,11 @@
 | 9.11 | Jan 1, 2026 | **Documentation Site** - MDX-based `/docs` with 12 pages covering all features |
 | 9.12 | Jan 1, 2026 | **Abandoned Cart Recovery** - Server sync, admin page, recovery emails with cart links |
 | 9.13 | Jan 1, 2026 | **Gift Cards** - Purchase, redemption, balance check, admin management, email delivery |
+| 9.14 | Jan 1, 2026 | **Shopify Import** - Auto-detect Shopify CSV format, variant support, image download, format selector |
+| 9.15 | Jan 1, 2026 | **Order Detail Mobile Polish** - 44px touch targets, Lucide icons, responsive spacing |
+| 9.16 | Jan 1, 2026 | **Multi-Currency** - 60+ Stripe currencies, zero-decimal handling, grouped by region, admin selector |
+| 9.17 | Jan 1, 2026 | **WooCommerce Import** - Variable products, Parent linking, up to 10 attributes |
+| 9.18 | Jan 1, 2026 | **BigCommerce Import** - Item Type/SKU row detection, variant support, 10 image columns |
 
 ---
 
@@ -72,6 +77,111 @@
 ---
 
 ## Session Summaries
+
+### Session 29 - BigCommerce Import (v9.18) - Jan 1, 2026
+
+**What was done:**
+
+Added BigCommerce CSV import to complete the e-commerce platform migration trifecta.
+
+**Parser Implementation:**
+- Created `bigcommerce-csv-parser.ts` (~340 lines)
+- `isBigCommerceFormat()` - detects via unique `Item Type` column
+- Sequential row parsing: `Item Type = "Product"` creates parent, `Item Type = "SKU"` adds variants
+- Supports up to 10 image columns (`Product Image File - 1` through `10`)
+- Sale price support, digital product detection (`Product Type = D`)
+- Categories via semicolon-separated values
+- Parses option values from various formats: `[Size=Small]`, `Size: Small, Color: Red`
+
+**Import Page Updates:**
+- Added BigCommerce to format selector dropdown
+- Auto-detection prioritizes BigCommerce before WooCommerce
+- Blue info banner when BigCommerce selected
+- BigCommerce badge in preview step
+- Updated grid layout for 4 format columns
+
+**Commits:**
+- Template: `94a0add` - feat: Add BigCommerce CSV import support (v9.18)
+- Main: `7c06a3c` - docs: Update CLAUDE.md for v9.18 (BigCommerce Import)
+
+**Result:** Store migration now supports Shopify, WooCommerce, and BigCommerce.
+
+---
+
+### Session 28 - WooCommerce Import (v9.17) - Jan 1, 2026
+
+**What was done:**
+
+Added WooCommerce CSV import with support for variable products and variations.
+
+**Parser Implementation:**
+- Created `woocommerce-csv-parser.ts`
+- Two-pass parsing: first collect products/variations, then link by Parent column
+- Type detection: `simple`, `variable`, `variation`, `grouped`, `external`
+- Dynamic attribute support (up to 10 attributes per product)
+- Sale price priority over regular price
+
+**Key Files:**
+- `templates/hosted/lib/woocommerce-csv-parser.ts`
+- Updated `templates/hosted/app/admin/products/import/page.tsx`
+
+---
+
+### Session 27 - Multi-Currency (v9.16) - Jan 1, 2026
+
+**What was done:**
+
+Added multi-currency support with 60+ Stripe-supported currencies.
+
+**Features:**
+- Currency selector in admin Settings (General tab)
+- Currencies grouped by region (Americas, Europe, Asia-Pacific, etc.)
+- Zero-decimal currency handling (JPY, KRW, etc.)
+- `formatPrice()` utility with proper locale formatting
+- Currency stored in store settings, propagated to checkout
+
+**Key Files:**
+- `templates/hosted/lib/currencies.ts` - Currency data and utilities
+- Updated Settings page, checkout, and all price displays
+
+---
+
+### Session 26 - Order Detail Mobile Polish (v9.15) - Jan 1, 2026
+
+**What was done:**
+
+Mobile UX improvements for order detail admin page.
+
+- 44px minimum touch targets for all interactive elements
+- Replaced text with Lucide icons for status actions
+- Responsive spacing and layout adjustments
+- Improved button grouping on mobile
+
+---
+
+### Session 25 - Shopify Import (v9.14) - Jan 1, 2026
+
+**What was done:**
+
+Added Shopify CSV import as the first platform-specific import format.
+
+**Parser Implementation:**
+- Created `shopify-csv-parser.ts`
+- Groups rows by Handle column (one product, multiple variant rows)
+- Up to 3 option levels (Option1 Name/Value, Option2, Option3)
+- Image collection from all variant rows
+- HTML description preservation
+
+**Import Page Updates:**
+- Format selector dropdown: Auto-detect, Standard, Shopify
+- Auto-detection based on Shopify-specific columns
+- Platform imports skip column mapping step
+
+**Key Files:**
+- `templates/hosted/lib/shopify-csv-parser.ts`
+- Updated `templates/hosted/app/admin/products/import/page.tsx`
+
+---
 
 ### Session 24 - Gift Cards (v9.13) - Jan 1, 2026
 
@@ -434,4 +544,4 @@ Audited email system - discovered it was ALREADY FULLY IMPLEMENTED. No code chan
 
 ---
 
-*Last Updated: January 1, 2026*
+*Last Updated: January 1, 2026 (v9.18)*
