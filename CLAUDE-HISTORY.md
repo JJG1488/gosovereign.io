@@ -32,6 +32,7 @@
 | 9.4 | Jan 1, 2026 | **Automated Domain Verification** - Platform API proxies Vercel Domains, DNS records in Settings UI, verification status |
 | 9.5 | Jan 1, 2026 | **Coupon/Discount System** - Promo codes, percentage/fixed discounts, usage limits, Stripe integration, admin CRUD |
 | 9.6 | Jan 1, 2026 | **Product Variants** - Size/Color/etc options, per-variant inventory, admin VariantEditor, storefront selector, cart+checkout integration |
+| 9.7 | Jan 1, 2026 | **Bulk Product Import** - CSV upload with column mapping, image URL download, progress tracking, error handling |
 
 ---
 
@@ -64,6 +65,39 @@
 ---
 
 ## Session Summaries
+
+### Session 18 - Bulk Product Import (v9.7) - Jan 1, 2026
+
+**What was done:**
+
+Complete bulk product import feature allowing store owners to import products via CSV file.
+
+**Files Created:**
+- `lib/csv-parser.ts` - CSV parsing with auto-detect column mapping
+- `app/admin/products/import/page.tsx` - 5-step import wizard
+- `app/api/admin/products/import/route.ts` - Import endpoint with image handling
+
+**Files Modified:**
+- `app/admin/products/page.tsx` - Added "Import CSV" button
+
+**Features:**
+- 5-step wizard: Upload → Mapping → Preview → Importing → Complete
+- Drag-drop CSV upload with file validation
+- Auto-detect column mapping from header names (name, title, price, etc.)
+- Column mapping interface with sample data preview
+- Image URL download and Supabase Storage upload
+- Real-time progress bar during import
+- Validation warnings before import
+- Error handling with row-specific messages
+- Product limit enforcement for Starter tier
+
+**CSV Format Support:**
+- Handles quoted values and commas within quotes
+- Converts price from dollars to cents automatically
+- Supports comma-separated image URLs
+- Flexible column naming (name/title, price/cost, etc.)
+
+---
 
 ### Session 17 - Product Variants (v9.6) - Jan 1, 2026
 

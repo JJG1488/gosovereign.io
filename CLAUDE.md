@@ -3,7 +3,7 @@
 > **IMPORTANT:** This file is the source of truth for active development.
 > For version history and session logs, see `CLAUDE-HISTORY.md`.
 
-**Current Version: 9.6** | **Last Updated: January 1, 2026**
+**Current Version: 9.7** | **Last Updated: January 1, 2026**
 
 ---
 
@@ -18,7 +18,7 @@
 
 ## Current State (January 2026)
 
-### Phase: LAUNCHED + FEATURE EXPANSION (v9.6)
+### Phase: LAUNCHED + FEATURE EXPANSION (v9.7)
 
 **Core Platform:**
 - Landing page with A/B variants (`/a`, `/b`)
@@ -57,9 +57,11 @@
 - Runtime settings (no redeploy needed)
 - Low stock email alerts
 - Bulk store redeploy
+- Bulk product import via CSV
 
 **Completed This Session:**
 - Product Variants (v9.6)
+- Bulk Product Import (v9.7)
 
 **Known Tech Debt:**
 - `WizardContext.tsx:455` - React hooks ref mutation pattern (non-blocking)
@@ -233,7 +235,7 @@ PLATFORM_ADMIN_EMAILS=info@gosovereign.io
 
 ## Recommendations for Next Session
 
-### Completed (v9.6)
+### Completed (v9.7)
 
 All major e-commerce features built:
 - Tier-based feature gating
@@ -250,7 +252,8 @@ All major e-commerce features built:
 - Inventory Management
 - Domain Verification
 - Coupon/Discount System
-- **Product Variants**
+- Product Variants
+- **Bulk Product Import**
 
 ### High Priority
 
@@ -263,16 +266,15 @@ All major e-commerce features built:
 
 2. **Account Settings Page** - Email change, password update, GDPR deletion
 3. **Order Detail Page Mobile** - Shipping notification button UX
-4. **Bulk Product Import** - CSV upload with field mapping
 
 ### Lower Priority
 
-5. Customer Accounts - Optional login for order history
-6. Multi-currency - International store support
-7. Store Migration - Import from Shopify/WooCommerce
-8. Advanced Analytics - Conversion funnels, cohorts
-9. Abandoned Cart Recovery
-10. Gift Cards
+4. Customer Accounts - Optional login for order history
+5. Multi-currency - International store support
+6. Store Migration - Import from Shopify/WooCommerce
+7. Advanced Analytics - Conversion funnels, cohorts
+8. Abandoned Cart Recovery
+9. Gift Cards
 
 ### Storage Setup Reminder
 
@@ -281,5 +283,5 @@ All major e-commerce features built:
 
 ---
 
-*Version: 9.6 | Status: LAUNCHED + FEATURE EXPANSION*
+*Version: 9.7 | Status: LAUNCHED + FEATURE EXPANSION*
 *See CLAUDE-HISTORY.md for version history and session details.*
