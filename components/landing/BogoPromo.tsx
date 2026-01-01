@@ -129,7 +129,7 @@ export function BogoPromo({ className = "" }: BogoPromoProps) {
             href="/auth/signup"
             className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-purple-500 hover:bg-purple-400 text-white text-sm font-semibold rounded-full transition-colors"
           >
-            Start with a one time $50 installment today
+            Start with a one time payment today
             <ArrowRight className="w-4 h-4" />
           </a>
         </div>
