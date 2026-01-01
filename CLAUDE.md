@@ -3,7 +3,7 @@
 > **IMPORTANT:** This file is the source of truth for active development.
 > For version history and session logs, see `CLAUDE-HISTORY.md`.
 
-**Current Version: 9.15** | **Last Updated: January 1, 2026**
+**Current Version: 9.16** | **Last Updated: January 1, 2026**
 
 ---
 
@@ -18,7 +18,7 @@
 
 ## Current State (January 2026)
 
-### Phase: LAUNCHED + FEATURE EXPANSION (v9.15)
+### Phase: LAUNCHED + FEATURE EXPANSION (v9.16)
 
 **Core Platform:**
 - Landing page with A/B variants (`/a`, `/b`)
@@ -55,6 +55,7 @@
 - Checkout address pre-fill (logged-in customers can use saved addresses)
 - Abandoned cart recovery (manual trigger from admin, recovery emails)
 - Gift cards (purchase, redeem at checkout, balance check, stackable with coupons)
+- Multi-currency support (60+ Stripe currencies, zero-decimal handling)
 
 **Admin Features:**
 - Platform Admin Dashboard (`/platform-admin`)
@@ -73,7 +74,7 @@
 - Change password (requires current password)
 - Delete account with GDPR compliance (cascading deletion)
 
-**Recent Changes (v9.8-9.15):**
+**Recent Changes (v9.8-9.16):**
 - v9.8: Account Settings Page - email/password change, account deletion
 - v9.9: Customer Accounts - login, registration, order history, saved addresses
 - v9.10: Checkout Address Pre-fill - logged-in customers use saved addresses, email pre-fill
@@ -82,6 +83,7 @@
 - v9.13: Gift Cards - purchase page, checkout redemption, balance check, admin management, email delivery
 - v9.14: Shopify Import - auto-detect Shopify CSV, variant support, image download, format selector
 - v9.15: Order Detail Mobile Polish - 44px touch targets, Lucide icons, responsive spacing
+- v9.16: Multi-Currency - 60+ currencies grouped by region, zero-decimal handling, admin selector
 
 **Known Tech Debt:**
 - `WizardContext.tsx:455` - React hooks ref mutation pattern (non-blocking)
@@ -107,6 +109,7 @@ NEXT_PUBLIC_MAX_PRODUCTS=10|unlimited
 NEXT_PUBLIC_CUSTOM_DOMAIN_ENABLED=true|false
 NEXT_PUBLIC_ANALYTICS_ENABLED=true|false
 NEXT_PUBLIC_PREMIUM_THEMES_ENABLED=true|false
+NEXT_PUBLIC_STORE_CURRENCY=USD|EUR|GBP|JPY|...
 ```
 
 ### Implementation Files
@@ -116,6 +119,7 @@ NEXT_PUBLIC_PREMIUM_THEMES_ENABLED=true|false
 | `/lib/vercel.ts` | `buildEnvironmentVariables()` - Sets tier env vars during deployment |
 | `/templates/hosted/hooks/useFeatureFlags.ts` | React hook to access feature flags |
 | `/templates/hosted/lib/products.ts` | Product limit enforcement functions |
+| `/templates/hosted/lib/currencies.ts` | Currency data, formatPrice(), zero-decimal handling |
 
 ---
 
@@ -317,15 +321,17 @@ All major e-commerce features built:
 - **Documentation Site (v9.11)**
 - **Abandoned Cart Recovery (v9.12)**
 - **Gift Cards (v9.13)**
+- **Shopify Import (v9.14)**
+- **Multi-Currency (v9.16)**
 
 ### Remaining Tasks
 
-1. **Multi-currency** - International store support
-2. **WooCommerce Import** - Extend migration support beyond Shopify
-3. **Advanced Analytics** - Conversion funnels, cohorts
+1. **WooCommerce Import** - Extend migration support beyond Shopify
+2. **Advanced Analytics** - Conversion funnels, cohorts
+3. **Store Migration Wizard** - Guided import from other platforms
 
 **Note:** Storefront Search is already implemented (`SearchModal.tsx` + `/api/products/search`)
-**Note:** Shopify Import completed in v9.14, Order Detail Mobile completed in v9.15
+**Note:** Multi-currency completed in v9.16 (60+ Stripe currencies with zero-decimal handling)
 
 ### Storage Setup Reminder
 
@@ -334,5 +340,5 @@ All major e-commerce features built:
 
 ---
 
-*Version: 9.15 | Status: LAUNCHED + FEATURE EXPANSION*
+*Version: 9.16 | Status: LAUNCHED + FEATURE EXPANSION*
 *See CLAUDE-HISTORY.md for version history and session details.*
