@@ -414,6 +414,16 @@ function buildEnvironmentVariables(store: Store) {
     });
   }
 
+  // Anthropic API key for AI product description generation
+  if (process.env.ANTHROPIC_API_KEY) {
+    envVars.push({
+      key: "ANTHROPIC_API_KEY",
+      value: process.env.ANTHROPIC_API_KEY,
+      target: ["production", "preview", "development"],
+      type: "encrypted",
+    });
+  }
+
   // Email "from" address - use platform's verified domain
   // Without this, deployed stores would use the Resend sandbox domain
   envVars.push({
