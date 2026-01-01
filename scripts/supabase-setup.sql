@@ -337,6 +337,25 @@ CREATE TABLE IF NOT EXISTS public.coupons (
   UNIQUE(store_id, code)
 );
 
+-- ----------------------------------------------------------------------------
+-- PRODUCT VARIANTS TABLE
+-- ----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS public.product_variants (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  product_id UUID NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
+  name TEXT NOT NULL, -- Combined option values, e.g., "Small / Black"
+  sku TEXT, -- Optional SKU for this variant
+  price_adjustment INTEGER DEFAULT 0, -- In cents, can be negative (e.g., -500 = $5 less)
+  inventory_count INTEGER DEFAULT 0,
+  track_inventory BOOLEAN DEFAULT true,
+  options JSONB NOT NULL DEFAULT '{}'::jsonb, -- e.g., {"Size": "Small", "Color": "Black"}
+  position INTEGER DEFAULT 0, -- For ordering variants
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
 -- ============================================================================
 -- 3. INDEXES (IF NOT EXISTS)
 -- ============================================================================
@@ -393,6 +412,11 @@ CREATE INDEX IF NOT EXISTS idx_coupons_store ON public.coupons(store_id);
 CREATE INDEX IF NOT EXISTS idx_coupons_code ON public.coupons(store_id, code);
 CREATE INDEX IF NOT EXISTS idx_coupons_active ON public.coupons(is_active) WHERE is_active = true;
 
+-- Product Variants
+CREATE INDEX IF NOT EXISTS idx_product_variants_product ON public.product_variants(product_id);
+CREATE INDEX IF NOT EXISTS idx_product_variants_sku ON public.product_variants(sku) WHERE sku IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_product_variants_active ON public.product_variants(is_active) WHERE is_active = true;
+
 -- ============================================================================
 -- 4. ROW LEVEL SECURITY
 -- ============================================================================
@@ -412,6 +436,7 @@ ALTER TABLE public.newsletter_subscribers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admin_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.product_reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.coupons ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.product_variants ENABLE ROW LEVEL SECURITY;
 
 -- ----------------------------------------------------------------------------
 -- Users Policies (drop and recreate)
@@ -643,6 +668,23 @@ CREATE POLICY "Public can validate active coupons"
   ON public.coupons FOR SELECT
   USING (is_active = true);
 
+-- ----------------------------------------------------------------------------
+-- Product Variants Policies
+-- Note: Deployed stores use service role for CRUD, public can view active variants
+-- ----------------------------------------------------------------------------
+
+DROP POLICY IF EXISTS "Service role full access to product_variants" ON public.product_variants;
+DROP POLICY IF EXISTS "Public can view active variants" ON public.product_variants;
+
+CREATE POLICY "Service role full access to product_variants"
+  ON public.product_variants FOR ALL
+  TO service_role
+  USING (true);
+
+CREATE POLICY "Public can view active variants"
+  ON public.product_variants FOR SELECT
+  USING (is_active = true);
+
 -- ============================================================================
 -- 5. FUNCTIONS (CREATE OR REPLACE)
 -- ============================================================================
@@ -689,6 +731,7 @@ DROP TRIGGER IF EXISTS update_subscriptions_updated_at ON public.subscriptions;
 DROP TRIGGER IF EXISTS update_wizard_progress_updated_at ON public.wizard_progress;
 DROP TRIGGER IF EXISTS update_purchases_updated_at ON public.purchases;
 DROP TRIGGER IF EXISTS update_coupons_updated_at ON public.coupons;
+DROP TRIGGER IF EXISTS update_product_variants_updated_at ON public.product_variants;
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 
 CREATE TRIGGER update_users_updated_at
@@ -721,6 +764,10 @@ CREATE TRIGGER update_purchases_updated_at
 
 CREATE TRIGGER update_coupons_updated_at
   BEFORE UPDATE ON public.coupons
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE TRIGGER update_product_variants_updated_at
+  BEFORE UPDATE ON public.product_variants
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 CREATE TRIGGER on_auth_user_created
