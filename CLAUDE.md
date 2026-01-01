@@ -68,11 +68,11 @@
 - Change password (requires current password)
 - Delete account with GDPR compliance (cascading deletion)
 
-**Completed This Session:**
-- Account Settings Page (v9.8)
-- Customer Accounts (v9.9)
-- Checkout Address Pre-fill (v9.10)
-- Documentation Site (v9.11)
+**Recent Changes (v9.8-9.11):**
+- v9.8: Account Settings Page - email/password change, account deletion
+- v9.9: Customer Accounts - login, registration, order history, saved addresses
+- v9.10: Checkout Address Pre-fill - logged-in customers use saved addresses, email pre-fill
+- v9.11: Documentation Site - `/docs` with MDX, 12 pages covering all features
 
 **Known Tech Debt:**
 - `WizardContext.tsx:455` - React hooks ref mutation pattern (non-blocking)
@@ -137,6 +137,13 @@ gosovereign/
 ```
 
 **Template Sync:** `templates/hosted/` syncs to `gosovereign/storefront-template` on GitHub.
+
+### Checkout Address Pre-fill (v9.10)
+Key files for saved address checkout:
+- `templates/hosted/components/AddressSelector.tsx` - Address selection UI
+- `templates/hosted/app/cart/page.tsx` - Cart with address selector for logged-in users
+- `templates/hosted/app/api/checkout/route.ts` - Accepts savedAddressId, pre-fills email
+- `templates/hosted/app/api/webhooks/stripe/route.ts` - Uses saved address from metadata
 
 ---
 
@@ -235,6 +242,30 @@ PLATFORM_ADMIN_EMAILS=info@gosovereign.io
 
 ---
 
+## Documentation Site (`/docs`)
+
+MDX-based documentation at `gosovereign.io/docs`:
+
+```
+app/docs/
+├── layout.tsx              # Sidebar navigation
+├── page.mdx                # Introduction
+├── getting-started/        # First 15 minutes guide
+├── tiers/                  # Pricing comparison
+└── features/
+    ├── products/           # Products, variants, inventory
+    ├── orders/             # Order management
+    ├── coupons/            # Discount codes
+    ├── themes/             # Appearance (Pro)
+    ├── analytics/          # Dashboard (Pro)
+    ├── domains/            # Custom domains (Pro)
+    ├── digital-products/   # Downloadable files
+    ├── customer-accounts/  # Account system
+    └── settings/           # Store configuration
+```
+
+---
+
 ## Documentation Files
 
 | File | Purpose |
@@ -273,18 +304,16 @@ All major e-commerce features built:
 - **Checkout Address Pre-fill (v9.10)**
 - **Documentation Site (v9.11)**
 
-### High Priority
+### Remaining Tasks
 
-1. **Order Detail Page Mobile** - Shipping notification button UX
-2. ~~**Storefront Search**~~ - Already implemented (SearchModal.tsx)
+1. **Order Detail Page Mobile** - Minor polish for shipping notification button
+2. **Multi-currency** - International store support
+3. **Store Migration** - Import from Shopify/WooCommerce
+4. **Advanced Analytics** - Conversion funnels, cohorts
+5. **Abandoned Cart Recovery** - Email customers with items in cart
+6. **Gift Cards** - Digital gift card system
 
-### Lower Priority
-
-3. Multi-currency - International store support
-4. Store Migration - Import from Shopify/WooCommerce
-5. Advanced Analytics - Conversion funnels, cohorts
-6. Abandoned Cart Recovery
-7. Gift Cards
+**Note:** Storefront Search is already implemented (`SearchModal.tsx` + `/api/products/search`)
 
 ### Storage Setup Reminder
 
