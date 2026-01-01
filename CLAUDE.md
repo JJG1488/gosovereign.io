@@ -3,7 +3,7 @@
 > **IMPORTANT:** This file is the source of truth for active development.
 > For version history and session logs, see `CLAUDE-HISTORY.md`.
 
-**Current Version: 9.16** | **Last Updated: January 1, 2026**
+**Current Version: 9.17** | **Last Updated: January 1, 2026**
 
 ---
 
@@ -18,7 +18,7 @@
 
 ## Current State (January 2026)
 
-### Phase: LAUNCHED + FEATURE EXPANSION (v9.16)
+### Phase: LAUNCHED + FEATURE EXPANSION (v9.17)
 
 **Core Platform:**
 - Landing page with A/B variants (`/a`, `/b`)
@@ -65,6 +65,7 @@
 - Bulk store redeploy
 - Bulk product import via CSV
 - Shopify import (auto-detect format, variant support, image download)
+- WooCommerce import (variable products, variations, up to 10 attributes)
 - Abandoned Carts page (view abandoned carts, send recovery emails)
 - Gift Cards management (list, detail, manual issuance, resend emails)
 
@@ -74,7 +75,7 @@
 - Change password (requires current password)
 - Delete account with GDPR compliance (cascading deletion)
 
-**Recent Changes (v9.8-9.16):**
+**Recent Changes (v9.8-9.17):**
 - v9.8: Account Settings Page - email/password change, account deletion
 - v9.9: Customer Accounts - login, registration, order history, saved addresses
 - v9.10: Checkout Address Pre-fill - logged-in customers use saved addresses, email pre-fill
@@ -84,6 +85,7 @@
 - v9.14: Shopify Import - auto-detect Shopify CSV, variant support, image download, format selector
 - v9.15: Order Detail Mobile Polish - 44px touch targets, Lucide icons, responsive spacing
 - v9.16: Multi-Currency - 60+ currencies grouped by region, zero-decimal handling, admin selector
+- v9.17: WooCommerce Import - variable products, variations, Parent linking, up to 10 attributes
 
 **Known Tech Debt:**
 - `WizardContext.tsx:455` - React hooks ref mutation pattern (non-blocking)
@@ -120,6 +122,8 @@ NEXT_PUBLIC_STORE_CURRENCY=USD|EUR|GBP|JPY|...
 | `/templates/hosted/hooks/useFeatureFlags.ts` | React hook to access feature flags |
 | `/templates/hosted/lib/products.ts` | Product limit enforcement functions |
 | `/templates/hosted/lib/currencies.ts` | Currency data, formatPrice(), zero-decimal handling |
+| `/templates/hosted/lib/shopify-csv-parser.ts` | Shopify CSV format detection and parsing |
+| `/templates/hosted/lib/woocommerce-csv-parser.ts` | WooCommerce CSV format detection and parsing |
 
 ---
 
@@ -323,15 +327,16 @@ All major e-commerce features built:
 - **Gift Cards (v9.13)**
 - **Shopify Import (v9.14)**
 - **Multi-Currency (v9.16)**
+- **WooCommerce Import (v9.17)**
 
 ### Remaining Tasks
 
-1. **WooCommerce Import** - Extend migration support beyond Shopify
-2. **Advanced Analytics** - Conversion funnels, cohorts
-3. **Store Migration Wizard** - Guided import from other platforms
+1. **Advanced Analytics** - Conversion funnels, cohorts
+2. **Store Migration Wizard** - Guided import from other platforms
+3. **BigCommerce Import** - Extend migration support to more platforms
 
 **Note:** Storefront Search is already implemented (`SearchModal.tsx` + `/api/products/search`)
-**Note:** Multi-currency completed in v9.16 (60+ Stripe currencies with zero-decimal handling)
+**Note:** Store migration now supports Shopify (v9.14) and WooCommerce (v9.17)
 
 ### Storage Setup Reminder
 
@@ -340,5 +345,5 @@ All major e-commerce features built:
 
 ---
 
-*Version: 9.16 | Status: LAUNCHED + FEATURE EXPANSION*
+*Version: 9.17 | Status: LAUNCHED + FEATURE EXPANSION*
 *See CLAUDE-HISTORY.md for version history and session details.*
