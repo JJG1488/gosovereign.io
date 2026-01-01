@@ -3,7 +3,7 @@
 > **IMPORTANT:** This file is the source of truth for active development.
 > For version history and session logs, see `CLAUDE-HISTORY.md`.
 
-**Current Version: 9.13** | **Last Updated: January 1, 2026**
+**Current Version: 9.14** | **Last Updated: January 1, 2026**
 
 ---
 
@@ -18,7 +18,7 @@
 
 ## Current State (January 2026)
 
-### Phase: LAUNCHED + FEATURE EXPANSION (v9.13)
+### Phase: LAUNCHED + FEATURE EXPANSION (v9.14)
 
 **Core Platform:**
 - Landing page with A/B variants (`/a`, `/b`)
@@ -63,6 +63,7 @@
 - Low stock email alerts
 - Bulk store redeploy
 - Bulk product import via CSV
+- Shopify import (auto-detect format, variant support, image download)
 - Abandoned Carts page (view abandoned carts, send recovery emails)
 - Gift Cards management (list, detail, manual issuance, resend emails)
 
@@ -72,13 +73,14 @@
 - Change password (requires current password)
 - Delete account with GDPR compliance (cascading deletion)
 
-**Recent Changes (v9.8-9.13):**
+**Recent Changes (v9.8-9.14):**
 - v9.8: Account Settings Page - email/password change, account deletion
 - v9.9: Customer Accounts - login, registration, order history, saved addresses
 - v9.10: Checkout Address Pre-fill - logged-in customers use saved addresses, email pre-fill
 - v9.11: Documentation Site - `/docs` with MDX, 12 pages covering all features
 - v9.12: Abandoned Cart Recovery - server sync for logged-in customers, admin page, recovery emails
 - v9.13: Gift Cards - purchase page, checkout redemption, balance check, admin management, email delivery
+- v9.14: Shopify Import - auto-detect Shopify CSV, variant support, image download, format selector
 
 **Known Tech Debt:**
 - `WizardContext.tsx:455` - React hooks ref mutation pattern (non-blocking)
@@ -319,10 +321,11 @@ All major e-commerce features built:
 
 1. **Order Detail Page Mobile** - Minor polish for shipping notification button
 2. **Multi-currency** - International store support
-3. **Store Migration** - Import from Shopify/WooCommerce
+3. **WooCommerce Import** - Extend migration support beyond Shopify
 4. **Advanced Analytics** - Conversion funnels, cohorts
 
 **Note:** Storefront Search is already implemented (`SearchModal.tsx` + `/api/products/search`)
+**Note:** Shopify Import completed in v9.14 (`/admin/products/import` with auto-detect)
 
 ### Storage Setup Reminder
 
@@ -331,5 +334,5 @@ All major e-commerce features built:
 
 ---
 
-*Version: 9.13 | Status: LAUNCHED + FEATURE EXPANSION*
+*Version: 9.14 | Status: LAUNCHED + FEATURE EXPANSION*
 *See CLAUDE-HISTORY.md for version history and session details.*
