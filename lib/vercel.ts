@@ -459,6 +459,16 @@ function buildEnvironmentVariables(store: Store) {
     type: "plain",
   });
 
+  // Platform API URL for custom domain management
+  // Deployed stores call this to add/verify domains via Vercel API
+  const platformUrl = process.env.NEXT_PUBLIC_APP_URL || "https://gosovereign.io";
+  envVars.push({
+    key: "PLATFORM_API_URL",
+    value: platformUrl,
+    target: ["production", "preview", "development"],
+    type: "plain",
+  });
+
   // ========================================
   // Tier-based environment variables
   // IMPORTANT: These use NEXT_PUBLIC_ prefix so they're available to client components
