@@ -3,7 +3,7 @@
 > **IMPORTANT:** This file is the source of truth for active development.
 > For version history and session logs, see `CLAUDE-HISTORY.md`.
 
-**Current Version: 9.17** | **Last Updated: January 1, 2026**
+**Current Version: 9.18** | **Last Updated: January 1, 2026**
 
 ---
 
@@ -18,7 +18,7 @@
 
 ## Current State (January 2026)
 
-### Phase: LAUNCHED + FEATURE EXPANSION (v9.17)
+### Phase: LAUNCHED + FEATURE EXPANSION (v9.18)
 
 **Core Platform:**
 - Landing page with A/B variants (`/a`, `/b`)
@@ -66,6 +66,7 @@
 - Bulk product import via CSV
 - Shopify import (auto-detect format, variant support, image download)
 - WooCommerce import (variable products, variations, up to 10 attributes)
+- BigCommerce import (Item Type detection, SKU variants, 10 image columns)
 - Abandoned Carts page (view abandoned carts, send recovery emails)
 - Gift Cards management (list, detail, manual issuance, resend emails)
 
@@ -86,6 +87,7 @@
 - v9.15: Order Detail Mobile Polish - 44px touch targets, Lucide icons, responsive spacing
 - v9.16: Multi-Currency - 60+ currencies grouped by region, zero-decimal handling, admin selector
 - v9.17: WooCommerce Import - variable products, variations, Parent linking, up to 10 attributes
+- v9.18: BigCommerce Import - Item Type/SKU row detection, variant support, 10 image columns
 
 **Known Tech Debt:**
 - `WizardContext.tsx:455` - React hooks ref mutation pattern (non-blocking)
@@ -124,6 +126,7 @@ NEXT_PUBLIC_STORE_CURRENCY=USD|EUR|GBP|JPY|...
 | `/templates/hosted/lib/currencies.ts` | Currency data, formatPrice(), zero-decimal handling |
 | `/templates/hosted/lib/shopify-csv-parser.ts` | Shopify CSV format detection and parsing |
 | `/templates/hosted/lib/woocommerce-csv-parser.ts` | WooCommerce CSV format detection and parsing |
+| `/templates/hosted/lib/bigcommerce-csv-parser.ts` | BigCommerce CSV format detection and parsing |
 
 ---
 
@@ -328,15 +331,15 @@ All major e-commerce features built:
 - **Shopify Import (v9.14)**
 - **Multi-Currency (v9.16)**
 - **WooCommerce Import (v9.17)**
+- **BigCommerce Import (v9.18)**
 
 ### Remaining Tasks
 
 1. **Advanced Analytics** - Conversion funnels, cohorts
 2. **Store Migration Wizard** - Guided import from other platforms
-3. **BigCommerce Import** - Extend migration support to more platforms
 
 **Note:** Storefront Search is already implemented (`SearchModal.tsx` + `/api/products/search`)
-**Note:** Store migration now supports Shopify (v9.14) and WooCommerce (v9.17)
+**Note:** Store migration now supports Shopify (v9.14), WooCommerce (v9.17), and BigCommerce (v9.18)
 
 ### Storage Setup Reminder
 
@@ -345,5 +348,5 @@ All major e-commerce features built:
 
 ---
 
-*Version: 9.17 | Status: LAUNCHED + FEATURE EXPANSION*
+*Version: 9.18 | Status: LAUNCHED + FEATURE EXPANSION*
 *See CLAUDE-HISTORY.md for version history and session details.*
