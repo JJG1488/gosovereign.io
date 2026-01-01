@@ -3,7 +3,7 @@
 > **IMPORTANT:** This file is the source of truth for active development.
 > For version history and session logs, see `CLAUDE-HISTORY.md`.
 
-**Current Version: 9.11** | **Last Updated: January 1, 2026**
+**Current Version: 9.12** | **Last Updated: January 1, 2026**
 
 ---
 
@@ -18,7 +18,7 @@
 
 ## Current State (January 2026)
 
-### Phase: LAUNCHED + FEATURE EXPANSION (v9.11)
+### Phase: LAUNCHED + FEATURE EXPANSION (v9.12)
 
 **Core Platform:**
 - Landing page with A/B variants (`/a`, `/b`)
@@ -53,6 +53,7 @@
 - Media banner (YouTube/video/image)
 - Customer accounts (optional login, order history, saved addresses)
 - Checkout address pre-fill (logged-in customers can use saved addresses)
+- Abandoned cart recovery (manual trigger from admin, recovery emails)
 
 **Admin Features:**
 - Platform Admin Dashboard (`/platform-admin`)
@@ -61,6 +62,7 @@
 - Low stock email alerts
 - Bulk store redeploy
 - Bulk product import via CSV
+- Abandoned Carts page (view abandoned carts, send recovery emails)
 
 **User Account Features:**
 - Account Settings page (`/account/settings`)
@@ -68,11 +70,12 @@
 - Change password (requires current password)
 - Delete account with GDPR compliance (cascading deletion)
 
-**Recent Changes (v9.8-9.11):**
+**Recent Changes (v9.8-9.12):**
 - v9.8: Account Settings Page - email/password change, account deletion
 - v9.9: Customer Accounts - login, registration, order history, saved addresses
 - v9.10: Checkout Address Pre-fill - logged-in customers use saved addresses, email pre-fill
 - v9.11: Documentation Site - `/docs` with MDX, 12 pages covering all features
+- v9.12: Abandoned Cart Recovery - server sync for logged-in customers, admin page, recovery emails
 
 **Known Tech Debt:**
 - `WizardContext.tsx:455` - React hooks ref mutation pattern (non-blocking)
@@ -176,6 +179,7 @@ orders          - Customer orders with discount tracking
 order_items     - Line items with variant_info
 coupons         - Promo codes with usage limits
 subscriptions   - Hosted tier recurring billing
+abandoned_carts - Cart sync for logged-in customers (recovery emails)
 ```
 
 ### Key Fields
@@ -303,6 +307,7 @@ All major e-commerce features built:
 - **Customer Accounts (v9.9)**
 - **Checkout Address Pre-fill (v9.10)**
 - **Documentation Site (v9.11)**
+- **Abandoned Cart Recovery (v9.12)**
 
 ### Remaining Tasks
 
@@ -310,8 +315,7 @@ All major e-commerce features built:
 2. **Multi-currency** - International store support
 3. **Store Migration** - Import from Shopify/WooCommerce
 4. **Advanced Analytics** - Conversion funnels, cohorts
-5. **Abandoned Cart Recovery** - Email customers with items in cart
-6. **Gift Cards** - Digital gift card system
+5. **Gift Cards** - Digital gift card system
 
 **Note:** Storefront Search is already implemented (`SearchModal.tsx` + `/api/products/search`)
 
@@ -322,5 +326,5 @@ All major e-commerce features built:
 
 ---
 
-*Version: 9.11 | Status: LAUNCHED + FEATURE EXPANSION*
+*Version: 9.12 | Status: LAUNCHED + FEATURE EXPANSION*
 *See CLAUDE-HISTORY.md for version history and session details.*
