@@ -279,7 +279,7 @@ export const variantA: CopyVariant = {
   },
   footer: {
     logo: "GoSovereign",
-    links: ["FAQ", "Contact", "Terms", "Privacy"],
+    links: ["Docs", "FAQ", "Contact", "Terms", "Privacy"],
     copyright: "© 2024 GoSovereign. Own your store.",
   },
 };

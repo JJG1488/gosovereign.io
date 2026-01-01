@@ -1,0 +1,148 @@
+# Custom Domains
+
+Use your own domain name for your store instead of `yourstore.gosovereign.io`.
+
+> **Pro Feature:** Custom domains are available on Pro and Hosted tiers. [Compare tiers](/docs/tiers)
+
+## Overview
+
+By default, your store is hosted at:
+```
+https://yourstore.gosovereign.io
+```
+
+With a custom domain, customers visit:
+```
+https://shop.yourbrand.com
+```
+
+## Requirements
+
+Before setting up a custom domain:
+
+1. **Own a domain** - Purchase from a registrar (Namecheap, GoDaddy, Cloudflare, etc.)
+2. **Have Pro or Hosted tier** - Custom domains require an upgrade
+3. **Access DNS settings** - You'll add a DNS record
+
+## Setup Steps
+
+### Step 1: Add Domain in Settings
+
+1. Go to **Admin > Settings**
+2. Click the **Domain** tab
+3. Enter your custom domain (e.g., `shop.yourbrand.com`)
+4. Click **Add Domain**
+
+### Step 2: Configure DNS
+
+Add a CNAME record at your domain registrar:
+
+| Type | Name | Value |
+|------|------|-------|
+| CNAME | shop | cname.vercel-dns.com |
+
+**Examples by subdomain:**
+
+| Your Domain | Name Field |
+|-------------|------------|
+| shop.example.com | shop |
+| store.example.com | store |
+| www.example.com | www |
+
+### Step 3: Verify
+
+After adding the DNS record:
+
+1. Wait 5-10 minutes for DNS propagation
+2. Return to Settings > Domain
+3. Click **Verify Domain**
+4. Status changes to "Connected"
+
+## Using Root Domain
+
+To use your root domain (e.g., `yourbrand.com` without www):
+
+1. Add an A record instead of CNAME:
+
+| Type | Name | Value |
+|------|------|-------|
+| A | @ | 76.76.21.21 |
+
+2. Add the domain in Settings as usual
+
+## SSL/HTTPS
+
+SSL certificates are automatic:
+
+1. Domain is verified
+2. Certificate is issued within minutes
+3. HTTPS works automatically
+4. HTTP redirects to HTTPS
+
+No action required on your part.
+
+## Troubleshooting
+
+### "Domain not verified"
+
+- DNS changes can take up to 48 hours
+- Double-check the CNAME value is exactly `cname.vercel-dns.com`
+- Ensure no typos in the domain name
+
+### "SSL error"
+
+- Wait 10-15 minutes after verification
+- Certificate issuance is automatic but not instant
+
+### "Site not loading"
+
+- Clear browser cache
+- Try incognito/private mode
+- Check DNS propagation: [whatsmydns.net](https://www.whatsmydns.net)
+
+## Multiple Domains
+
+You can add multiple domains to one store:
+
+- `shop.yourbrand.com`
+- `store.yourbrand.com`
+- `yourbrand.shop`
+
+All domains serve the same store content.
+
+## Removing a Domain
+
+1. Go to Settings > Domain
+2. Click the X next to the domain
+3. Confirm removal
+
+Your store continues working at `yourstore.gosovereign.io`.
+
+## Tips
+
+### Subdomain vs Root Domain
+
+**Subdomain (shop.example.com):**
+- Easier to set up (simple CNAME)
+- Clear purpose
+- Good for businesses with main website
+
+**Root domain (example.com):**
+- More memorable
+- Requires A record
+- Best when store is your main site
+
+### DNS Providers
+
+Each registrar has different interfaces. Search "[your registrar] add CNAME record" for specific instructions.
+
+### Propagation Time
+
+DNS changes typically take:
+- 5-30 minutes for most users
+- Up to 48 hours in rare cases
+- Varies by ISP and location
+
+---
+
+Next: [Digital Products](/docs/features/digital-products)

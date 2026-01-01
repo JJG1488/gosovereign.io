@@ -3,7 +3,7 @@
 > **IMPORTANT:** This file is the source of truth for active development.
 > For version history and session logs, see `CLAUDE-HISTORY.md`.
 
-**Current Version: 9.10** | **Last Updated: January 1, 2026**
+**Current Version: 9.11** | **Last Updated: January 1, 2026**
 
 ---
 
@@ -18,7 +18,7 @@
 
 ## Current State (January 2026)
 
-### Phase: LAUNCHED + FEATURE EXPANSION (v9.10)
+### Phase: LAUNCHED + FEATURE EXPANSION (v9.11)
 
 **Core Platform:**
 - Landing page with A/B variants (`/a`, `/b`)
@@ -28,6 +28,7 @@
 - Stripe Connect OAuth for store owners
 - One-click deployment to platform Vercel
 - Download ZIP for self-hosting
+- Documentation site (`/docs`) with MDX pages
 
 **Payment & Tiers:**
 - Stripe Checkout Sessions with webhook verification
@@ -71,6 +72,7 @@
 - Account Settings Page (v9.8)
 - Customer Accounts (v9.9)
 - Checkout Address Pre-fill (v9.10)
+- Documentation Site (v9.11)
 
 **Known Tech Debt:**
 - `WizardContext.tsx:455` - React hooks ref mutation pattern (non-blocking)
@@ -269,11 +271,12 @@ All major e-commerce features built:
 - **Account Settings Page (v9.8)**
 - **Customer Accounts (v9.9)**
 - **Checkout Address Pre-fill (v9.10)**
+- **Documentation Site (v9.11)**
 
 ### High Priority
 
 1. **Order Detail Page Mobile** - Shipping notification button UX
-2. **Storefront Search** - Full-text product search with filters
+2. ~~**Storefront Search**~~ - Already implemented (SearchModal.tsx)
 
 ### Lower Priority
 
@@ -290,5 +293,5 @@ All major e-commerce features built:
 
 ---
 
-*Version: 9.10 | Status: LAUNCHED + FEATURE EXPANSION*
+*Version: 9.11 | Status: LAUNCHED + FEATURE EXPANSION*
 *See CLAUDE-HISTORY.md for version history and session details.*

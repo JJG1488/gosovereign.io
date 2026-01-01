@@ -1,0 +1,161 @@
+# Orders
+
+Learn how to process orders, manage fulfillment, and keep customers informed.
+
+## Order Lifecycle
+
+Orders flow through these statuses:
+
+1. **Pending** - Payment received, awaiting fulfillment
+2. **Processing** - Order is being prepared
+3. **Shipped** - Order has been sent
+4. **Delivered** - Order confirmed delivered
+5. **Cancelled** - Order was cancelled
+
+## Viewing Orders
+
+Go to **Admin > Orders** to see all orders.
+
+The orders list shows:
+- Order number
+- Customer name and email
+- Order total
+- Status
+- Date placed
+
+Click any order to view details.
+
+## Order Details
+
+Each order page shows:
+
+### Customer Information
+- Name and email
+- Shipping address
+- Phone number (if provided)
+
+### Order Items
+- Product names and quantities
+- Variant information (if applicable)
+- Line item prices
+- Subtotal, tax, shipping, and total
+
+### Payment Details
+- Payment status
+- Stripe payment ID (links to Stripe dashboard)
+- Discount applied (if coupon used)
+
+## Fulfilling Orders
+
+### Physical Products
+
+1. Open the order
+2. Prepare and pack items
+3. Ship the order
+4. Click **Mark as Shipped**
+5. Enter tracking number (optional)
+6. Customer receives shipping notification email
+
+### Digital Products
+
+Digital products are fulfilled automatically:
+
+1. Customer completes purchase
+2. Order confirmation email includes download link
+3. Customer clicks link to download
+4. Downloads are tracked (up to 3 per order)
+
+## Shipping Notifications
+
+When you mark an order as shipped:
+
+1. Status changes to "Shipped"
+2. Customer receives email notification
+3. Email includes:
+   - Order summary
+   - Tracking number (if provided)
+   - Estimated delivery (optional)
+
+### Adding Tracking
+
+1. Open the order
+2. Click **Mark as Shipped**
+3. Enter carrier and tracking number
+4. Click **Send Notification**
+
+Tracking links are automatically generated for major carriers:
+- USPS
+- UPS
+- FedEx
+- DHL
+
+## Order Emails
+
+Customers receive automatic emails for:
+
+| Event | Email Sent |
+|-------|------------|
+| Purchase complete | Order confirmation |
+| Order shipped | Shipping notification |
+| Digital product | Download link |
+
+### Email Contents
+
+**Order Confirmation:**
+- Order number and date
+- Items purchased
+- Shipping address
+- Order total breakdown
+
+**Shipping Notification:**
+- Shipping carrier
+- Tracking number and link
+- Estimated delivery
+
+## Cancellations and Refunds
+
+### Cancelling an Order
+
+1. Open the order
+2. Click **Cancel Order**
+3. Confirm cancellation
+
+Note: Cancelling in GoSovereign does not automatically refund. Process refunds through Stripe.
+
+### Issuing Refunds
+
+1. Go to your [Stripe Dashboard](https://dashboard.stripe.com)
+2. Find the payment
+3. Click **Refund**
+4. Enter refund amount (full or partial)
+5. Confirm
+
+Stripe handles the refund to the customer's payment method.
+
+## Low Stock Alerts
+
+When a product's inventory drops below the threshold:
+
+1. You receive an email alert
+2. Alert includes product name and current stock
+3. Reorder before running out
+
+Configure thresholds in **Admin > Settings > Inventory**.
+
+## Tips
+
+### Fast Fulfillment
+Customers expect quick shipping. Try to ship within 1-2 business days.
+
+### Communication
+Keep customers informed. Use the notes field to track special requests.
+
+### Batch Processing
+Use the orders list to quickly scan and process multiple orders.
+
+### Stripe Dashboard
+For payment issues, disputes, or refunds, use the Stripe dashboard directly.
+
+---
+
+Next: [Creating Coupons](/docs/features/coupons)

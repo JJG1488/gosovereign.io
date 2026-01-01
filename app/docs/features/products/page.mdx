@@ -1,0 +1,147 @@
+# Products
+
+Learn how to add, edit, and manage products in your GoSovereign store.
+
+## Adding a Product
+
+1. Go to **Admin > Products**
+2. Click **Add Product**
+3. Fill in the product details:
+
+### Basic Information
+
+- **Name** - The product title customers see
+- **Description** - Detailed product description (supports basic formatting)
+- **Price** - Product price in USD (e.g., $29.99)
+- **Category** - Optional category for organization
+
+### Images
+
+Upload up to 5 images per product. The first image is the main product image shown in listings.
+
+- Drag and drop images or click to browse
+- Supported formats: JPG, PNG, WebP
+- Recommended size: 800x800 pixels or larger
+- Images are automatically optimized
+
+### Inventory Tracking
+
+Enable inventory tracking to:
+- Show stock counts to customers
+- Prevent overselling
+- Get low stock alerts
+
+To enable:
+1. Toggle **Track Inventory** on
+2. Enter current stock quantity
+3. Set low stock threshold (default: 5)
+
+When stock reaches the threshold, you'll receive an email alert.
+
+## Product Variants
+
+Variants let you offer different options like sizes or colors.
+
+### Creating Variants
+
+1. In the product editor, click **Add Variant Type**
+2. Enter the type name (e.g., "Size" or "Color")
+3. Add options (e.g., "Small", "Medium", "Large")
+4. For each variant combination:
+   - Set price adjustment (e.g., +$5 for XL)
+   - Set individual stock levels
+   - Add variant-specific SKU
+
+### Example: T-Shirt with Size and Color
+
+```
+Variant Type: Size
+Options: S, M, L, XL
+
+Variant Type: Color
+Options: Black, White, Navy
+
+This creates 12 variant combinations:
+- S/Black, S/White, S/Navy
+- M/Black, M/White, M/Navy
+- etc.
+```
+
+Each combination can have its own inventory count.
+
+## Digital Products
+
+Sell downloadable products like ebooks, courses, or software.
+
+### Setting Up Digital Products
+
+1. Toggle **Digital Product** on
+2. Upload the downloadable file
+3. Customers receive a secure download link after purchase
+
+### Delivery
+
+- Download links are unique per order
+- Links expire after 7 days
+- Customers can download up to 3 times
+- Secure, signed URLs prevent sharing
+
+### Supported Files
+
+Any file type up to 100MB:
+- PDFs, ebooks
+- ZIP archives
+- Audio/video files
+- Software installers
+
+## Bulk Import
+
+Import multiple products at once using CSV.
+
+### CSV Format
+
+```csv
+name,description,price,category,inventory
+"Product Name","Description here",29.99,Category,100
+```
+
+### Import Steps
+
+1. Go to **Admin > Products**
+2. Click **Import CSV**
+3. Upload your CSV file
+4. Review the preview
+5. Click **Import**
+
+Products are created immediately after import.
+
+## Product Limits
+
+| Tier | Product Limit |
+|------|---------------|
+| Starter | 10 products |
+| Pro | Unlimited |
+| Hosted | Unlimited |
+
+If you're on Starter and need more products, [upgrade to Pro](/docs/tiers).
+
+## Tips
+
+### Product Photos
+- Use consistent lighting and backgrounds
+- Show products from multiple angles
+- Include size reference when helpful
+
+### Descriptions
+- Lead with key features
+- Include dimensions/specifications
+- Answer common questions
+
+### Pricing
+- All prices are in USD
+- Stripe handles currency conversion for international customers
+- Consider including shipping in price for simplicity
+
+---
+
+Next: [Processing Orders](/docs/features/orders)

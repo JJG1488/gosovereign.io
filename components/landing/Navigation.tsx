@@ -57,8 +57,14 @@ export function Navigation({ logo, cta, ctaHref = "/templates" }: NavigationProp
               {logo}
             </Link>
 
-            {/* Desktop CTA */}
-            <div className="hidden md:block">
+            {/* Desktop Nav */}
+            <div className="hidden md:flex items-center gap-6">
+              <Link
+                href="/docs"
+                className="text-sm text-gray-400 hover:text-gray-100 transition-colors"
+              >
+                Docs
+              </Link>
               <Button variant="primary" size="md" onClick={handleCTAClick}>
                 {cta}
               </Button>
@@ -91,6 +97,13 @@ export function Navigation({ logo, cta, ctaHref = "/templates" }: NavigationProp
             className="fixed inset-0 z-40 bg-navy-900/98 backdrop-blur-lg pt-24 px-6 md:hidden"
           >
             <div className="flex flex-col items-center gap-6">
+              <Link
+                href="/docs"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="text-lg text-gray-300 hover:text-gray-100 transition-colors"
+              >
+                Documentation
+              </Link>
               <Button
                 variant="primary"
                 size="lg"

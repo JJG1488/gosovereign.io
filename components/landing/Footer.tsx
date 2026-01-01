@@ -11,6 +11,7 @@ interface FooterProps {
 
 // Map link labels to actual routes
 const linkRoutes: Record<string, string> = {
+  Docs: "/docs",
   FAQ: "/faq",
   Contact: "/contact",
   Terms: "/terms",

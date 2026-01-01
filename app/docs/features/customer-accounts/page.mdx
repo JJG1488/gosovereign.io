@@ -1,0 +1,150 @@
+# Customer Accounts
+
+Let customers create accounts to track orders and save their information.
+
+## Overview
+
+Customer accounts provide:
+
+- **Order history** - View past purchases
+- **Saved addresses** - Faster checkout
+- **Download access** - Digital product downloads
+- **Profile management** - Update email and password
+
+## Enabling Customer Accounts
+
+Customer accounts are enabled by default. Customers can:
+
+1. Create an account during checkout
+2. Register at `/account/register`
+3. Log in at `/account/login`
+
+## Account Features
+
+### Order History
+
+Customers view all past orders:
+- Order number and date
+- Items purchased
+- Order status
+- Tracking information
+
+Access at: **Account > Orders**
+
+### Order Details
+
+Click an order to see:
+- Full item list with prices
+- Shipping address
+- Payment summary
+- Download links (for digital products)
+- Tracking link (if shipped)
+
+### Saved Addresses
+
+Customers can save multiple addresses:
+- Home, work, gift recipients
+- Set default shipping address
+- Set default billing address
+
+Saved addresses appear at checkout for one-click selection.
+
+### Profile Management
+
+Customers can update:
+- Email address
+- Password
+- Name
+
+Access at: **Account > Profile**
+
+## Customer Registration
+
+### Registration Flow
+
+1. Customer visits `/account/register`
+2. Enters email and password
+3. Confirms password
+4. Account is created immediately
+5. Redirected to account dashboard
+
+### Password Requirements
+
+- Minimum 8 characters
+- No other restrictions
+
+### Email Verification
+
+Currently, email verification is not required. Customers can use their account immediately.
+
+## Guest Checkout
+
+Customers can still checkout without an account:
+
+1. Add items to cart
+2. Proceed to checkout
+3. Enter shipping info
+4. Complete payment
+5. Order confirmation sent to email
+
+After purchase, guests can create an account to access order history.
+
+## Checkout with Account
+
+When logged in:
+
+1. Add items to cart
+2. Proceed to checkout
+3. **Select saved address** (or enter new)
+4. Email is pre-filled
+5. Complete payment
+
+Faster checkout = higher conversion.
+
+## Forgot Password
+
+If a customer forgets their password:
+
+1. Click "Forgot Password?" on login
+2. Enter email address
+3. Receive reset link via email
+4. Click link to set new password
+5. Log in with new password
+
+Reset links expire after 1 hour.
+
+## Account Security
+
+### Password Storage
+Passwords are hashed using bcrypt. We never store plain-text passwords.
+
+### Session Management
+Sessions expire after 30 days of inactivity. Customers can log out from any device.
+
+### Data Privacy
+Customers can delete their account, which removes all personal data.
+
+## Tips
+
+### Encourage Registration
+
+- Mention order tracking benefits
+- Highlight faster checkout
+- Offer loyalty discounts to members
+
+### Support Requests
+
+When customers contact you, ask for:
+- Order number (not password)
+- Email address on account
+
+### Guest Conversion
+
+After a guest purchase, the success page prompts:
+"Create an account to track your order"
+
+This captures customers who prefer to browse anonymously but may want accounts after buying.
+
+---
+
+Next: [Store Settings](/docs/features/settings)
