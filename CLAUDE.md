@@ -3,7 +3,7 @@
 > **IMPORTANT:** This file is the source of truth for active development.
 > For version history and session logs, see `CLAUDE-HISTORY.md`.
 
-**Current Version: 9.9** | **Last Updated: January 1, 2026**
+**Current Version: 9.10** | **Last Updated: January 1, 2026**
 
 ---
 
@@ -18,7 +18,7 @@
 
 ## Current State (January 2026)
 
-### Phase: LAUNCHED + FEATURE EXPANSION (v9.8)
+### Phase: LAUNCHED + FEATURE EXPANSION (v9.10)
 
 **Core Platform:**
 - Landing page with A/B variants (`/a`, `/b`)
@@ -51,6 +51,7 @@
 - AI product copywriting
 - Media banner (YouTube/video/image)
 - Customer accounts (optional login, order history, saved addresses)
+- Checkout address pre-fill (logged-in customers can use saved addresses)
 
 **Admin Features:**
 - Platform Admin Dashboard (`/platform-admin`)
@@ -69,6 +70,7 @@
 **Completed This Session:**
 - Account Settings Page (v9.8)
 - Customer Accounts (v9.9)
+- Checkout Address Pre-fill (v9.10)
 
 **Known Tech Debt:**
 - `WizardContext.tsx:455` - React hooks ref mutation pattern (non-blocking)
@@ -266,23 +268,20 @@ All major e-commerce features built:
 - **Subscription Billing (Verified)**
 - **Account Settings Page (v9.8)**
 - **Customer Accounts (v9.9)**
+- **Checkout Address Pre-fill (v9.10)**
 
 ### High Priority
 
 1. **Order Detail Page Mobile** - Shipping notification button UX
 2. **Storefront Search** - Full-text product search with filters
 
-### Medium Priority
-
-3. **Checkout Address Pre-fill** - Use saved address from customer account
-
 ### Lower Priority
 
-4. Multi-currency - International store support
-5. Store Migration - Import from Shopify/WooCommerce
-6. Advanced Analytics - Conversion funnels, cohorts
-7. Abandoned Cart Recovery
-8. Gift Cards
+3. Multi-currency - International store support
+4. Store Migration - Import from Shopify/WooCommerce
+5. Advanced Analytics - Conversion funnels, cohorts
+6. Abandoned Cart Recovery
+7. Gift Cards
 
 ### Storage Setup Reminder
 
@@ -291,5 +290,5 @@ All major e-commerce features built:
 
 ---
 
-*Version: 9.7 | Status: LAUNCHED + FEATURE EXPANSION*
+*Version: 9.10 | Status: LAUNCHED + FEATURE EXPANSION*
 *See CLAUDE-HISTORY.md for version history and session details.*
