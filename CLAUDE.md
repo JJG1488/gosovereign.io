@@ -30,6 +30,7 @@
 | 9.2 | Jan 1, 2026 | Digital goods support, AI product copywriting, video mute/unmute, Platform Admin redeploy stores feature |
 | 9.3 | Jan 1, 2026 | **Inventory Management** - Low stock email alerts, configurable thresholds, auto-hide out-of-stock products |
 | 9.4 | Jan 1, 2026 | **Automated Domain Verification** - Platform API proxies Vercel Domains, DNS records in Settings UI, verification status |
+| 9.5 | Jan 1, 2026 | **Coupon/Discount System** - Promo codes, percentage/fixed discounts, usage limits, Stripe integration, admin CRUD |
 
 ---
 
@@ -44,7 +45,7 @@
 
 ## Current State (January 2026)
 
-### Phase: LAUNCHED + FEATURE EXPANSION (v9.4)
+### Phase: LAUNCHED + FEATURE EXPANSION (v9.5)
 
 **What's Built:**
 - [x] Landing page with A/B variants (`/a`, `/b`)
@@ -252,9 +253,23 @@
   - [x] All admin pages use configurable threshold (products, stats, dashboard)
   - [x] `AddToCartButton` uses configurable threshold for "low stock" warning
   - [x] `lowStockThreshold` added to `RuntimeSettings` interface
+- [x] **Coupon/Discount System** (Jan 1, 2026)
+  - [x] `coupons` table in database schema with code, discount_type, value, limits
+  - [x] `/api/coupons/validate` - Public coupon validation endpoint
+  - [x] `/api/admin/coupons` - Admin CRUD API (list, create)
+  - [x] `/api/admin/coupons/[id]` - Admin single coupon API (get, update, delete)
+  - [x] `/admin/coupons` - List page with status badges (active/expired/limit reached)
+  - [x] `/admin/coupons/new` - Create coupon with auto-generate code
+  - [x] `/admin/coupons/[id]` - Edit coupon with usage stats
+  - [x] `CouponInput` component for cart page
+  - [x] Cart shows discount amount and final total
+  - [x] Checkout API validates coupon, creates Stripe coupon, applies discount
+  - [x] Webhook captures `discount_amount` and `coupon_code` on orders
+  - [x] Order confirmation emails show discount line with coupon code
+  - [x] "Coupons" link added to admin navigation
 
 **Completed This Session:**
-- [x] Inventory Management ✅ (v9.3)
+- [x] Coupon/Discount System ✅ (v9.5)
 
 **Known Tech Debt:**
 - `WizardContext.tsx:455` - React hooks ref mutation pattern (non-blocking)
@@ -709,6 +724,86 @@ SHIPPING_COUNTRIES=US,CA,GB,AU      # Comma-separated ISO codes for Stripe check
 ---
 
 ## Session Summary (Jan 1, 2026)
+
+### Session 16 - Coupon/Discount System (v9.5)
+
+**What was done:**
+
+Complete coupon/discount system with admin CRUD, cart integration, and Stripe checkout support.
+
+**Database Schema:**
+- Added `coupons` table with:
+  - `code` - Unique coupon code per store
+  - `discount_type` - "percentage" or "fixed"
+  - `discount_value` - Percentage (0-100) or cents
+  - `minimum_order_amount` - Minimum cart total required
+  - `max_uses` / `current_uses` - Usage limit tracking
+  - `starts_at` / `expires_at` - Date range validity
+  - `is_active` - Enable/disable toggle
+- Added `coupon_code` and `stripe_session_id` columns to orders table
+
+**Admin Interface:**
+- `/admin/coupons` - List all coupons with status badges:
+  - Green "Active" for valid coupons
+  - Gray "Inactive" for disabled
+  - Red "Expired" or "Limit Reached" for exhausted coupons
+- `/admin/coupons/new` - Create coupons with:
+  - Auto-generate random code button
+  - Discount type selector (% or $)
+  - Minimum order, usage limit, date range fields
+- `/admin/coupons/[id]` - Edit with usage statistics display
+- "Coupons" link added to admin nav between Products and Orders
+
+**Cart Integration:**
+- `CouponInput` component with:
+  - Input field with tag icon
+  - Apply button with loading state
+  - Success state showing applied coupon with remove button
+  - Error messages for invalid/expired codes
+- Cart page shows:
+  - Subtotal
+  - Discount line (green) with coupon code
+  - Final total after discount
+
+**Checkout Flow:**
+- Checkout API extracts `couponCode` from request
+- Server-side validation via `validateAndGetCoupon()`:
+  - Checks code exists and is active
+  - Validates date range (starts_at, expires_at)
+  - Checks usage limit not exceeded
+  - Validates minimum order amount
+- Creates Stripe coupon on-the-fly with matching discount
+- Applies discount to Stripe Checkout Session
+- Increments `current_uses` after session creation
+- Passes `coupon_id` and `coupon_code` in session metadata
+
+**Webhook Updates:**
+- Captures `discount_amount` from `session.total_details.amount_discount`
+- Stores `coupon_code` from session metadata on order record
+- Email confirmations show discount line with coupon code (green text)
+
+**Files created:**
+- `templates/hosted/components/CouponInput.tsx`
+- `templates/hosted/app/api/coupons/validate/route.ts`
+- `templates/hosted/app/api/admin/coupons/route.ts`
+- `templates/hosted/app/api/admin/coupons/[id]/route.ts`
+- `templates/hosted/app/admin/coupons/page.tsx`
+- `templates/hosted/app/admin/coupons/new/page.tsx`
+- `templates/hosted/app/admin/coupons/[id]/page.tsx`
+
+**Files modified:**
+- `scripts/supabase-setup.sql` - Added coupons table, order columns
+- `templates/hosted/app/cart/page.tsx` - CouponInput integration
+- `templates/hosted/app/api/checkout/route.ts` - Coupon validation & Stripe integration
+- `templates/hosted/app/api/webhooks/stripe/route.ts` - Discount capture
+- `templates/hosted/lib/email.ts` - Discount in order confirmations
+- `templates/hosted/app/admin/layout.tsx` - Coupons nav link
+
+**Commits:**
+- Template: `54c54d9` - feat: Add coupon/discount system (v9.5)
+- Main: `82cffcd` - feat: Add coupons table and order discount columns
+
+---
 
 ### Session 15 - Automated Domain Verification (v9.4)
 
@@ -1203,7 +1298,7 @@ Client Component (Header, Footer, Hero, MobileMenu)
 
 ## Recommendations for Next Session
 
-### Completed (v9.4)
+### Completed (v9.5)
 
 All launch blockers + operational tools + full mobile UX + **complete runtime settings** + new features:
 - ✅ Tier-based feature gating working (Pro + Starter verified)
@@ -1222,40 +1317,52 @@ All launch blockers + operational tools + full mobile UX + **complete runtime se
 - ✅ **AI Product Copywriting** - Claude 3.5 Haiku description generation
 - ✅ **Platform Admin Redeploy** - Single store + bulk redeploy from admin dashboard
 - ✅ **Inventory Management** - Low stock alerts, configurable thresholds, auto-hide out-of-stock
-- ✅ **Template synced to GitHub** - v9.4 features available for new deployments
 - ✅ **Automated Domain Verification** - Vercel API integration, DNS records in UI, status tracking
+- ✅ **Coupon/Discount System** - Promo codes, percentage/fixed discounts, usage limits, Stripe integration
 
-### High Priority (Post-Launch Enhancements)
+### High Priority (Next Up)
 
-1. **Coupon/Discount System**
-   - Promo codes for stores
-   - Percentage and fixed amount discounts
-   - Usage limits and expiration dates
-   - Apply at checkout via Stripe
+1. **Sync Template to GitHub** ⚠️ CRITICAL
+   - Push v9.5 changes to `gosovereign/storefront-template`
+   - New store deployments need coupon system
+   - Run: `cd templates/hosted && git push origin main`
 
 2. **Product Variants**
    - Size, color, and other product variations
    - Variant-specific inventory tracking
    - Variant pricing and images
+   - Variant-specific images in gallery
+
+3. **Subscription Billing for Hosted Tier**
+   - Currently one-time + monthly, but recurring not fully tested
+   - Verify `invoice.paid` webhook updates subscription status
+   - Test payment failure → grace period flow
+   - Test cancellation → `can_deploy: false`
 
 ### Medium Priority
 
-3. **Account Settings Page**
+4. **Account Settings Page**
    - User profile management on platform side
    - Email change, password update
    - Account deletion (GDPR compliance)
 
-4. **Order Detail Page Mobile**
+5. **Order Detail Page Mobile**
    - Check if order detail page needs mobile fixes
    - Shipping notification button mobile UX
 
+6. **Bulk Product Import**
+   - CSV upload for products
+   - Map columns to fields
+   - Handle images via URL
+
 ### Lower Priority (Future Growth)
 
-5. **Customer Accounts** - Optional login for order history, saved addresses
-6. **Multi-currency** - International store support with currency conversion
-7. **Store Migration** - Import from Shopify/WooCommerce/Etsy
-8. **Advanced Analytics** - Conversion funnels, customer cohorts, A/B testing
-9. **Abandoned Cart Recovery** - Email reminders for incomplete checkouts
+7. **Customer Accounts** - Optional login for order history, saved addresses
+8. **Multi-currency** - International store support with currency conversion
+9. **Store Migration** - Import from Shopify/WooCommerce/Etsy
+10. **Advanced Analytics** - Conversion funnels, customer cohorts, A/B testing
+11. **Abandoned Cart Recovery** - Email reminders for incomplete checkouts
+12. **Gift Cards** - Store credit system
 
 ### Storage Setup Reminder
 
@@ -1265,7 +1372,7 @@ All launch blockers + operational tools + full mobile UX + **complete runtime se
 ---
 
 *Last Updated: January 1, 2026*
-*Version: 9.4*
-*Status: LAUNCHED + FEATURE EXPANSION - Automated domain verification, inventory management, digital products*
-*Next: Coupon/discount system, Product variants, Account settings page*
+*Version: 9.5*
+*Status: LAUNCHED + FEATURE EXPANSION - Coupon system complete, all major e-commerce features built*
+*Next: Sync template to GitHub, Product variants, Subscription billing verification*
 *This file is the source of truth for all project context.*
