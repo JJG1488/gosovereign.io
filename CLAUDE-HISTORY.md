@@ -33,6 +33,7 @@
 | 9.5 | Jan 1, 2026 | **Coupon/Discount System** - Promo codes, percentage/fixed discounts, usage limits, Stripe integration, admin CRUD |
 | 9.6 | Jan 1, 2026 | **Product Variants** - Size/Color/etc options, per-variant inventory, admin VariantEditor, storefront selector, cart+checkout integration |
 | 9.7 | Jan 1, 2026 | **Bulk Product Import** - CSV upload with column mapping, image URL download, progress tracking, error handling |
+| 9.7 | Jan 1, 2026 | **Subscription Billing Verified** - All webhook handlers confirmed working, deploy flow checks can_deploy |
 
 ---
 
@@ -65,6 +66,39 @@
 ---
 
 ## Session Summaries
+
+### Session 19 - Subscription Billing Verification (v9.7) - Jan 1, 2026
+
+**What was done:**
+
+Verified the complete subscription billing system for the Hosted tier ($149 + $19/mo).
+
+**Webhook Handlers Verified:**
+1. `checkout.session.completed` - Creates subscription record, sets `subscription_status: 'active'`
+2. `invoice.paid` - Monthly renewal restores `subscription_status: 'active'`, `can_deploy: true`
+3. `invoice.payment_failed` - Sets `subscription_status: 'past_due'`, `can_deploy: false`
+4. `customer.subscription.deleted` - Sets `subscription_status: 'cancelled'`, grace period via `subscription_ends_at`
+5. `customer.subscription.updated` - Resubscription restores active status
+
+**Database Schema Verified:**
+- `stores.subscription_status` - 'active', 'past_due', 'cancelled', 'none'
+- `stores.subscription_ends_at` - Grace period end date
+- `stores.can_deploy` - Boolean restricting deployments
+- `subscriptions` table with Stripe subscription tracking
+
+**Deploy Flow Verified:**
+- `/api/deploy/execute` checks `can_deploy` before allowing deployment
+- Returns appropriate error messages for past_due and cancelled states
+- Store continues working during payment issues (just can't redeploy)
+
+**Key Files:**
+- `app/api/webhooks/stripe/route.ts` - All subscription handlers (lines 384-586)
+- `app/api/deploy/execute/route.ts` - Deploy restriction check (lines 59-74)
+- `scripts/supabase-setup.sql` - Schema with subscription columns
+
+**Result:** No code changes needed - subscription billing was already complete!
+
+---
 
 ### Session 18 - Bulk Product Import (v9.7) - Jan 1, 2026
 

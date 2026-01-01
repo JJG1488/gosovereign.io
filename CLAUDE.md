@@ -62,6 +62,7 @@
 **Completed This Session:**
 - Product Variants (v9.6)
 - Bulk Product Import (v9.7)
+- Subscription Billing Verification (v9.7)
 
 **Known Tech Debt:**
 - `WizardContext.tsx:455` - React hooks ref mutation pattern (non-blocking)
@@ -215,10 +216,12 @@ PLATFORM_ADMIN_EMAILS=info@gosovereign.io
 - [x] Click "Deploy Now" on preview
 - [x] Store goes live at `subdomain.gosovereign.io`
 
-### Subscription Lifecycle (Hosted Tier)
-- [ ] Monthly renewal → `subscription_status: 'active'`
-- [ ] Payment failure → `can_deploy: false`
-- [ ] Cancellation → grace period until `subscription_ends_at`
+### Subscription Lifecycle (Hosted Tier) ✅ VERIFIED
+- [x] Monthly renewal → `subscription_status: 'active'`, `can_deploy: true`
+- [x] Payment failure → `subscription_status: 'past_due'`, `can_deploy: false`
+- [x] Cancellation → `subscription_status: 'cancelled'`, grace period until `subscription_ends_at`
+- [x] Resubscription → restores `active` status and `can_deploy: true`
+- [x] Deploy flow checks `can_deploy` and returns appropriate error messages
 
 ---
 
@@ -253,23 +256,21 @@ All major e-commerce features built:
 - Domain Verification
 - Coupon/Discount System
 - Product Variants
-- **Bulk Product Import**
+- Bulk Product Import
+- **Subscription Billing (Verified)**
 
 ### High Priority
 
-1. **Subscription Billing for Hosted Tier**
-   - Verify `invoice.paid` webhook updates subscription status
-   - Test payment failure → grace period flow
-   - Test cancellation → `can_deploy: false`
+1. **Account Settings Page** - Email change, password update, GDPR deletion
+2. **Customer Accounts** - Optional login for order history, saved addresses
 
 ### Medium Priority
 
-2. **Account Settings Page** - Email change, password update, GDPR deletion
 3. **Order Detail Page Mobile** - Shipping notification button UX
+4. **Storefront Search** - Full-text product search with filters
 
 ### Lower Priority
 
-4. Customer Accounts - Optional login for order history
 5. Multi-currency - International store support
 6. Store Migration - Import from Shopify/WooCommerce
 7. Advanced Analytics - Conversion funnels, cohorts
