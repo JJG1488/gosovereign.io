@@ -35,6 +35,7 @@
 | 9.7 | Jan 1, 2026 | **Bulk Product Import** - CSV upload with column mapping, image URL download, progress tracking, error handling |
 | 9.7 | Jan 1, 2026 | **Subscription Billing Verified** - All webhook handlers confirmed working, deploy flow checks can_deploy |
 | 9.8 | Jan 1, 2026 | **Account Settings Page** - Email change, password update, GDPR account deletion, cascading data removal |
+| 9.9 | Jan 1, 2026 | **Customer Accounts** - Optional customer login, order history, saved addresses, profile management |
 
 ---
 
