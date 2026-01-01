@@ -31,6 +31,7 @@
 | 9.3 | Jan 1, 2026 | **Inventory Management** - Low stock email alerts, configurable thresholds, auto-hide out-of-stock products |
 | 9.4 | Jan 1, 2026 | **Automated Domain Verification** - Platform API proxies Vercel Domains, DNS records in Settings UI, verification status |
 | 9.5 | Jan 1, 2026 | **Coupon/Discount System** - Promo codes, percentage/fixed discounts, usage limits, Stripe integration, admin CRUD |
+| 9.6 | Jan 1, 2026 | **Product Variants** - Size/Color/etc options, per-variant inventory, admin VariantEditor, storefront selector, cart+checkout integration |
 
 ---
 
@@ -45,7 +46,7 @@
 
 ## Current State (January 2026)
 
-### Phase: LAUNCHED + FEATURE EXPANSION (v9.5)
+### Phase: LAUNCHED + FEATURE EXPANSION (v9.6)
 
 **What's Built:**
 - [x] Landing page with A/B variants (`/a`, `/b`)
@@ -267,9 +268,19 @@
   - [x] Webhook captures `discount_amount` and `coupon_code` on orders
   - [x] Order confirmation emails show discount line with coupon code
   - [x] "Coupons" link added to admin navigation
+- [x] **Product Variants** (Jan 1, 2026)
+  - [x] `product_variants` table with per-variant inventory tracking
+  - [x] `VariantEditor` component for admin product pages
+  - [x] Option types (Size, Color, etc.) with cartesian variant generation
+  - [x] `VariantSelector` component for storefront product pages
+  - [x] Variant availability indicators and stock warnings
+  - [x] Cart integration with `productId:variantId` composite keys
+  - [x] Checkout API validates variant stock server-side
+  - [x] Webhook decrements variant inventory on purchase
+  - [x] Low stock alerts work for variant inventory
 
 **Completed This Session:**
-- [x] Coupon/Discount System ✅ (v9.5)
+- [x] Product Variants ✅ (v9.6)
 
 **Known Tech Debt:**
 - `WizardContext.tsx:455` - React hooks ref mutation pattern (non-blocking)
@@ -724,6 +735,77 @@ SHIPPING_COUNTRIES=US,CA,GB,AU      # Comma-separated ISO codes for Stripe check
 ---
 
 ## Session Summary (Jan 1, 2026)
+
+### Session 17 - Product Variants (v9.6)
+
+**What was done:**
+
+Complete product variants system allowing stores to sell products with options like Size (S/M/L/XL), Color (Black/White/Gold), etc.
+
+**Database Schema:**
+- Added `product_variants` table with:
+  - `name` - Human-readable variant name (e.g., "Small / Black")
+  - `sku` - Optional SKU per variant
+  - `price_adjustment` - Price difference from base (positive or negative)
+  - `inventory_count` - Per-variant stock tracking
+  - `track_inventory` - Enable/disable inventory per variant
+  - `options` - JSONB with option values (e.g., `{"Size": "Small", "Color": "Black"}`)
+  - `position` - Sort order
+  - `is_active` - Enable/disable variant
+- Added `has_variants` and `variant_options` columns to products table
+
+**Admin UI:**
+- `VariantEditor` component on product edit page:
+  - Option type management (Size, Color, Material, etc.)
+  - Values per option type (S, M, L, XL for Size)
+  - Auto-generates cartesian product of all combinations
+  - Bulk pricing/inventory table for all variants
+  - Individual variant SKU, price adjustment, inventory fields
+- Product edit page hides standard inventory when variants enabled
+
+**Storefront:**
+- `VariantSelector` component on product pages:
+  - Button groups for each option type
+  - Grayed out unavailable combinations
+  - Stock warnings for low inventory variants
+  - SKU display for selected variant
+- `ProductWithVariants` wrapper for dynamic price display
+- Price updates in real-time based on variant selection
+
+**Cart Integration:**
+- `CartContext` updated with VariantInfo interface
+- Cart items keyed by `productId:variantId` for uniqueness
+- `addItem`, `removeItem`, `updateQuantity` all variant-aware
+- Cart page shows variant name under product name
+- Total calculation includes variant price adjustments
+
+**Checkout & Webhook:**
+- Checkout API validates variant stock server-side
+- Stripe metadata includes `variant_id` and `variant_name`
+- Webhook extracts variant info and saves to `order_items.variant_info`
+- `decrementVariantInventory()` function for variant stock
+- Low stock alerts work for variant inventory
+
+**Files created:**
+- `templates/hosted/components/VariantEditor.tsx`
+- `templates/hosted/components/VariantSelector.tsx`
+- `templates/hosted/components/ProductWithVariants.tsx`
+- `templates/hosted/app/api/admin/products/[id]/variants/route.ts`
+- `templates/hosted/app/api/products/[id]/variants/route.ts`
+
+**Files modified:**
+- `scripts/supabase-setup.sql` - product_variants table
+- `templates/hosted/app/admin/products/[id]/page.tsx` - VariantEditor integration
+- `templates/hosted/app/api/admin/products/[id]/route.ts` - has_variants handling
+- `templates/hosted/components/CartContext.tsx` - Variant-aware cart
+- `templates/hosted/components/AddToCartButton.tsx` - Variant props
+- `templates/hosted/app/cart/page.tsx` - Variant display
+- `templates/hosted/app/products/[id]/page.tsx` - ProductWithVariants
+- `templates/hosted/data/products.ts` - has_variants field
+- `templates/hosted/app/api/checkout/route.ts` - Variant stock validation
+- `templates/hosted/app/api/webhooks/stripe/route.ts` - Variant inventory decrement
+
+---
 
 ### Session 16 - Coupon/Discount System (v9.5)
 
@@ -1298,7 +1380,7 @@ Client Component (Header, Footer, Hero, MobileMenu)
 
 ## Recommendations for Next Session
 
-### Completed (v9.5)
+### Completed (v9.6)
 
 All launch blockers + operational tools + full mobile UX + **complete runtime settings** + new features:
 - ✅ Tier-based feature gating working (Pro + Starter verified)
@@ -1319,21 +1401,16 @@ All launch blockers + operational tools + full mobile UX + **complete runtime se
 - ✅ **Inventory Management** - Low stock alerts, configurable thresholds, auto-hide out-of-stock
 - ✅ **Automated Domain Verification** - Vercel API integration, DNS records in UI, status tracking
 - ✅ **Coupon/Discount System** - Promo codes, percentage/fixed discounts, usage limits, Stripe integration
+- ✅ **Product Variants** - Size/Color options, per-variant inventory, admin editor, storefront selector
 
 ### High Priority (Next Up)
 
 1. **Sync Template to GitHub** ⚠️ CRITICAL
-   - Push v9.5 changes to `gosovereign/storefront-template`
-   - New store deployments need coupon system
+   - Push v9.6 changes to `gosovereign/storefront-template`
+   - New store deployments need variants + coupons
    - Run: `cd templates/hosted && git push origin main`
 
-2. **Product Variants**
-   - Size, color, and other product variations
-   - Variant-specific inventory tracking
-   - Variant pricing and images
-   - Variant-specific images in gallery
-
-3. **Subscription Billing for Hosted Tier**
+2. **Subscription Billing for Hosted Tier**
    - Currently one-time + monthly, but recurring not fully tested
    - Verify `invoice.paid` webhook updates subscription status
    - Test payment failure → grace period flow
@@ -1372,7 +1449,7 @@ All launch blockers + operational tools + full mobile UX + **complete runtime se
 ---
 
 *Last Updated: January 1, 2026*
-*Version: 9.5*
-*Status: LAUNCHED + FEATURE EXPANSION - Coupon system complete, all major e-commerce features built*
-*Next: Sync template to GitHub, Product variants, Subscription billing verification*
+*Version: 9.6*
+*Status: LAUNCHED + FEATURE EXPANSION - Product variants complete, full e-commerce feature set*
+*Next: Sync template to GitHub, Subscription billing verification*
 *This file is the source of truth for all project context.*
