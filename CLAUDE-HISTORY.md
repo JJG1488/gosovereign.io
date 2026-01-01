@@ -36,6 +36,10 @@
 | 9.7 | Jan 1, 2026 | **Subscription Billing Verified** - All webhook handlers confirmed working, deploy flow checks can_deploy |
 | 9.8 | Jan 1, 2026 | **Account Settings Page** - Email change, password update, GDPR account deletion, cascading data removal |
 | 9.9 | Jan 1, 2026 | **Customer Accounts** - Optional customer login, order history, saved addresses, profile management |
+| 9.10 | Jan 1, 2026 | **Checkout Address Pre-fill** - Logged-in customers use saved addresses, AddressSelector component |
+| 9.11 | Jan 1, 2026 | **Documentation Site** - MDX-based `/docs` with 12 pages covering all features |
+| 9.12 | Jan 1, 2026 | **Abandoned Cart Recovery** - Server sync, admin page, recovery emails with cart links |
+| 9.13 | Jan 1, 2026 | **Gift Cards** - Purchase, redemption, balance check, admin management, email delivery |
 
 ---
 
@@ -68,6 +72,46 @@
 ---
 
 ## Session Summaries
+
+### Session 24 - Gift Cards (v9.13) - Jan 1, 2026
+
+**What was done:**
+
+Implemented a complete digital gift card system for store owners.
+
+**Customer Features:**
+- Gift card purchase page (`/gift-cards`) with fixed denominations ($25, $50, $100, $200)
+- Recipient details form (email, name, personal message)
+- Balance check page (`/gift-cards/check`)
+- Gift card redemption at checkout via `GiftCardInput` component
+- Stackable with coupons (gift card applied after coupon discount)
+- Full gift card coverage skips Stripe payment
+
+**Admin Features:**
+- Gift cards list page (`/admin/gift-cards`) with status, balance, recipient info
+- Gift card detail page with transaction history, enable/disable, resend email
+- Manual gift card issuance (`/admin/gift-cards/new`) for promotions/customer service
+- Custom amounts for manual issuance
+
+**Email Notifications:**
+- Purchase confirmation to buyer
+- Gift card delivery to recipient with code and message
+
+**Database:**
+- `gift_cards` table - codes, balances, recipient info, status
+- `gift_card_transactions` table - redemption history
+
+**Key Files:**
+- `scripts/supabase-gift-cards.sql` - Database schema
+- `templates/hosted/lib/gift-cards.ts` - Core utilities
+- `templates/hosted/app/gift-cards/page.tsx` - Purchase page
+- `templates/hosted/app/gift-cards/check/page.tsx` - Balance check
+- `templates/hosted/components/GiftCardInput.tsx` - Checkout integration
+- `templates/hosted/app/admin/gift-cards/` - Admin pages
+- `templates/hosted/app/api/admin/gift-cards/` - Admin APIs
+- `templates/hosted/app/api/gift-cards/` - Customer APIs
+
+---
 
 ### Session 19 - Subscription Billing Verification (v9.7) - Jan 1, 2026
 
