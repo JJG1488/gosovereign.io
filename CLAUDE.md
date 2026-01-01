@@ -27,6 +27,8 @@
 | 8.9 | Dec 30, 2025 | Reviews mobile fix, **Runtime Settings System** - all store settings now update without redeploy |
 | 9.0 | Dec 30, 2025 | Trust Badges moved below Reviews, initial Supabase caching investigation |
 | 9.1 | Dec 31, 2025 | **CRITICAL FIX:** Supabase PostgREST caching - custom fetch with cache-busting headers, settings now persist correctly |
+| 9.2 | Jan 1, 2026 | Digital goods support, AI product copywriting, video mute/unmute, Platform Admin redeploy stores feature |
+| 9.3 | Jan 1, 2026 | **Inventory Management** - Low stock email alerts, configurable thresholds, auto-hide out-of-stock products |
 
 ---
 
@@ -39,9 +41,9 @@
 
 ---
 
-## Current State (December 2025)
+## Current State (January 2026)
 
-### Phase: LAUNCHED + SETTINGS PERSISTENCE FIXED (v9.1)
+### Phase: LAUNCHED + FEATURE EXPANSION (v9.3)
 
 **What's Built:**
 - [x] Landing page with A/B variants (`/a`, `/b`)
@@ -209,9 +211,43 @@
   - [x] Cart page two-row layout with Trash icon
   - [x] Duplicate stock message fix (kept in AddToCartButton only)
   - [x] Footer payment icons with flex-wrap
+- [x] **Digital Products Support** (Jan 1, 2026)
+  - [x] `is_digital` toggle on product create/edit pages
+  - [x] `/api/admin/upload-digital` endpoint for file uploads
+  - [x] Supabase Storage bucket `digital-products` for secure files
+  - [x] Signed download URLs with 1-hour expiration
+  - [x] Order confirmation emails include download links for digital items
+  - [x] "Instant Download" badge on product pages
+  - [x] Digital products excluded from out-of-stock logic
+- [x] **AI Product Copywriting** (Jan 1, 2026)
+  - [x] `/api/admin/generate-description` endpoint using Claude 3.5 Haiku
+  - [x] `AIDescriptionButton` component with idle → loading → regenerate states
+  - [x] Available on both new and edit product pages
+  - [x] `ANTHROPIC_API_KEY` added to store deployments in `lib/vercel.ts`
+  - [x] `@anthropic-ai/sdk` added to template dependencies
+- [x] **Video Banner Sound Toggle** (Jan 1, 2026)
+  - [x] Mute/unmute button on VideoBanner component
+  - [x] Works with uploaded videos and YouTube embeds
+  - [x] YouTube iframe reloads on unmute (browser autoplay policy)
+- [x] **Platform Admin Redeploy** (Jan 1, 2026)
+  - [x] `/api/platform-admin/redeploy` endpoint (single + bulk)
+  - [x] `RedeployButton` on store detail page
+  - [x] `RedeployAllButton` on stores list page
+  - [x] Logs all actions to `deployment_logs` table
+  - [x] Processes bulk redeployments sequentially to avoid rate limits
+- [x] **Inventory Management** (Jan 1, 2026)
+  - [x] `sendLowStockAlert()` email function in `lib/email.ts`
+  - [x] Stripe webhook triggers alert when inventory crosses threshold
+  - [x] Configurable low stock threshold (replaces hardcoded 5)
+  - [x] "Email me on low stock" toggle in Settings
+  - [x] "Hide out of stock products" toggle for storefront
+  - [x] `getProducts()` and search API filter out-of-stock when enabled
+  - [x] All admin pages use configurable threshold (products, stats, dashboard)
+  - [x] `AddToCartButton` uses configurable threshold for "low stock" warning
+  - [x] `lowStockThreshold` added to `RuntimeSettings` interface
 
 **Completed This Session:**
-- [x] Storefront Mobile UX - comprehensive mobile audit and fixes ✅ (v8.8)
+- [x] Inventory Management ✅ (v9.3)
 
 **Known Tech Debt:**
 - `WizardContext.tsx:455` - React hooks ref mutation pattern (non-blocking)
@@ -555,34 +591,43 @@ SHIPPING_COUNTRIES=US,CA,GB,AU      # Comma-separated ISO codes for Stripe check
 
 ### Recommended for Next Session (High Priority)
 
-1. **Automated Domain Verification** (Pro Feature Enhancement)
+1. **Sync Template to GitHub** ⚠️ CRITICAL
+   - Push latest changes to `gosovereign/storefront-template`
+   - Critical for new store deployments to get v9.3 features
+   - Without this, new stores won't have inventory management or AI copywriting
+
+2. **Automated Domain Verification** (Pro Feature Enhancement)
    - Currently: User saves domain → manual verification
    - Build: Auto-check DNS → Auto-add to Vercel via API → Show verification status
    - Integrate with Vercel Domains API for SSL provisioning
 
-2. **Inventory Management**
-   - Low stock warnings in admin dashboard
-   - Out-of-stock auto-hide option
-   - Restock email notifications
-
-### Medium Priority
-
-3. **Account Settings Page**
-   - User profile management on platform side
-   - Email change, password update
-   - Account deletion (GDPR)
-
-4. **Coupon/Discount System**
+3. **Coupon/Discount System**
    - Promo codes for stores
    - Percentage and fixed amount discounts
    - Usage limits and expiration dates
 
+### Medium Priority
+
+4. **Account Settings Page**
+   - User profile management on platform side
+   - Email change, password update
+   - Account deletion (GDPR)
+
+5. **Product Variants**
+   - Size, color, and other product variations
+   - Variant-specific inventory tracking
+   - Variant pricing
+
+6. **Order Detail Page Mobile**
+   - Check if order detail page needs mobile fixes
+   - Shipping notification button mobile UX
+
 ### Lower Priority (Future Growth)
 
-5. **Digital Products Support** - Download delivery for digital goods
-6. **Customer Accounts** - Optional login for order history
-7. **Multi-currency** - International store support
-8. **Store Migration** - Import from Shopify/WooCommerce/Etsy
+7. **Customer Accounts** - Optional login for order history, saved addresses
+8. **Multi-currency** - International store support with currency conversion
+9. **Store Migration** - Import from Shopify/WooCommerce/Etsy
+10. **Advanced Analytics** - Conversion funnels, customer cohorts, A/B testing
 
 ### Tech Debt (Non-Blocking)
 
@@ -650,13 +695,127 @@ SHIPPING_COUNTRIES=US,CA,GB,AU      # Comma-separated ISO codes for Stripe check
 
 | File | Purpose | Last Updated |
 |------|---------|--------------|
-| `CLAUDE.md` | Project context and version history (this file) | Dec 30, 2025 |
+| `CLAUDE.md` | Project context and version history (this file) | Jan 1, 2026 |
 | `PROMPTS.md` | Granular implementation prompts (v3.0) | Dec 22, 2024 |
 | `PROMPTS_v2.md` | Architecture documentation and runbook | Dec 22, 2024 |
 
 ---
 
-## Session Summary (Dec 31, 2025)
+## Session Summary (Jan 1, 2026)
+
+### Session 14 - Inventory Management (v9.3)
+
+**What was done:**
+
+Complete inventory management system with configurable thresholds, email alerts, and auto-hide functionality.
+
+**Phase 1: Low Stock Email Alerts**
+- Added `sendLowStockAlert()` function to `lib/email.ts`
+- Modified Stripe webhook's `decrementInventory()` to:
+  1. Fetch low stock threshold from `store_settings`
+  2. Check if inventory just crossed threshold (was above, now at/below)
+  3. Trigger email alert when threshold is crossed
+
+**Phase 2: Inventory Settings UI**
+- Added Inventory section to General tab in Settings page:
+  - Low stock threshold input (default: 5)
+  - "Email me when products reach low stock" toggle
+  - "Hide out of stock products from storefront" toggle
+- Updated `StoreSettings` interface with new fields
+- Updated settings API to include inventory defaults
+
+**Phase 3: Out-of-Stock Filtering**
+- `getProducts()` now filters out-of-stock products when `hideOutOfStock` is enabled
+- Product search API also respects the setting
+- Digital products and products not tracking inventory are never hidden
+
+**Phase 4: Configurable Threshold References**
+Updated all hardcoded `<= 5` references to use configurable threshold:
+- `app/api/admin/products/route.ts` - Low stock filter query
+- `app/api/admin/stats/route.ts` - Low stock count calculation
+- `app/admin/products/page.tsx` - Orange text indicator for low stock
+- `components/AddToCartButton.tsx` - "Only X left" warning
+- `app/products/[id]/page.tsx` - Passes threshold to AddToCartButton
+- `lib/settings.ts` - Added `lowStockThreshold` to RuntimeSettings
+
+**Files modified:**
+- `templates/hosted/lib/email.ts` - Added `sendLowStockAlert()`
+- `templates/hosted/app/api/webhooks/stripe/route.ts` - Threshold-based alert logic
+- `templates/hosted/app/admin/settings/page.tsx` - Inventory settings UI
+- `templates/hosted/app/api/admin/settings/route.ts` - Inventory defaults
+- `templates/hosted/data/products.ts` - Out-of-stock filtering
+- `templates/hosted/app/api/products/search/route.ts` - Out-of-stock filtering
+- `templates/hosted/app/api/admin/products/route.ts` - Configurable threshold
+- `templates/hosted/app/api/admin/stats/route.ts` - Configurable threshold
+- `templates/hosted/app/admin/products/page.tsx` - Configurable threshold
+- `templates/hosted/components/AddToCartButton.tsx` - Configurable threshold prop
+- `templates/hosted/app/products/[id]/page.tsx` - Pass threshold to AddToCartButton
+- `templates/hosted/lib/settings.ts` - Added `lowStockThreshold` to RuntimeSettings
+
+**Key Design Decisions:**
+- Threshold stored in `store_settings` JSONB, not separate column
+- Uses `createFreshAdminClient()` for all settings reads (cache-busting)
+- Digital products never hidden (always "in stock")
+- Products not tracking inventory never hidden
+- Email only sent when threshold is *crossed*, not on every low stock order
+
+---
+
+### Session 13 - Feature Expansion (v9.2)
+
+**What was done:**
+
+1. **Digital Products Support** (completed from previous session)
+   - File upload endpoint for digital products (`/api/admin/upload-digital`)
+   - `is_digital` toggle in product admin pages
+   - Signed download URLs via Supabase Storage with 1-hour expiration
+   - Download links in order confirmation emails
+   - "Instant Download" badge on product pages
+   - Digital products excluded from out-of-stock logic
+
+2. **AI Product Copywriting**
+   - `/api/admin/generate-description` endpoint using Claude 3.5 Haiku
+   - `AIDescriptionButton` component on product new/edit pages
+   - Purple gradient button with Sparkles icon
+   - States: idle → loading → success (regenerate mode)
+   - `ANTHROPIC_API_KEY` added to store deployments in `lib/vercel.ts`
+   - `@anthropic-ai/sdk` added to template `package.json`
+
+3. **Video Banner Sound Toggle**
+   - Added mute/unmute button to `VideoBanner.tsx`
+   - Works with uploaded videos and YouTube embeds
+   - YouTube iframe reloads on unmute (browser autoplay policy)
+
+4. **Platform Admin Redeploy**
+   - `/api/platform-admin/redeploy` endpoint (single + bulk)
+   - `RedeployButton` on store detail page (`/platform-admin/stores/[id]`)
+   - `RedeployAllButton` on stores list page (`/platform-admin/stores`)
+   - Logs all actions to `deployment_logs` table
+   - Sequential processing for bulk to avoid Vercel rate limits
+
+**Files created:**
+- `templates/hosted/app/api/admin/generate-description/route.ts`
+- `templates/hosted/components/AIDescriptionButton.tsx`
+- `app/api/platform-admin/redeploy/route.ts`
+- `components/platform-admin/RedeployButton.tsx`
+- `components/platform-admin/RedeployAllButton.tsx`
+- `components/platform-admin/index.ts`
+
+**Files modified:**
+- `templates/hosted/lib/email.ts` - Download links in confirmation emails
+- `templates/hosted/app/products/[id]/page.tsx` - Digital product badge
+- `templates/hosted/components/ProductCard.tsx` - Digital badge
+- `templates/hosted/components/VideoBanner.tsx` - Mute/unmute button
+- `templates/hosted/app/admin/products/new/page.tsx` - AI button
+- `templates/hosted/app/admin/products/[id]/page.tsx` - AI button
+- `templates/hosted/package.json` - Anthropic SDK dependency
+- `lib/vercel.ts` - ANTHROPIC_API_KEY env var
+- `app/platform-admin/stores/[id]/page.tsx` - Redeploy button
+- `app/platform-admin/stores/page.tsx` - Bulk redeploy button
+
+**Key Fix:** `ANTHROPIC_API_KEY` was not being passed to deployed stores. Added it to `buildEnvironmentVariables()` in `lib/vercel.ts`.
+
+---
 
 ### Session 12 - Supabase Caching FINAL Fix (v9.1)
 
@@ -993,9 +1152,9 @@ Client Component (Header, Footer, Hero, MobileMenu)
 
 ## Recommendations for Next Session
 
-### Completed (v8.9)
+### Completed (v9.3)
 
-All launch blockers + operational tools + full mobile UX + **complete runtime settings** system:
+All launch blockers + operational tools + full mobile UX + **complete runtime settings** + new features:
 - ✅ Tier-based feature gating working (Pro + Starter verified)
 - ✅ Custom domain settings UI (Pro feature)
 - ✅ Analytics dashboard (Pro feature)
@@ -1007,50 +1166,63 @@ All launch blockers + operational tools + full mobile UX + **complete runtime se
 - ✅ Admin Mobile UX (hamburger nav, tab dropdown, clickable product rows)
 - ✅ Storefront Mobile UX (reviews, orders, cart, header, footer all mobile-optimized)
 - ✅ Reviews admin Edit/Delete buttons visible on mobile
-- ✅ **ALL settings now update at runtime** (no redeploy needed):
-  - Theme, logo, announcement bar, tagline, about text
-  - Shipping/return policies, all social links
+- ✅ **ALL settings now update at runtime** (no redeploy needed)
+- ✅ **Digital Products Support** - File uploads, signed download URLs, email links
+- ✅ **AI Product Copywriting** - Claude 3.5 Haiku description generation
+- ✅ **Platform Admin Redeploy** - Single store + bulk redeploy from admin dashboard
+- ✅ **Inventory Management** - Low stock alerts, configurable thresholds, auto-hide out-of-stock
 
 ### High Priority (Post-Launch Enhancements)
 
 1. **Sync Template to GitHub** ⚠️ CRITICAL
    - Push latest changes to `gosovereign/storefront-template`
-   - Critical for new store deployments to get v8.9 runtime settings system
-   - Without this, new stores won't have runtime settings
+   - Critical for new store deployments to get v9.3 features
+   - Without this, new stores won't have inventory management, AI copywriting, or digital products
 
-2. **Inventory Management**
-   - Low stock warnings in admin dashboard
-   - Out-of-stock auto-hide option
-   - Restock email notifications
-
-3. **Automated Domain Verification**
+2. **Automated Domain Verification**
    - Currently: User saves domain → manual Vercel setup
    - Build: Auto-check DNS → Auto-add to Vercel via API → Show verification status
    - Integrate with Vercel Domains API for SSL provisioning
 
+3. **Coupon/Discount System**
+   - Promo codes for stores
+   - Percentage and fixed amount discounts
+   - Usage limits and expiration dates
+   - Apply at checkout via Stripe
+
 ### Medium Priority
 
-4. **Coupon/Discount System** - Promo codes, percentage/fixed discounts
-5. **Account Settings Page** - User profile, email change, account deletion
-6. **Order Detail Page Mobile** - Check if order detail page needs mobile fixes
-7. **Product Detail Page Mobile** - Image gallery, variant selector mobile UX
+4. **Product Variants**
+   - Size, color, and other product variations
+   - Variant-specific inventory tracking
+   - Variant pricing and images
+
+5. **Account Settings Page**
+   - User profile management on platform side
+   - Email change, password update
+   - Account deletion (GDPR compliance)
+
+6. **Order Detail Page Mobile**
+   - Check if order detail page needs mobile fixes
+   - Shipping notification button mobile UX
 
 ### Lower Priority (Future Growth)
 
-8. **Digital Products Support** - Download delivery for digital goods
-9. **Customer Accounts** - Optional login for order history, saved addresses
-10. **Multi-currency** - International store support with currency conversion
-11. **Store Migration** - Import from Shopify/WooCommerce/Etsy
-12. **Advanced Analytics** - Conversion funnels, customer cohorts, A/B testing
+7. **Customer Accounts** - Optional login for order history, saved addresses
+8. **Multi-currency** - International store support with currency conversion
+9. **Store Migration** - Import from Shopify/WooCommerce/Etsy
+10. **Advanced Analytics** - Conversion funnels, customer cohorts, A/B testing
+11. **Abandoned Cart Recovery** - Email reminders for incomplete checkouts
 
 ### Storage Setup Reminder
 
 - Create `store-videos` bucket in Supabase Storage for video uploads (if not done)
+- Create `digital-products` bucket in Supabase Storage for digital downloads (private bucket)
 
 ---
 
-*Last Updated: December 31, 2025*
-*Version: 9.1*
-*Status: LAUNCHED + SETTINGS PERSISTENCE FIXED - Supabase caching issue resolved*
-*Next: Remove debug logging, Sync template to GitHub, Inventory management, Automated domain verification*
+*Last Updated: January 1, 2026*
+*Version: 9.3*
+*Status: LAUNCHED + FEATURE EXPANSION - Inventory management, digital products, AI copywriting*
+*Next: Sync template to GitHub, Automated domain verification, Coupon system, Product variants*
 *This file is the source of truth for all project context.*
