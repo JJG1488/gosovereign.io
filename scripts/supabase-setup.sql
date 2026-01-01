@@ -157,7 +157,9 @@ CREATE TABLE IF NOT EXISTS public.orders (
   shipping_cost DECIMAL(10,2) DEFAULT 0,
   tax_amount DECIMAL(10,2) DEFAULT 0,
   discount_amount DECIMAL(10,2) DEFAULT 0,
+  coupon_code TEXT,
   total DECIMAL(10,2) NOT NULL,
+  stripe_session_id TEXT UNIQUE,
   stripe_payment_intent_id TEXT,
   stripe_charge_id TEXT,
   payment_status TEXT DEFAULT 'pending',
@@ -313,6 +315,28 @@ CREATE TABLE IF NOT EXISTS public.product_reviews (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- ----------------------------------------------------------------------------
+-- COUPONS TABLE
+-- ----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS public.coupons (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  store_id UUID NOT NULL REFERENCES public.stores(id) ON DELETE CASCADE,
+  code TEXT NOT NULL,
+  description TEXT,
+  discount_type TEXT NOT NULL, -- 'percentage' or 'fixed'
+  discount_value INTEGER NOT NULL, -- percentage (0-100) or cents
+  minimum_order_amount INTEGER DEFAULT 0, -- in cents
+  max_uses INTEGER, -- null = unlimited
+  current_uses INTEGER DEFAULT 0,
+  starts_at TIMESTAMPTZ,
+  expires_at TIMESTAMPTZ,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(store_id, code)
+);
+
 -- ============================================================================
 -- 3. INDEXES (IF NOT EXISTS)
 -- ============================================================================
@@ -364,6 +388,11 @@ CREATE INDEX IF NOT EXISTS idx_admin_sessions_expires ON public.admin_sessions(e
 CREATE INDEX IF NOT EXISTS idx_product_reviews_store ON public.product_reviews(store_id);
 CREATE INDEX IF NOT EXISTS idx_product_reviews_product ON public.product_reviews(product_id);
 
+-- Coupons
+CREATE INDEX IF NOT EXISTS idx_coupons_store ON public.coupons(store_id);
+CREATE INDEX IF NOT EXISTS idx_coupons_code ON public.coupons(store_id, code);
+CREATE INDEX IF NOT EXISTS idx_coupons_active ON public.coupons(is_active) WHERE is_active = true;
+
 -- ============================================================================
 -- 4. ROW LEVEL SECURITY
 -- ============================================================================
@@ -382,6 +411,7 @@ ALTER TABLE public.store_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.newsletter_subscribers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admin_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.product_reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.coupons ENABLE ROW LEVEL SECURITY;
 
 -- ----------------------------------------------------------------------------
 -- Users Policies (drop and recreate)
@@ -596,6 +626,23 @@ CREATE POLICY "Public can view reviews"
   ON public.product_reviews FOR SELECT
   USING (true);
 
+-- ----------------------------------------------------------------------------
+-- Coupons Policies
+-- Note: Deployed stores use service role for CRUD, public can validate codes
+-- ----------------------------------------------------------------------------
+
+DROP POLICY IF EXISTS "Service role full access to coupons" ON public.coupons;
+DROP POLICY IF EXISTS "Public can validate active coupons" ON public.coupons;
+
+CREATE POLICY "Service role full access to coupons"
+  ON public.coupons FOR ALL
+  TO service_role
+  USING (true);
+
+CREATE POLICY "Public can validate active coupons"
+  ON public.coupons FOR SELECT
+  USING (is_active = true);
+
 -- ============================================================================
 -- 5. FUNCTIONS (CREATE OR REPLACE)
 -- ============================================================================
@@ -641,6 +688,7 @@ DROP TRIGGER IF EXISTS update_orders_updated_at ON public.orders;
 DROP TRIGGER IF EXISTS update_subscriptions_updated_at ON public.subscriptions;
 DROP TRIGGER IF EXISTS update_wizard_progress_updated_at ON public.wizard_progress;
 DROP TRIGGER IF EXISTS update_purchases_updated_at ON public.purchases;
+DROP TRIGGER IF EXISTS update_coupons_updated_at ON public.coupons;
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 
 CREATE TRIGGER update_users_updated_at
@@ -669,6 +717,10 @@ CREATE TRIGGER update_wizard_progress_updated_at
 
 CREATE TRIGGER update_purchases_updated_at
   BEFORE UPDATE ON public.purchases
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE TRIGGER update_coupons_updated_at
+  BEFORE UPDATE ON public.coupons
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 CREATE TRIGGER on_auth_user_created
