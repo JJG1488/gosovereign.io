@@ -12,6 +12,7 @@ import {
   Calendar,
   Rocket,
 } from "lucide-react";
+import { RedeployButton } from "@/components/platform-admin";
 
 interface StoreDetail {
   id: string;
@@ -191,17 +192,20 @@ export default async function StoreDetailPage({
             </p>
           </div>
 
-          {store.deployment_url && (
-            <a
-              href={store.deployment_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors"
-            >
-              <ExternalLink className="w-4 h-4" />
-              Visit Store
-            </a>
-          )}
+          <div className="flex items-center gap-3">
+            <RedeployButton storeId={store.id} storeName={store.name} />
+            {store.deployment_url && (
+              <a
+                href={store.deployment_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Visit Store
+              </a>
+            )}
+          </div>
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { ExternalLink, Search } from "lucide-react";
+import { RedeployAllButton } from "@/components/platform-admin";
 
 interface StoreWithOwner {
   id: string;
@@ -85,6 +86,15 @@ async function getStores(params: SearchParams) {
     page,
     totalPages: Math.ceil((count || 0) / ITEMS_PER_PAGE),
   };
+}
+
+async function getDeployedCount() {
+  const supabase = createAdminClient();
+  const { count } = await supabase
+    .from("stores")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "deployed");
+  return count || 0;
 }
 
 function TierBadge({ tier }: { tier: string | null }) {
@@ -242,13 +252,20 @@ export default async function StoresListPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const { stores, total, page, totalPages } = await getStores(params);
+  const [storesResult, deployedCount] = await Promise.all([
+    getStores(params),
+    getDeployedCount(),
+  ]);
+  const { stores, total, page, totalPages } = storesResult;
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">All Stores</h1>
-        <p className="text-gray-400 mt-1">{total} stores total</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-white">All Stores</h1>
+          <p className="text-gray-400 mt-1">{total} stores total</p>
+        </div>
+        <RedeployAllButton deployedCount={deployedCount} />
       </div>
 
       <SearchForm
