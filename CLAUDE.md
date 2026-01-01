@@ -262,24 +262,24 @@ All major e-commerce features built:
 - Product Variants
 - Bulk Product Import
 - **Subscription Billing (Verified)**
+- **Account Settings Page (v9.8)**
 
 ### High Priority
 
-1. **Account Settings Page** - Email change, password update, GDPR deletion
-2. **Customer Accounts** - Optional login for order history, saved addresses
+1. **Customer Accounts** - Optional login for order history, saved addresses
 
 ### Medium Priority
 
-3. **Order Detail Page Mobile** - Shipping notification button UX
-4. **Storefront Search** - Full-text product search with filters
+2. **Order Detail Page Mobile** - Shipping notification button UX
+3. **Storefront Search** - Full-text product search with filters
 
 ### Lower Priority
 
-5. Multi-currency - International store support
-6. Store Migration - Import from Shopify/WooCommerce
-7. Advanced Analytics - Conversion funnels, cohorts
-8. Abandoned Cart Recovery
-9. Gift Cards
+4. Multi-currency - International store support
+5. Store Migration - Import from Shopify/WooCommerce
+6. Advanced Analytics - Conversion funnels, cohorts
+7. Abandoned Cart Recovery
+8. Gift Cards
 
 ### Storage Setup Reminder
 
