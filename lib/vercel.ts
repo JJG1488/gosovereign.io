@@ -516,6 +516,14 @@ function buildEnvironmentVariables(store: Store) {
     type: "plain",
   });
 
+  // Store currency (defaults to USD)
+  envVars.push({
+    key: "NEXT_PUBLIC_STORE_CURRENCY",
+    value: store.config?.currency || "USD",
+    target: ["production", "preview", "development"],
+    type: "plain",
+  });
+
   return envVars;
 }
 

@@ -63,6 +63,8 @@ export interface StoreConfig {
     aboutText?: string;
     contactEmail?: string;
   };
+  // Store currency (ISO code, e.g., "USD", "EUR", "JPY")
+  currency?: string;
   features: {
     shippingEnabled: boolean;
     shippingCountries?: string; // Comma-separated ISO country codes (e.g., "US,CA,GB")
