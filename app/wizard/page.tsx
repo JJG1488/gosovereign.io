@@ -21,11 +21,30 @@ import { AppHeader } from "@/components/layout";
 import type { StoreOption } from "@/components/layout";
 import { getMaxStores } from "@/lib/bogo";
 
-function WizardContent() {
+interface WizardContentProps {
+  prefillName?: string;
+  prefillColor?: string;
+}
+
+function WizardContent({ prefillName, prefillColor }: WizardContentProps) {
   const router = useRouter();
-  const { storeId, saveProgress } = useWizard();
+  const { storeId, saveProgress, updateConfig } = useWizard();
   const { isPaid } = usePaymentStatus();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const prefillApplied = useRef(false);
+
+  // Apply prefill values from mini-wizard on mount
+  useEffect(() => {
+    if (prefillApplied.current) return;
+    prefillApplied.current = true;
+
+    if (prefillName || prefillColor) {
+      const updates: Record<string, string> = {};
+      if (prefillName) updates.storeName = prefillName;
+      if (prefillColor) updates.primaryColor = prefillColor;
+      updateConfig(updates);
+    }
+  }, [prefillName, prefillColor, updateConfig]);
 
   const handleGenerate = async () => {
     // Check payment status before allowing generation
@@ -69,6 +88,8 @@ function WizardLoader() {
   const [showStoreLimitModal, setShowStoreLimitModal] = useState(false);
   const [showNewStoreModal, setShowNewStoreModal] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
+  const [prefillName, setPrefillName] = useState<string | undefined>();
+  const [prefillColor, setPrefillColor] = useState<string | undefined>();
 
   // Guard against double initialization (React StrictMode)
   const initializingRef = useRef(false);
@@ -85,6 +106,12 @@ function WizardLoader() {
         // Check if store ID is in URL
         const urlStoreId = searchParams.get("store");
         const urlTemplate = searchParams.get("template") as StoreTemplate | null;
+
+        // Extract prefill values from mini-wizard
+        const urlPrefillName = searchParams.get("prefill_name");
+        const urlPrefillColor = searchParams.get("prefill_color");
+        if (urlPrefillName) setPrefillName(urlPrefillName);
+        if (urlPrefillColor) setPrefillColor(urlPrefillColor);
 
         if (urlStoreId) {
           // Load existing store and get its template
@@ -505,7 +532,7 @@ function WizardLoader() {
       {deployedBannerJSX}
       <main className="py-8 px-4">
         <WizardProvider storeId={storeId} template={template}>
-          <WizardContent />
+          <WizardContent prefillName={prefillName} prefillColor={prefillColor} />
         </WizardProvider>
       </main>
 

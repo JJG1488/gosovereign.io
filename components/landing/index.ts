@@ -12,3 +12,4 @@ export { FinalCTA } from "./FinalCTA";
 export { Footer } from "./Footer";
 export { BogoPromo } from "./BogoPromo";
 export { ScreenshotGallery } from "./ScreenshotGallery";
+export { MiniWizard } from "./MiniWizard";

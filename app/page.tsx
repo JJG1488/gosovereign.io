@@ -33,7 +33,6 @@ export default function HomePage(): React.ReactElement {
         <Hero
           headline={copy.hero.headline}
           subheadline={copy.hero.subheadline}
-          cta={copy.hero.cta}
           microProof={copy.hero.microProof}
         />
 

@@ -4,14 +4,12 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Star, ExternalLink } from "lucide-react";
 import { Container } from "@/components/ui";
-import { HeroCTA } from "./HeroCTA";
+import { MiniWizard } from "./MiniWizard";
 
 interface HeroProps {
   headline: string;
   subheadline: string;
-  cta: string;
   microProof: string;
-  variant?: string;
 }
 
 // Shopify makes roughly $0.013 per second from their 2M+ merchants
@@ -21,9 +19,7 @@ const DOLLARS_PER_SECOND = 0.47;
 export function Hero({
   headline,
   subheadline,
-  cta,
   microProof,
-  variant,
 }: HeroProps): React.ReactElement {
   const [counter, setCounter] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
@@ -125,25 +121,32 @@ export function Hero({
             {subheadline}
           </motion.p>
 
-          {/* CTA */}
+          {/* Mini Wizard */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 30 }}
             transition={{ duration: 0.6, delay: 0.6 }}
             className="mb-8"
           >
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <HeroCTA cta={cta} variant={variant} />
-              <a
-                href="https://demo.gosovereign.io"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 text-gray-400 hover:text-emerald-400 transition-colors"
-              >
-                <ExternalLink className="w-4 h-4" />
-                See Live Examples
-              </a>
-            </div>
+            <MiniWizard />
+          </motion.div>
+
+          {/* Demo Link */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: isVisible ? 1 : 0 }}
+            transition={{ duration: 0.6, delay: 0.7 }}
+            className="mb-6"
+          >
+            <a
+              href="https://demo.gosovereign.io"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 text-gray-400 hover:text-emerald-400 transition-colors"
+            >
+              <ExternalLink className="w-4 h-4" />
+              See Live Examples
+            </a>
           </motion.div>
 
           {/* Micro-proof */}
