@@ -3,7 +3,7 @@
 > **IMPORTANT:** This file is the source of truth for active development.
 > For version history and session logs, see `CLAUDE-HISTORY.md`.
 
-**Current Version: 9.27** | **Last Updated: January 2, 2026**
+**Current Version: 9.28** | **Last Updated: January 2, 2026**
 
 ---
 
@@ -60,6 +60,7 @@
 - Abandoned cart recovery (manual trigger from admin, recovery emails)
 - Gift cards (purchase, redeem at checkout, balance check, stackable with coupons)
 - Multi-currency support (60+ Stripe currencies, zero-decimal handling)
+- Collections/Categories (products can belong to multiple collections)
 
 **Admin Features:**
 - Platform Admin Dashboard (`/platform-admin`)
@@ -73,6 +74,7 @@
 - BigCommerce import (Item Type detection, SKU variants, 10 image columns)
 - Abandoned Carts page (view abandoned carts, send recovery emails)
 - Gift Cards management (list, detail, manual issuance, resend emails)
+- Collections management (create, edit, assign products, reorder)
 
 **User Account Features:**
 - Account Settings page (`/account/settings`)
@@ -128,7 +130,7 @@
 
 | # | Issue | Details | Status |
 |---|-------|---------|--------|
-| **FEAT-1** | Collections/Categories admin page | Products can belong to multiple collections. Admin creates collections, assigns products via dropdown. Customer sees `/collections` page with grouped products. | **BACKLOG** |
+| **FEAT-1** | Collections/Categories admin page | Products can belong to multiple collections. Admin creates collections, assigns products via dropdown. Customer sees `/collections` page with grouped products. | **DONE** ✅ |
 | **FEAT-2** | Order confirmation emails not sending | Root cause: stores needed STRIPE_WEBHOOK_SECRET. Fixed with fallback order creation on success page. | **FIXED** ✅ |
 
 ### DEFERRED: Questions Answered
@@ -144,7 +146,7 @@
 2. ~~**Session 2:** BUG-4, WIZ-2, WIZ-3 (services creation, template-conditional UX)~~ ✅ DONE
 3. ~~**Session 3:** WIZ-4, WIZ-5 (AI enhance buttons)~~ ✅ DONE
 4. ~~**Session 4:** FEAT-2 (order emails - fallback order creation)~~ ✅ DONE
-5. **Session 5:** FEAT-1 (collections)
+5. ~~**Session 5:** FEAT-1 (collections)~~ ✅ DONE
 
 ---
 

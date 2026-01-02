@@ -54,6 +54,7 @@
 | 9.25 | Jan 2, 2026 | **Template-Aware Wizard** - TaglineStep template-specific content, services store creation fix |
 | 9.26 | Jan 2, 2026 | **AI Enhance Buttons** - Claude 3.5 Haiku integration for tagline and about step enhancement |
 | 9.27 | Jan 2, 2026 | **Order Email Fallback** - Fallback order creation on success page ensures emails send without webhook |
+| 9.28 | Jan 2, 2026 | **Collections Feature** - Products can belong to multiple collections, admin CRUD, customer-facing pages |
 
 ---
 
@@ -689,4 +690,4 @@ Audited email system - discovered it was ALREADY FULLY IMPLEMENTED. No code chan
 
 ---
 
-*Last Updated: January 2, 2026 (v9.27)*
+*Last Updated: January 2, 2026 (v9.28)*
