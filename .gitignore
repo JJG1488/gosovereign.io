@@ -47,5 +47,6 @@ next-env.d.ts
 .example
 
 # docs folder
-/docs/
+/docs
 
+/reference

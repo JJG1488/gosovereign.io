@@ -1,19 +1,37 @@
 "use client";
 
-import { useState } from "react";
-import { store } from "@/data/store";
+import { useState, useEffect } from "react";
+import { Send, CheckCircle } from "lucide-react";
+import type { Service } from "@/data/services";
 
-export function ContactForm() {
+interface ContactFormProps {
+  services?: Service[];
+  preselectedServiceId?: string;
+}
+
+export function ContactForm({ services = [], preselectedServiceId }: ContactFormProps) {
+  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phone: "",
+    service_id: preselectedServiceId || "",
     message: "",
   });
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    if (preselectedServiceId) {
+      setFormData((prev) => ({ ...prev, service_id: preselectedServiceId }));
+    }
+  }, [preselectedServiceId]);
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setStatus("sending");
+    setError("");
+    setSubmitting(true);
 
     try {
       const res = await fetch("/api/contact", {
@@ -22,99 +40,124 @@ export function ContactForm() {
         body: JSON.stringify(formData),
       });
 
-      if (res.ok) {
-        setStatus("sent");
-        setFormData({ name: "", email: "", message: "" });
-      } else {
-        setStatus("error");
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to send message");
       }
-    } catch {
-      setStatus("error");
+
+      setSubmitted(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to send message");
+    } finally {
+      setSubmitting(false);
     }
-  };
+  }
+
+  if (submitted) {
+    return (
+      <div className="bg-green-50 border border-green-200 rounded-xl p-8 text-center">
+        <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
+        <h3 className="text-xl font-semibold text-green-800 mb-2">Message Sent!</h3>
+        <p className="text-green-700">
+          Thank you for reaching out. We will get back to you shortly.
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <section id="contact" className="py-16 px-4">
-      <div className="max-w-xl mx-auto">
-        <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">
-          Get in Touch
-        </h2>
-        <p className="text-center text-gray-600 mb-8">
-          Have a question or want to work together? Send us a message!
-        </p>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      )}
 
-        {status === "sent" ? (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
-            <p className="text-green-800 font-medium">
-              Thank you! Your message has been sent.
-            </p>
-            <p className="text-green-600 text-sm mt-2">
-              We'll get back to you as soon as possible.
-            </p>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                required
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-shadow"
-                placeholder="Your name"
-              />
-            </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Your Name *
+          </label>
+          <input
+            type="text"
+            value={formData.name}
+            onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
+            placeholder="John Doe"
+            required
+          />
+        </div>
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                required
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-shadow"
-                placeholder="your@email.com"
-              />
-            </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Email Address *
+          </label>
+          <input
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
+            placeholder="john@example.com"
+            required
+          />
+        </div>
 
-            <div>
-              <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                Message
-              </label>
-              <textarea
-                id="message"
-                required
-                rows={5}
-                value={formData.message}
-                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-shadow resize-none"
-                placeholder="Tell us about your project..."
-              />
-            </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Phone Number
+          </label>
+          <input
+            type="tel"
+            value={formData.phone}
+            onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
+            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
+            placeholder="(555) 123-4567"
+          />
+        </div>
 
-            {status === "error" && (
-              <p className="text-red-600 text-sm">
-                Something went wrong. Please try again or email us directly at {store.contactEmail}.
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={status === "sending"}
-              className="w-full btn-primary"
+        {services.length > 0 && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Service of Interest
+            </label>
+            <select
+              value={formData.service_id}
+              onChange={(e) => setFormData((prev) => ({ ...prev, service_id: e.target.value }))}
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
             >
-              {status === "sending" ? "Sending..." : "Send Message"}
-            </button>
-          </form>
+              <option value="">Select a service...</option>
+              {services.map((service) => (
+                <option key={service.id} value={service.id}>
+                  {service.name}
+                </option>
+              ))}
+            </select>
+          </div>
         )}
       </div>
-    </section>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Message *
+        </label>
+        <textarea
+          value={formData.message}
+          onChange={(e) => setFormData((prev) => ({ ...prev, message: e.target.value }))}
+          rows={5}
+          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
+          placeholder="Tell us about your project or ask us a question..."
+          required
+        />
+      </div>
+
+      <button
+        type="submit"
+        disabled={submitting}
+        className="flex items-center justify-center gap-2 w-full bg-brand text-gray-900 font-semibold py-4 rounded-xl hover:bg-brand-dark disabled:opacity-50 transition-colors btn-glow"
+      >
+        <Send className="w-5 h-5" />
+        {submitting ? "Sending..." : "Send Message"}
+      </button>
+    </form>
   );
 }

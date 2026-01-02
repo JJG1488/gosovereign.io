@@ -3,36 +3,72 @@
 @tailwind utilities;
 
 :root {
-  --primary: {{PRIMARY_COLOR}};
-  --primary-dark: {{PRIMARY_COLOR_DARK}};
+  /* Primary brand color - gold accent (from reference) */
+  --brand-color: #FFD700;
+  --brand-color-dark: #e6c200;
+  --brand-color-10: rgba(255, 215, 0, 0.1);
+  --brand-color-20: rgba(255, 215, 0, 0.2);
+
+  /* Background colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-dark: #1a1a1a;
+  --bg-darker: #111827;
+
+  /* Text colors */
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
+  --text-light: #9ca3af;
+
+  /* Border colors */
+  --border-color: #e5e7eb;
+  --border-light: #f3f4f6;
+
+  /* Footer colors */
+  --footer-bg: #111827;
+  --footer-text: #ffffff;
+  --footer-text-muted: #9ca3af;
 }
 
-body {
-  @apply bg-white text-gray-900 antialiased;
+/* Utility class for text shadow on hero sections */
+.text-shadow {
+  text-shadow: 2px 4px 12px rgba(0, 0, 0, 0.8);
 }
 
-/* Smooth scrolling */
+.text-shadow-sm {
+  text-shadow: 1px 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+/* Smooth scroll behavior */
 html {
   scroll-behavior: smooth;
 }
 
-/* Focus styles */
-button:focus-visible,
-a:focus-visible {
-  @apply outline-none ring-2 ring-primary ring-offset-2;
+/* Card hover animation class */
+.card-hover {
+  transition: all 0.3s ease;
 }
 
-/* Custom button styles */
-.btn-primary {
-  @apply inline-flex items-center justify-center px-6 py-3
-         bg-primary text-white font-medium rounded-lg
-         hover:bg-primary-dark transition-colors
-         disabled:opacity-50 disabled:cursor-not-allowed;
+.card-hover:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 32px rgba(255, 215, 0, 0.2);
 }
 
-.btn-secondary {
-  @apply inline-flex items-center justify-center px-6 py-3
-         bg-gray-100 text-gray-900 font-medium rounded-lg
-         hover:bg-gray-200 transition-colors
-         disabled:opacity-50 disabled:cursor-not-allowed;
+/* Button hover glow */
+.btn-glow {
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+  transition: all 0.3s ease;
 }
+
+.btn-glow:hover {
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+  transform: translateY(-2px);
+}
+
+/* Staggered animation delays */
+.stagger-1 { animation-delay: 0ms; }
+.stagger-2 { animation-delay: 100ms; }
+.stagger-3 { animation-delay: 200ms; }
+.stagger-4 { animation-delay: 300ms; }
+.stagger-5 { animation-delay: 400ms; }

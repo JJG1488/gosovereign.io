@@ -11,15 +11,28 @@ interface DeployResult {
 }
 
 /**
+ * Template repo mapping - each template type deploys from a different GitHub repo.
+ */
+const TEMPLATE_REPOS: Record<string, string> = {
+  goods: "gosovereign/storefront-template",     // E-commerce (products) template
+  services: "JJG1488/services-template",         // Services business template
+  brochure: "gosovereign/brochure-template",     // Brochure/portfolio template
+};
+
+/**
  * Platform API token and team ID from environment variables.
  * These are used for ALL deployments (stores deploy to OUR Vercel account).
  */
-function getVercelConfig() {
+function getVercelConfig(templateType: string = "goods") {
   const token = process.env.VERCEL_API_TOKEN;
   const teamId = process.env.VERCEL_TEAM_ID;
   const storeDomain = process.env.STORE_DOMAIN || "gosovereign.io";
-  const templateRepo =
-    process.env.GITHUB_TEMPLATE_REPO || "gosovereign/storefront-template";
+
+  // Select template repo based on store template type
+  // Falls back to env var for backwards compatibility, then to goods template
+  const templateRepo = TEMPLATE_REPOS[templateType] ||
+    process.env.GITHUB_TEMPLATE_REPO ||
+    TEMPLATE_REPOS.goods;
 
   if (!token) {
     throw new Error("VERCEL_API_TOKEN is not configured");
@@ -76,9 +89,11 @@ function getTeamParam(teamId: string | undefined): string {
 /**
  * One-click deployment: Creates a Vercel project and deploys from our template.
  * The project is created in the PLATFORM's Vercel account (not user's).
+ * Selects the appropriate template repo based on store.template type.
  */
 export async function deployStore(store: Store): Promise<DeployResult> {
-  const { token, teamId, storeDomain, templateRepo } = getVercelConfig();
+  // Get config with correct template repo based on store type
+  const { token, teamId, storeDomain, templateRepo } = getVercelConfig(store.template || "goods");
   const headers = getHeaders(token);
   const teamParam = getTeamParam(teamId);
 
@@ -483,11 +498,20 @@ function buildEnvironmentVariables(store: Store) {
     type: "plain",
   });
 
-  // Tier-specific product limits
-  const maxProducts = paymentTier === "starter" ? "10" : "unlimited";
+  // Tier-specific limits (products for goods, services for services template)
+  const maxItems = paymentTier === "starter" ? "10" : "unlimited";
+
   envVars.push({
     key: "NEXT_PUBLIC_MAX_PRODUCTS",
-    value: maxProducts,
+    value: maxItems,
+    target: ["production", "preview", "development"],
+    type: "plain",
+  });
+
+  // Services template uses MAX_SERVICES instead of MAX_PRODUCTS
+  envVars.push({
+    key: "NEXT_PUBLIC_MAX_SERVICES",
+    value: maxItems,
     target: ["production", "preview", "development"],
     type: "plain",
   });
@@ -516,10 +540,33 @@ function buildEnvironmentVariables(store: Store) {
     type: "plain",
   });
 
+  // Services template-specific feature flags
+  envVars.push({
+    key: "NEXT_PUBLIC_CALENDLY_ENABLED",
+    value: isPro ? "true" : "false",
+    target: ["production", "preview", "development"],
+    type: "plain",
+  });
+
+  envVars.push({
+    key: "NEXT_PUBLIC_PORTFOLIO_ENABLED",
+    value: isPro ? "true" : "false",
+    target: ["production", "preview", "development"],
+    type: "plain",
+  });
+
   // Store currency (defaults to USD)
   envVars.push({
     key: "NEXT_PUBLIC_STORE_CURRENCY",
     value: store.config?.currency || "USD",
+    target: ["production", "preview", "development"],
+    type: "plain",
+  });
+
+  // Template type for template-specific features
+  envVars.push({
+    key: "NEXT_PUBLIC_TEMPLATE_TYPE",
+    value: store.template || "goods",
     target: ["production", "preview", "development"],
     type: "plain",
   });
