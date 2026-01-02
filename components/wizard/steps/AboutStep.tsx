@@ -2,11 +2,12 @@
 
 import { FileText } from "lucide-react";
 import { useWizard } from "../WizardContext";
+import { EnhanceButton } from "../EnhanceButton";
 
 export function AboutStep() {
-  const { state, updateConfig } = useWizard();
+  const { state, updateConfig, template } = useWizard();
 
-  const templates = [
+  const aboutTemplates = [
     {
       label: "The Craftsperson",
       text: `Every product we create is made with care and attention to detail. We believe in quality over quantity, and that shows in everything we do.
@@ -60,25 +61,40 @@ Thank you for supporting small business. Every order means the world to us.`,
             {state.config.aboutText?.length ?? 0} characters
           </p>
         </div>
+
+        {/* AI Enhance Button */}
+        <div className="mt-4 pt-4 border-t border-navy-700">
+          <EnhanceButton
+            type="about"
+            storeName={state.config.storeName || ""}
+            template={template}
+            currentText={state.config.aboutText}
+            onEnhanced={(text) => updateConfig({ aboutText: text })}
+          />
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="max-w-lg mx-auto flex items-center gap-3">
+        <div className="flex-1 h-px bg-navy-700" />
+        <span className="text-xs text-gray-500 uppercase">or pick a template</span>
+        <div className="flex-1 h-px bg-navy-700" />
       </div>
 
       {/* Templates */}
       <div className="max-w-lg mx-auto">
-        <p className="text-xs text-gray-500 uppercase tracking-wider mb-3">
-          Need a starting point?
-        </p>
         <div className="space-y-2">
-          {templates.map((template) => (
+          {aboutTemplates.map((tpl) => (
             <button
-              key={template.label}
-              onClick={() => updateConfig({ aboutText: template.text })}
+              key={tpl.label}
+              onClick={() => updateConfig({ aboutText: tpl.text })}
               className="w-full text-left p-4 bg-navy-900/50 border border-navy-700 rounded-lg hover:border-emerald-500/50 transition-all group"
             >
               <span className="text-sm font-medium text-emerald-400 group-hover:text-emerald-300">
-                {template.label}
+                {tpl.label}
               </span>
               <p className="text-sm text-gray-400 mt-1 line-clamp-2">
-                {template.text.substring(0, 100)}...
+                {tpl.text.substring(0, 100)}...
               </p>
             </button>
           ))}

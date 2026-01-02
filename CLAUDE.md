@@ -3,7 +3,7 @@
 > **IMPORTANT:** This file is the source of truth for active development.
 > For version history and session logs, see `CLAUDE-HISTORY.md`.
 
-**Current Version: 9.25** | **Last Updated: January 2, 2026**
+**Current Version: 9.26** | **Last Updated: January 2, 2026**
 
 ---
 
@@ -121,8 +121,8 @@
 | **WIZ-1** | Template selector shows "Coming Soon" for brochure/services | **FIXED** ✅ |
 | **WIZ-2** | Brochure Step 2 asks "what do you sell" (wrong copy) | **FIXED** ✅ (TaglineStep now template-aware) |
 | **WIZ-3** | Brochure Step 5 asks to "add a product" (verify PortfolioStep routing) | **VERIFIED** ✅ (PortfolioStep exists and routes correctly) |
-| **WIZ-4** | Add AI "Enhance" button to TaglineStep (Step 2) | **TODO** |
-| **WIZ-5** | Add AI "Enhance" button to AboutStep (Step 6) | **TODO** |
+| **WIZ-4** | Add AI "Enhance" button to TaglineStep (Step 2) | **DONE** ✅ |
+| **WIZ-5** | Add AI "Enhance" button to AboutStep (Step 6) | **DONE** ✅ |
 
 ### MEDIUM: Feature Requests
 
@@ -142,7 +142,7 @@
 
 1. ~~**Session 1:** BUG-1, BUG-2, BUG-3 (template deployment fixes)~~ ✅ DONE
 2. ~~**Session 2:** BUG-4, WIZ-2, WIZ-3 (services creation, template-conditional UX)~~ ✅ DONE
-3. **Session 3:** WIZ-4, WIZ-5 (AI enhance buttons)
+3. ~~**Session 3:** WIZ-4, WIZ-5 (AI enhance buttons)~~ ✅ DONE
 4. **Session 4:** FEAT-2, FEAT-1 (emails, collections)
 
 ---

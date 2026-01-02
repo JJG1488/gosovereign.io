@@ -2,6 +2,7 @@
 
 import { MessageSquare } from "lucide-react";
 import { useWizard } from "../WizardContext";
+import { EnhanceButton } from "../EnhanceButton";
 
 // Template-specific content
 const TEMPLATE_CONTENT = {
@@ -80,13 +81,28 @@ export function TaglineStep() {
             {state.config.tagline?.length ?? 0}/150
           </p>
         </div>
+
+        {/* AI Enhance Button */}
+        <div className="mt-4 pt-4 border-t border-navy-700">
+          <EnhanceButton
+            type="tagline"
+            storeName={state.config.storeName || ""}
+            template={template}
+            currentText={state.config.tagline}
+            onEnhanced={(text) => updateConfig({ tagline: text })}
+          />
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="max-w-md mx-auto flex items-center gap-3">
+        <div className="flex-1 h-px bg-navy-700" />
+        <span className="text-xs text-gray-500 uppercase">or pick one</span>
+        <div className="flex-1 h-px bg-navy-700" />
       </div>
 
       {/* Examples */}
       <div className="max-w-md mx-auto">
-        <p className="text-xs text-gray-500 uppercase tracking-wider mb-3">
-          Need inspiration?
-        </p>
         <div className="space-y-2">
           {content.examples.map((example) => (
             <button
