@@ -3,7 +3,7 @@
 > **IMPORTANT:** This file is the source of truth for active development.
 > For version history and session logs, see `CLAUDE-HISTORY.md`.
 
-**Current Version: 9.19** | **Last Updated: January 2, 2026**
+**Current Version: 9.20** | **Last Updated: January 2, 2026**
 
 ---
 
@@ -90,6 +90,7 @@
 - v9.17: WooCommerce Import - variable products, variations, Parent linking, up to 10 attributes
 - v9.18: BigCommerce Import - Item Type/SKU row detection, variant support, 10 image columns
 - v9.19: Services Template MVP - complete services template, multi-template deployment, repo mapping fixes
+- v9.20: Brochure Template - complete portfolio/information site template, env-var approach, admin dashboard
 
 **Known Tech Debt:**
 - `WizardContext.tsx:455` - React hooks ref mutation pattern (non-blocking)
@@ -151,7 +152,8 @@ gosovereign/
 ├── lib/                    # Platform utilities (vercel.ts, supabase.ts)
 ├── templates/
 │   ├── hosted/             # E-commerce template (products) → JJG1488/storefront-template
-│   └── services/           # Services business template → JJG1488/services-template
+│   ├── services/           # Services business template → JJG1488/services-template
+│   └── brochure/           # Brochure/portfolio template → JJG1488/brochure-template
 ├── scripts/                # Database setup SQL
 └── CLAUDE-HISTORY.md       # Version history & session logs
 ```
@@ -159,6 +161,7 @@ gosovereign/
 **Template Sync:**
 - `templates/hosted/` syncs to `JJG1488/storefront-template` on GitHub
 - `templates/services/` syncs to `JJG1488/services-template` on GitHub
+- `templates/brochure/` syncs to `JJG1488/brochure-template` on GitHub
 - Template selection based on `store.template` field ("goods", "services", "brochure")
 
 ### Checkout Address Pre-fill (v9.10)
@@ -336,14 +339,15 @@ All major e-commerce features built:
 - **WooCommerce Import (v9.17)**
 - **BigCommerce Import (v9.18)**
 - **Services Template MVP (v9.19)**
+- **Brochure Template (v9.20)**
 
 ### Remaining Tasks
 
 1. **Advanced Analytics** - Conversion funnels, cohorts
-2. **Brochure Template** - Portfolio/information site template
 
 **Note:** Storefront Search is already implemented (`SearchModal.tsx` + `/api/products/search`)
 **Note:** Store migration now supports Shopify (v9.14), WooCommerce (v9.17), and BigCommerce (v9.18)
+**Note:** All three templates now complete: Products (goods), Services, Brochure
 
 ### Storage Setup Reminder
 

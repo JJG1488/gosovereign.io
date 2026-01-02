@@ -1,30 +1,55 @@
-import { NextResponse } from "next/server";
-import { store } from "@/data/store";
+import { NextRequest, NextResponse } from "next/server";
+import { getSupabaseAdmin, getStoreId } from "@/lib/supabase";
+import { sendContactNotification } from "@/lib/email";
+import { getStoreConfig } from "@/lib/store";
 
-export async function POST(request: Request) {
+export const dynamic = "force-dynamic";
+
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, email, message } = body;
+    const { name, email, phone, message } = body;
 
-    // Validate required fields
     if (!name || !email || !message) {
       return NextResponse.json(
-        { error: "All fields are required" },
+        { error: "Name, email, and message are required" },
         { status: 400 }
       );
     }
 
-    // In a production app, you would:
-    // 1. Send an email notification to store.contactEmail
-    // 2. Store the inquiry in a database
-    // 3. Send a confirmation email to the customer
+    const supabase = getSupabaseAdmin();
+    const storeId = getStoreId();
 
-    // For now, we'll just log it and return success
-    console.log("Contact form submission:", {
-      to: store.contactEmail,
-      from: { name, email },
+    if (!supabase || !storeId) {
+      return NextResponse.json(
+        { error: "Configuration error" },
+        { status: 500 }
+      );
+    }
+
+    // Insert contact submission
+    const { error } = await supabase.from("contact_submissions").insert({
+      store_id: storeId,
+      name,
+      email,
+      phone: phone || null,
       message,
+      status: "new",
     });
+
+    if (error) throw error;
+
+    // Send email notification to store owner
+    const store = getStoreConfig();
+    const ownerEmail = process.env.STORE_OWNER_EMAIL || store.contactEmail;
+
+    if (ownerEmail) {
+      await sendContactNotification(
+        { name, email, phone, message },
+        ownerEmail,
+        store.name
+      );
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

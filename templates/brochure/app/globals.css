@@ -3,12 +3,18 @@
 @tailwind utilities;
 
 :root {
-  --primary: {{PRIMARY_COLOR}};
-  --primary-dark: {{PRIMARY_COLOR_DARK}};
+  --brand-color: #10b981;
+  --brand-dark: #059669;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
 }
 
 body {
-  @apply bg-white text-gray-900 antialiased;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  @apply antialiased;
 }
 
 /* Smooth scrolling */
@@ -19,15 +25,21 @@ html {
 /* Focus styles */
 button:focus-visible,
 a:focus-visible {
-  @apply outline-none ring-2 ring-primary ring-offset-2;
+  @apply outline-none ring-2 ring-offset-2;
+  --tw-ring-color: var(--brand-color);
 }
 
 /* Custom button styles */
 .btn-primary {
+  background-color: var(--brand-color);
   @apply inline-flex items-center justify-center px-6 py-3
-         bg-primary text-white font-medium rounded-lg
-         hover:bg-primary-dark transition-colors
+         text-white font-medium rounded-lg
+         transition-colors
          disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.btn-primary:hover {
+  background-color: var(--brand-dark);
 }
 
 .btn-secondary {
@@ -35,4 +47,21 @@ a:focus-visible {
          bg-gray-100 text-gray-900 font-medium rounded-lg
          hover:bg-gray-200 transition-colors
          disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+/* Brand color utilities */
+.text-brand {
+  color: var(--brand-color);
+}
+
+.bg-brand {
+  background-color: var(--brand-color);
+}
+
+.hover\:bg-brand-dark:hover {
+  background-color: var(--brand-dark);
+}
+
+.border-brand {
+  border-color: var(--brand-color);
 }

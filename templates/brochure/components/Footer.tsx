@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { store } from "@/data/store";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "My Site";
+  const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "";
 
   return (
     <footer className="bg-gray-50 border-t border-gray-200">
@@ -11,9 +12,8 @@ export function Footer() {
           {/* Brand */}
           <div>
             <h3 className="text-lg font-bold text-gray-900 mb-4">
-              {store.name}
+              {storeName}
             </h3>
-            <p className="text-gray-600 text-sm">{store.tagline}</p>
           </div>
 
           {/* Links */}
@@ -54,19 +54,21 @@ export function Footer() {
             <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">
               Contact
             </h4>
-            <a
-              href={`mailto:${store.contactEmail}`}
-              className="text-gray-600 hover:text-gray-900 text-sm"
-            >
-              {store.contactEmail}
-            </a>
+            {contactEmail && (
+              <a
+                href={`mailto:${contactEmail}`}
+                className="text-gray-600 hover:text-gray-900 text-sm"
+              >
+                {contactEmail}
+              </a>
+            )}
           </div>
         </div>
 
         {/* Bottom */}
         <div className="mt-12 pt-8 border-t border-gray-200">
           <p className="text-center text-gray-500 text-sm">
-            &copy; {currentYear} {store.name}. All rights reserved.
+            &copy; {currentYear} {storeName}. All rights reserved.
           </p>
         </div>
       </div>

@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { store } from "@/data/store";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const storeName = process.env.NEXT_PUBLIC_STORE_NAME || "My Site";
+  const logoUrl = process.env.NEXT_PUBLIC_LOGO_URL || "";
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
@@ -13,15 +14,15 @@ export function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            {store.logoUrl && !store.useTextLogo ? (
+            {logoUrl ? (
               <img
-                src={store.logoUrl}
-                alt={store.name}
+                src={logoUrl}
+                alt={storeName}
                 className="h-8 w-auto"
               />
             ) : (
               <span className="text-xl font-bold text-gray-900">
-                {store.name}
+                {storeName}
               </span>
             )}
           </Link>
