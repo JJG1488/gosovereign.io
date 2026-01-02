@@ -55,6 +55,7 @@
 | 9.26 | Jan 2, 2026 | **AI Enhance Buttons** - Claude 3.5 Haiku integration for tagline and about step enhancement |
 | 9.27 | Jan 2, 2026 | **Order Email Fallback** - Fallback order creation on success page ensures emails send without webhook |
 | 9.28 | Jan 2, 2026 | **Collections Feature** - Products can belong to multiple collections, admin CRUD, customer-facing pages |
+| 9.29 | Jan 2, 2026 | **Collections Bug Fix** - Fixed React error #438 by using useParams() instead of use(params) in client components |
 
 ---
 
@@ -690,4 +691,4 @@ Audited email system - discovered it was ALREADY FULLY IMPLEMENTED. No code chan
 
 ---
 
-*Last Updated: January 2, 2026 (v9.28)*
+*Last Updated: January 2, 2026 (v9.29)*

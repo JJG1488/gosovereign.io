@@ -3,7 +3,7 @@
 > **IMPORTANT:** This file is the source of truth for active development.
 > For version history and session logs, see `CLAUDE-HISTORY.md`.
 
-**Current Version: 9.28** | **Last Updated: January 2, 2026**
+**Current Version: 9.29** | **Last Updated: January 2, 2026**
 
 ---
 
