@@ -25,10 +25,16 @@ export default function RootLayout({
   const theme = getThemePreset(store.themePreset);
   const themeCSS = generateThemeCSS(theme);
 
+  // Override brand color with user's selected color from wizard
+  // This ensures the color picker selection takes precedence over theme presets
+  const brandColorOverride = store.brandColor
+    ? `:root { --brand-color: ${store.brandColor}; --brand-dark: ${store.brandColor}; }`
+    : "";
+
   return (
     <html lang="en">
       <head>
-        <style dangerouslySetInnerHTML={{ __html: themeCSS }} />
+        <style dangerouslySetInnerHTML={{ __html: themeCSS + brandColorOverride }} />
       </head>
       <body className={inter.className}>
         <Header />

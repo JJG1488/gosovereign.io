@@ -3,7 +3,7 @@
 > **IMPORTANT:** This file is the source of truth for active development.
 > For version history and session logs, see `CLAUDE-HISTORY.md`.
 
-**Current Version: 9.22** | **Last Updated: January 2, 2026**
+**Current Version: 9.24** | **Last Updated: January 2, 2026**
 
 ---
 
@@ -100,6 +100,49 @@
 **Known Tech Debt:**
 - `WizardContext.tsx:455` - React hooks ref mutation pattern (non-blocking)
 - `ContactStep.tsx:17` - setState in useEffect (non-blocking)
+
+---
+
+## Active Bug Tracker (v9.23)
+
+### CRITICAL: Template Deployment Bugs (Blocks All Template Users)
+
+| # | Issue | Root Cause | Status |
+|---|-------|------------|--------|
+| **BUG-1** | Brochure deploys with Goods template look | Brochure template not consuming `NEXT_PUBLIC_BRAND_COLOR` | **FIXED** ✅ |
+| **BUG-2** | Custom color not carrying to brochure site | Same as BUG-1 - CSS vars not wired | **FIXED** ✅ |
+| **BUG-3** | Services template - colors and services not showing | Env vars not consumed in services template | **FIXED** ✅ |
+
+### HIGH: Wizard UX Issues
+
+| # | Issue | Status |
+|---|-------|--------|
+| **WIZ-1** | Template selector shows "Coming Soon" for brochure/services | **FIXED** ✅ |
+| **WIZ-2** | Brochure Step 2 asks "what do you sell" (wrong copy) | **TODO** |
+| **WIZ-3** | Brochure Step 5 asks to "add a product" (verify PortfolioStep routing) | **VERIFY** |
+| **WIZ-4** | Add AI "Enhance" button to TaglineStep (Step 2) | **TODO** |
+| **WIZ-5** | Add AI "Enhance" button to AboutStep (Step 6) | **TODO** |
+
+### MEDIUM: Feature Requests
+
+| # | Issue | Details | Status |
+|---|-------|---------|--------|
+| **FEAT-1** | Collections/Categories admin page | Products can belong to multiple collections. Admin creates collections, assigns products via dropdown. Customer sees `/collections` page with grouped products. | **BACKLOG** |
+| **FEAT-2** | Order confirmation emails not sending | Issue is in **deployed stores** (customer order confirmations), not platform. Subscription notifications work. | **TODO** |
+
+### DEFERRED: Questions Answered
+
+| # | Question | Answer |
+|---|----------|--------|
+| **Q1** | What if no Stripe before deploy? | Brochure has no Payments step. Goods/Services require it for wizard completion. |
+| **Q2** | Need captchas? | Defer to V2. Add Cloudflare Turnstile if spam becomes an issue. |
+
+### Execution Priority
+
+1. ~~**Session 1:** BUG-1, BUG-2, BUG-3 (template deployment fixes)~~ ✅ DONE
+2. **Session 2:** WIZ-2, WIZ-3 (wizard template-conditional UX) - WIZ-1 done
+3. **Session 3:** WIZ-4, WIZ-5 (AI enhance buttons)
+4. **Session 4:** FEAT-2, FEAT-1 (emails, collections)
 
 ---
 
@@ -453,5 +496,5 @@ All major e-commerce features built:
 
 ---
 
-*Version: 9.22 | Status: LAUNCHED + VISITOR EDUCATION IN PROGRESS*
+*Version: 9.24 | Status: TEMPLATE FIXES COMPLETE - PUSH TO REPOS REQUIRED*
 *See CLAUDE-HISTORY.md for version history and session details.*

@@ -36,7 +36,7 @@ const TEMPLATES = [
       "No inventory complexity",
     ],
     highlighted: false,
-    disabled: true,
+    disabled: false,
   },
   {
     id: "brochure" as StoreTemplate,
@@ -51,7 +51,7 @@ const TEMPLATES = [
       "No payment integration needed",
     ],
     highlighted: false,
-    disabled: true,
+    disabled: false,
   },
 ];
 
