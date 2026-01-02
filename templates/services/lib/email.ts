@@ -64,7 +64,7 @@ export async function sendContactNotification(
         '<p style="margin-top: 20px; color: #6b7280; font-size: 14px;">' +
         'Reply directly to this email to respond to ' + submission.name + '.' +
         '</p></div>',
-      replyTo: submission.email,
+      reply_to: submission.email,
     });
     return true;
   } catch (error) {

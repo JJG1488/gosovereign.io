@@ -14,9 +14,9 @@ interface DeployResult {
  * Template repo mapping - each template type deploys from a different GitHub repo.
  */
 const TEMPLATE_REPOS: Record<string, string> = {
-  goods: "gosovereign/storefront-template",     // E-commerce (products) template
+  goods: "JJG1488/storefront-template",          // E-commerce (products) template
   services: "JJG1488/services-template",         // Services business template
-  brochure: "gosovereign/brochure-template",     // Brochure/portfolio template
+  brochure: "JJG1488/brochure-template",         // Brochure/portfolio template (future)
 };
 
 /**
