@@ -3,7 +3,7 @@
 > **IMPORTANT:** This file is the source of truth for active development.
 > For version history and session logs, see `CLAUDE-HISTORY.md`.
 
-**Current Version: 9.20** | **Last Updated: January 2, 2026**
+**Current Version: 9.21** | **Last Updated: January 2, 2026**
 
 ---
 
@@ -91,6 +91,7 @@
 - v9.18: BigCommerce Import - Item Type/SKU row detection, variant support, 10 image columns
 - v9.19: Services Template MVP - complete services template, multi-template deployment, repo mapping fixes
 - v9.20: Brochure Template - complete portfolio/information site template, env-var approach, admin dashboard
+- v9.21: Visitor Education Initiative - documented 5-phase plan to educate visitors (market validation confirmed)
 
 **Known Tech Debt:**
 - `WizardContext.tsx:455` - React hooks ref mutation pattern (non-blocking)
@@ -356,5 +357,93 @@ All major e-commerce features built:
 
 ---
 
-*Version: 9.19 | Status: LAUNCHED + FEATURE EXPANSION*
+## Visitor Education Initiative (v9.21)
+
+> **Market Validation:** People WANT this product but don't fully understand what it is.
+> The landing page communicates WHY (cost savings, ownership) but fails to show WHAT (the actual product, wizard, finished stores).
+
+### Current Gaps Identified
+
+1. **No Visual Proof** - Zero screenshots of wizard, admin, or finished stores
+2. **No Live Examples** - No demo store links to browse
+3. **No Wizard Preview** - Can't see the experience before committing
+4. **Template Confusion** - 3 templates mentioned but no visual differentiation
+5. **High Commitment Required** - Must complete 8 steps + payment before seeing anything
+6. **No Social Proof with Links** - Testimonials exist but no actual store links
+
+### Implementation Phases
+
+#### Phase 1: Quick Wins (Hours) - HIGH PRIORITY
+| Item | Effort | Impact |
+|------|--------|--------|
+| Link existing demo stores in Hero | 30 min | High |
+| Screenshot gallery section ("What You'll Build") | 2-3 hrs | High |
+| Video embed in How It Works (2-min walkthrough) | 1-2 hrs | High |
+
+**Files to modify:**
+- `/components/landing/Hero.tsx` - Add "See Live Examples" button
+- New: `/components/landing/ScreenshotGallery.tsx`
+- `/components/landing/HowItWorks.tsx` - Add video embed
+
+#### Phase 2: Template Showcase (1-2 Days)
+| Item | Effort | Impact |
+|------|--------|--------|
+| Template preview page (`/templates`) | 4-6 hrs | Medium |
+| Template gallery on landing page | 2-3 hrs | Medium |
+| Deploy demo stores (demo-products, demo-services, demo-portfolio) | 2 hrs | Medium |
+
+**Files to modify:**
+- New: `/app/templates/page.tsx` - Enhanced with live previews
+- New: `/components/landing/TemplateShowcase.tsx`
+
+#### Phase 3: Interactive Experience (3-5 Days) - VERY HIGH IMPACT
+| Item | Effort | Impact |
+|------|--------|--------|
+| Landing page mini-wizard (3 questions, instant preview) | 1-2 days | Very High |
+| Wizard preview mode (anonymous until Stripe Connect) | 2-3 days | Very High |
+| Admin dashboard tour (interactive walkthrough) | 1 day | Medium |
+
+**Files to modify:**
+- `/components/landing/Hero.tsx` - Embed mini-wizard
+- `/app/wizard/page.tsx` - Anonymous mode support
+- `/components/wizard/WizardContext.tsx` - Guest state handling
+
+#### Phase 4: Social Proof & Trust (Ongoing)
+| Item | Effort | Impact |
+|------|--------|--------|
+| Customer store gallery (`/showcase`) | 4-6 hrs | Medium |
+| Success stories section on landing | 2-3 hrs | Medium |
+| Trust badges (Stripe, SSL, "X stores deployed") | 1 hr | Low |
+
+**Files to modify:**
+- New: `/app/showcase/page.tsx` - Customer gallery
+- New: `/components/landing/SuccessStories.tsx`
+
+#### Phase 5: Advanced Education (Week+)
+| Item | Effort | Impact |
+|------|--------|--------|
+| ROI Calculator (interactive savings calculator) | 4-6 hrs | Medium |
+| Feature deep-dive pages (`/features/*`) | 1-2 days | Medium |
+| FAQ video answers (30-sec clips) | 2-3 hrs | Low |
+| Comparison tool (paste your store URL) | 1 day | Medium |
+
+### Success Metrics
+
+- Bounce rate reduction on landing page
+- Wizard completion rate increase
+- Time on site increase
+- Conversion rate: visitor → paid customer
+- Demo store click-through rate
+
+### Execution Priority
+
+1. **Phase 1** - Quick wins with screenshots and demo links
+2. **Phase 3 Item 1** - Mini-wizard on landing (highest impact)
+3. **Phase 2** - Template showcase differentiation
+4. **Phase 3 Item 2** - Wizard preview mode
+5. **Phase 4** - Social proof (ongoing as customers deploy)
+
+---
+
+*Version: 9.21 | Status: LAUNCHED + VISITOR EDUCATION INITIATIVE*
 *See CLAUDE-HISTORY.md for version history and session details.*
