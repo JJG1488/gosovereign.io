@@ -3,7 +3,7 @@
 > **IMPORTANT:** This file is the source of truth for active development.
 > For version history and session logs, see `CLAUDE-HISTORY.md`.
 
-**Current Version: 9.18** | **Last Updated: January 1, 2026**
+**Current Version: 9.19** | **Last Updated: January 2, 2026**
 
 ---
 
@@ -18,7 +18,7 @@
 
 ## Current State (January 2026)
 
-### Phase: LAUNCHED + FEATURE EXPANSION (v9.18)
+### Phase: LAUNCHED + FEATURE EXPANSION (v9.19)
 
 **Core Platform:**
 - Landing page with A/B variants (`/a`, `/b`)
@@ -29,6 +29,7 @@
 - One-click deployment to platform Vercel
 - Download ZIP for self-hosting
 - Documentation site (`/docs`) with MDX pages
+- **Multi-template architecture** (Products, Services, Brochure)
 
 **Payment & Tiers:**
 - Stripe Checkout Sessions with webhook verification
@@ -88,6 +89,7 @@
 - v9.16: Multi-Currency - 60+ currencies grouped by region, zero-decimal handling, admin selector
 - v9.17: WooCommerce Import - variable products, variations, Parent linking, up to 10 attributes
 - v9.18: BigCommerce Import - Item Type/SKU row detection, variant support, 10 image columns
+- v9.19: Services Template MVP - complete services template, multi-template deployment, repo mapping fixes
 
 **Known Tech Debt:**
 - `WizardContext.tsx:455` - React hooks ref mutation pattern (non-blocking)
@@ -147,16 +149,17 @@ gosovereign/
 ├── app/                    # Platform pages (landing, wizard, auth)
 ├── components/             # Platform components
 ├── lib/                    # Platform utilities (vercel.ts, supabase.ts)
-├── templates/hosted/       # PRIMARY store template (synced to GitHub)
-│   ├── app/admin/          # Store admin dashboard
-│   ├── components/         # Store components (Cart, Variants, etc.)
-│   ├── lib/                # Store utilities (email.ts, settings.ts)
-│   └── data/               # Data fetching (products.ts)
+├── templates/
+│   ├── hosted/             # E-commerce template (products) → JJG1488/storefront-template
+│   └── services/           # Services business template → JJG1488/services-template
 ├── scripts/                # Database setup SQL
 └── CLAUDE-HISTORY.md       # Version history & session logs
 ```
 
-**Template Sync:** `templates/hosted/` syncs to `gosovereign/storefront-template` on GitHub.
+**Template Sync:**
+- `templates/hosted/` syncs to `JJG1488/storefront-template` on GitHub
+- `templates/services/` syncs to `JJG1488/services-template` on GitHub
+- Template selection based on `store.template` field ("goods", "services", "brochure")
 
 ### Checkout Address Pre-fill (v9.10)
 Key files for saved address checkout:
@@ -332,11 +335,12 @@ All major e-commerce features built:
 - **Multi-Currency (v9.16)**
 - **WooCommerce Import (v9.17)**
 - **BigCommerce Import (v9.18)**
+- **Services Template MVP (v9.19)**
 
 ### Remaining Tasks
 
 1. **Advanced Analytics** - Conversion funnels, cohorts
-2. **Store Migration Wizard** - Guided import from other platforms
+2. **Brochure Template** - Portfolio/information site template
 
 **Note:** Storefront Search is already implemented (`SearchModal.tsx` + `/api/products/search`)
 **Note:** Store migration now supports Shopify (v9.14), WooCommerce (v9.17), and BigCommerce (v9.18)
@@ -348,5 +352,5 @@ All major e-commerce features built:
 
 ---
 
-*Version: 9.18 | Status: LAUNCHED + FEATURE EXPANSION*
+*Version: 9.19 | Status: LAUNCHED + FEATURE EXPANSION*
 *See CLAUDE-HISTORY.md for version history and session details.*

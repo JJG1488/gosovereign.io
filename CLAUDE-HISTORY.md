@@ -45,6 +45,7 @@
 | 9.16 | Jan 1, 2026 | **Multi-Currency** - 60+ Stripe currencies, zero-decimal handling, grouped by region, admin selector |
 | 9.17 | Jan 1, 2026 | **WooCommerce Import** - Variable products, Parent linking, up to 10 attributes |
 | 9.18 | Jan 1, 2026 | **BigCommerce Import** - Item Type/SKU row detection, variant support, 10 image columns |
+| 9.19 | Jan 2, 2026 | **Services Template MVP** - Complete services template, multi-template deployment, repo mapping fix, bulk redeploy |
 
 ---
 
@@ -73,10 +74,55 @@
 | 2025-12-30 | **Use `.limit(1)` not `.single()` for Supabase** | `.single()` causes PostgREST caching issues returning stale data |
 | 2025-12-30 | **Fresh Supabase client for settings API** | Singleton pattern can cache stale data in serverless environments |
 | 2025-12-31 | **Custom fetch with cache-busting headers** | Override Supabase client's fetch to add `cache: 'no-store'` and `Cache-Control` headers - the definitive fix for PostgREST caching |
+| 2026-01-02 | **Multi-template architecture** | Separate GitHub repos per template (goods, services, brochure), template selected via `store.template` field |
+| 2026-01-02 | **JJG1488 repo namespace** | All template repos under `JJG1488/` organization (storefront-template, services-template) |
 
 ---
 
 ## Session Summaries
+
+### Session 30 - Services Template MVP (v9.19) - Jan 2, 2026
+
+**What was done:**
+
+Completed the services template MVP and fixed deployment propagation issues.
+
+**Services Template (`templates/services/`):**
+- Full Next.js 15 template for service-based businesses
+- Homepage with hero, services grid, about section, contact form
+- Services pages with slug-based routing (`/services/[slug]`)
+- Contact form with Resend email notifications
+- Admin dashboard with services CRUD, inquiries management, settings
+- Database schema: `services`, `contact_submissions` tables
+
+**Multi-Template Deployment:**
+- Added `TEMPLATE_REPOS` mapping in `lib/vercel.ts`:
+  - `goods` → `JJG1488/storefront-template`
+  - `services` → `JJG1488/services-template`
+  - `brochure` → `JJG1488/brochure-template` (future)
+- `deployStore()` selects repo based on `store.template` field
+- Added services-specific env vars: `NEXT_PUBLIC_TEMPLATE_TYPE`, `NEXT_PUBLIC_MAX_SERVICES`, `NEXT_PUBLIC_CALENDLY_ENABLED`
+
+**Bug Fixes:**
+- Fixed Resend API property: `replyTo` → `reply_to` (snake_case)
+- Fixed repo mismatch: Platform was pointing to `gosovereign/` but submodules use `JJG1488/`
+- All template repos now correctly mapped to `JJG1488/` namespace
+
+**Bulk Redeploy:**
+- Triggered via Platform Admin UI at `/platform-admin/stores`
+- All existing stores redeployed with fixed template repo mapping
+
+**Key Files Modified:**
+- `lib/vercel.ts` - Template repo selection logic
+- `templates/services/lib/email.ts` - Fixed `reply_to` property
+
+**Commits:**
+- Services template pushed to `JJG1488/services-template`
+- Platform deployed with repo mapping fix
+
+**Result:** Services template fully functional, all stores redeployed with correct template repos.
+
+---
 
 ### Session 29 - BigCommerce Import (v9.18) - Jan 1, 2026
 
@@ -544,4 +590,4 @@ Audited email system - discovered it was ALREADY FULLY IMPLEMENTED. No code chan
 
 ---
 
-*Last Updated: January 1, 2026 (v9.18)*
+*Last Updated: January 2, 2026 (v9.19)*
