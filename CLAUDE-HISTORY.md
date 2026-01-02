@@ -49,6 +49,11 @@
 | 9.20 | Jan 2, 2026 | **Brochure Template** - Complete portfolio/information site template, env-var approach, admin dashboard |
 | 9.21 | Jan 2, 2026 | **Visitor Education Initiative** - Documented 5-phase plan to educate visitors (market validation confirmed) |
 | 9.22 | Jan 2, 2026 | **Visitor Education Phase 1 + Mini-Wizard** - Screenshot gallery, video placeholder, demo links, interactive 3-step mini-wizard with live preview |
+| 9.23 | Jan 2, 2026 | Screenshot gallery fixes, double-payment bug fix, template brand color propagation |
+| 9.24 | Jan 2, 2026 | Bug tracker created, wizard template-aware prep |
+| 9.25 | Jan 2, 2026 | **Template-Aware Wizard** - TaglineStep template-specific content, services store creation fix |
+| 9.26 | Jan 2, 2026 | **AI Enhance Buttons** - Claude 3.5 Haiku integration for tagline and about step enhancement |
+| 9.27 | Jan 2, 2026 | **Order Email Fallback** - Fallback order creation on success page ensures emails send without webhook |
 
 ---
 
@@ -84,6 +89,60 @@
 ---
 
 ## Session Summaries
+
+### Session 32 - AI Enhance + Order Email Fallback (v9.25-9.27) - Jan 2, 2026
+
+**What was done:**
+
+Completed wizard template-aware copy, AI enhancement buttons, and fixed order confirmation emails.
+
+**Template-Aware Wizard (v9.25):**
+- `TaglineStep.tsx` now shows template-specific content:
+  - Goods: "Describe what you sell" with product-focused examples
+  - Services: "Describe what you do" with service-focused examples
+  - Brochure: "Describe your work" with portfolio-focused examples
+- Fixed services store creation bug - wizard was resuming existing store instead of creating new one when `?template=services` URL param was set
+
+**AI Enhance Buttons (v9.26):**
+- Created `/api/wizard/enhance/route.ts` - API endpoint using Claude 3.5 Haiku
+- Created `components/wizard/EnhanceButton.tsx` - Reusable button component with loading states
+- Integrated into TaglineStep and AboutStep
+- Template-aware prompts (goods/services/brochure context)
+- Improves existing text or generates fresh copy from scratch
+- Requires authentication (prevents anonymous API abuse)
+- Added `@anthropic-ai/sdk` dependency
+
+**Order Email Fallback (v9.27):**
+- Root cause: Deployed stores don't have `STRIPE_WEBHOOK_SECRET`, so webhooks don't create orders
+- Solution: Fallback order creation on checkout success page
+- Created `templates/hosted/app/api/orders/from-session/route.ts`:
+  - Called from success page when `session_id` present
+  - Idempotent - checks if order already exists (webhook may have created it)
+  - Retrieves checkout session from Stripe API
+  - Creates order and order_items in database
+  - Sends order confirmation and new order alert emails
+- Modified `templates/hosted/app/checkout/success/page.tsx`:
+  - Added useEffect to call fallback API on page load
+  - Uses ref to prevent duplicate calls
+
+**Files Created:**
+- `app/api/wizard/enhance/route.ts` - AI enhance endpoint
+- `components/wizard/EnhanceButton.tsx` - Reusable enhance button
+- `templates/hosted/app/api/orders/from-session/route.ts` - Fallback order creation
+
+**Files Modified:**
+- `components/wizard/steps/TaglineStep.tsx` - Template-aware content + AI enhance
+- `components/wizard/steps/AboutStep.tsx` - AI enhance button
+- `app/wizard/page.tsx` - Fixed services store creation logic
+- `templates/hosted/app/checkout/success/page.tsx` - Calls fallback API
+- `package.json` - Added @anthropic-ai/sdk
+
+**Key Decisions:**
+- Use Claude 3.5 Haiku for AI enhance (fast, cost-effective)
+- Fallback order creation instead of requiring webhook configuration (better DX for store owners)
+- Idempotent order creation allows webhook and fallback to coexist
+
+---
 
 ### Session 31 - Visitor Education Phase 1 + Mini-Wizard (v9.22) - Jan 2, 2026
 
@@ -630,4 +689,4 @@ Audited email system - discovered it was ALREADY FULLY IMPLEMENTED. No code chan
 
 ---
 
-*Last Updated: January 2, 2026 (v9.19)*
+*Last Updated: January 2, 2026 (v9.27)*
