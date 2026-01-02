@@ -622,6 +622,7 @@ function PreviewContent() {
           isOpen={showUpgradeModal}
           onClose={() => setShowUpgradeModal(false)}
           context="download"
+          storeId={storeId || undefined}
         />
       </div>
     </div>

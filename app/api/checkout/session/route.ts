@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
       plan: session.metadata?.plan || "unknown",
       amount: session.amount_total || 0,
       status: session.payment_status,
+      storeId: session.metadata?.store_id || null,
     });
   } catch (error) {
     console.error("Session retrieval error:", error);

@@ -10,6 +10,7 @@ interface SessionInfo {
   email: string;
   plan: string;
   amount: number;
+  storeId: string | null;
 }
 
 function SuccessContent() {
@@ -88,40 +89,65 @@ function SuccessContent() {
               <Sparkles className="w-5 h-5 text-emerald-400" />
               What happens next
             </h2>
-            <ol className="space-y-3 text-gray-400">
-              <li className="flex gap-3">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-semibold flex items-center justify-center">
-                  1
-                </span>
-                <span>
-                  <strong className="text-white">Click the button below</strong> to enter the store builder
-                </span>
-              </li>
-              <li className="flex gap-3">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-semibold flex items-center justify-center">
-                  2
-                </span>
-                <span>Answer 8 simple questions to configure your store</span>
-              </li>
-              <li className="flex gap-3">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-semibold flex items-center justify-center">
-                  3
-                </span>
-                <span>Connect your Stripe account to accept payments</span>
-              </li>
-              <li className="flex gap-3">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-semibold flex items-center justify-center">
-                  4
-                </span>
-                <span>Download your complete, ready-to-deploy store</span>
-              </li>
-            </ol>
+            {sessionInfo?.storeId ? (
+              <ol className="space-y-3 text-gray-400">
+                <li className="flex gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-semibold flex items-center justify-center">
+                    1
+                  </span>
+                  <span>
+                    <strong className="text-white">Click the button below</strong> to deploy your store
+                  </span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-semibold flex items-center justify-center">
+                    2
+                  </span>
+                  <span>Your store goes live in about 60 seconds</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-semibold flex items-center justify-center">
+                    3
+                  </span>
+                  <span>Start accepting orders immediately</span>
+                </li>
+              </ol>
+            ) : (
+              <ol className="space-y-3 text-gray-400">
+                <li className="flex gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-semibold flex items-center justify-center">
+                    1
+                  </span>
+                  <span>
+                    <strong className="text-white">Click the button below</strong> to enter the store builder
+                  </span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-semibold flex items-center justify-center">
+                    2
+                  </span>
+                  <span>Answer 8 simple questions to configure your store</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-semibold flex items-center justify-center">
+                    3
+                  </span>
+                  <span>Connect your Stripe account to accept payments</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-semibold flex items-center justify-center">
+                    4
+                  </span>
+                  <span>Deploy your store with one click</span>
+                </li>
+              </ol>
+            )}
           </div>
 
           {/* Primary CTA */}
-          <Link href="/wizard">
+          <Link href={sessionInfo?.storeId ? `/wizard/preview?store=${sessionInfo.storeId}` : "/wizard"}>
             <Button variant="primary" size="lg">
-              Build Your Store Now
+              {sessionInfo?.storeId ? "Deploy Your Store" : "Build Your Store Now"}
               <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
           </Link>
