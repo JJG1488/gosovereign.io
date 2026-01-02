@@ -4,6 +4,7 @@ import {
   Hero,
   ProblemSection,
   SolutionSection,
+  ScreenshotGallery,
   HowItWorks,
   Pricing,
   WhoItsFor,
@@ -49,6 +50,8 @@ export default function HomePage(): React.ReactElement {
           intro={copy.solution.intro}
           features={copy.solution.features}
         />
+
+        <ScreenshotGallery />
 
         <HowItWorks
           headline={copy.howItWorks.headline}

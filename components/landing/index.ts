@@ -11,3 +11,4 @@ export { FAQ } from "./FAQ";
 export { FinalCTA } from "./FinalCTA";
 export { Footer } from "./Footer";
 export { BogoPromo } from "./BogoPromo";
+export { ScreenshotGallery } from "./ScreenshotGallery";

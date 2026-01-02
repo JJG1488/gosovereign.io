@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
+import { Play } from "lucide-react";
 import { Container } from "@/components/ui";
 
 interface Step {
@@ -32,6 +33,24 @@ export function HowItWorks({ headline, steps }: HowItWorksProps): React.ReactEle
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-100">
             {headline}
           </h2>
+        </motion.div>
+
+        {/* Video Demo */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="max-w-3xl mx-auto mb-16"
+        >
+          <div className="relative aspect-video rounded-2xl overflow-hidden border border-navy-700 bg-navy-900/50">
+            {/* Placeholder state - replace with iframe when video ready */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+              <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                <Play className="w-8 h-8 text-emerald-400 ml-1" />
+              </div>
+              <span className="text-gray-400">Video walkthrough coming soon</span>
+            </div>
+          </div>
         </motion.div>
 
         {/* Steps */}

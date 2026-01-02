@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Star } from "lucide-react";
+import { Star, ExternalLink } from "lucide-react";
 import { Container } from "@/components/ui";
 import { HeroCTA } from "./HeroCTA";
 
@@ -132,7 +132,18 @@ export function Hero({
             transition={{ duration: 0.6, delay: 0.6 }}
             className="mb-8"
           >
-            <HeroCTA cta={cta} variant={variant} />
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <HeroCTA cta={cta} variant={variant} />
+              <a
+                href="https://demo.gosovereign.io"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 text-gray-400 hover:text-emerald-400 transition-colors"
+              >
+                <ExternalLink className="w-4 h-4" />
+                See Live Examples
+              </a>
+            </div>
           </motion.div>
 
           {/* Micro-proof */}
