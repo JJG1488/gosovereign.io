@@ -3,7 +3,7 @@
 > **IMPORTANT:** This file is the source of truth for active development.
 > For version history and session logs, see `CLAUDE-HISTORY.md`.
 
-**Current Version: 9.26** | **Last Updated: January 2, 2026**
+**Current Version: 9.27** | **Last Updated: January 2, 2026**
 
 ---
 
@@ -129,7 +129,7 @@
 | # | Issue | Details | Status |
 |---|-------|---------|--------|
 | **FEAT-1** | Collections/Categories admin page | Products can belong to multiple collections. Admin creates collections, assigns products via dropdown. Customer sees `/collections` page with grouped products. | **BACKLOG** |
-| **FEAT-2** | Order confirmation emails not sending | Issue is in **deployed stores** (customer order confirmations), not platform. Subscription notifications work. | **TODO** |
+| **FEAT-2** | Order confirmation emails not sending | Root cause: stores needed STRIPE_WEBHOOK_SECRET. Fixed with fallback order creation on success page. | **FIXED** ✅ |
 
 ### DEFERRED: Questions Answered
 
@@ -143,7 +143,8 @@
 1. ~~**Session 1:** BUG-1, BUG-2, BUG-3 (template deployment fixes)~~ ✅ DONE
 2. ~~**Session 2:** BUG-4, WIZ-2, WIZ-3 (services creation, template-conditional UX)~~ ✅ DONE
 3. ~~**Session 3:** WIZ-4, WIZ-5 (AI enhance buttons)~~ ✅ DONE
-4. **Session 4:** FEAT-2, FEAT-1 (emails, collections)
+4. ~~**Session 4:** FEAT-2 (order emails - fallback order creation)~~ ✅ DONE
+5. **Session 5:** FEAT-1 (collections)
 
 ---
 
