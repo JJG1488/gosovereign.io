@@ -3,15 +3,46 @@
 import { MessageSquare } from "lucide-react";
 import { useWizard } from "../WizardContext";
 
-export function TaglineStep() {
-  const { state, updateConfig } = useWizard();
+// Template-specific content
+const TEMPLATE_CONTENT = {
+  goods: {
+    title: "Describe what you sell",
+    subtitle: "One sentence that captures your store's essence.",
+    placeholder: "Premium products for people who care about quality",
+    examples: [
+      "Handcrafted jewelry for the modern minimalist",
+      "Premium coffee beans, roasted with love",
+      "Sustainable fashion for conscious consumers",
+      "Artisan candles that tell a story",
+    ],
+  },
+  services: {
+    title: "Describe what you do",
+    subtitle: "One sentence that captures your business's value.",
+    placeholder: "Expert solutions that transform your business",
+    examples: [
+      "Web design that turns visitors into customers",
+      "Professional photography that tells your story",
+      "Business coaching for ambitious entrepreneurs",
+      "Home cleaning services you can trust",
+    ],
+  },
+  brochure: {
+    title: "Describe your work",
+    subtitle: "One sentence that captures what you do.",
+    placeholder: "Creative work that makes an impact",
+    examples: [
+      "Award-winning designs that inspire",
+      "Photography that captures life's moments",
+      "Architectural visions brought to life",
+      "Creative direction for bold brands",
+    ],
+  },
+};
 
-  const examples = [
-    "Handcrafted jewelry for the modern minimalist",
-    "Premium coffee beans, roasted with love",
-    "Sustainable fashion for conscious consumers",
-    "Artisan candles that tell a story",
-  ];
+export function TaglineStep() {
+  const { state, updateConfig, template } = useWizard();
+  const content = TEMPLATE_CONTENT[template] || TEMPLATE_CONTENT.goods;
 
   return (
     <div className="space-y-6">
@@ -21,10 +52,10 @@ export function TaglineStep() {
           <MessageSquare className="w-8 h-8 text-emerald-400" />
         </div>
         <h2 className="text-2xl font-bold text-white mb-2">
-          Describe what you sell
+          {content.title}
         </h2>
         <p className="text-gray-400">
-          One sentence that captures your store's essence.
+          {content.subtitle}
         </p>
       </div>
 
@@ -37,7 +68,7 @@ export function TaglineStep() {
           id="tagline"
           value={state.config.tagline ?? ""}
           onChange={(e) => updateConfig({ tagline: e.target.value })}
-          placeholder="Premium products for people who care about quality"
+          placeholder={content.placeholder}
           rows={3}
           maxLength={150}
           className="w-full px-4 py-4 text-lg bg-navy-900 border border-navy-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all resize-none"
@@ -57,7 +88,7 @@ export function TaglineStep() {
           Need inspiration?
         </p>
         <div className="space-y-2">
-          {examples.map((example) => (
+          {content.examples.map((example) => (
             <button
               key={example}
               onClick={() => updateConfig({ tagline: example })}

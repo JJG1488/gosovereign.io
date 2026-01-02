@@ -232,71 +232,78 @@ function WizardLoader() {
             return;
           }
 
-          // Resume existing store - use its template
-          setTemplate(existingStore.template || "goods");
-          setStoreId(existingStore.id);
-          router.replace(`/wizard?store=${existingStore.id}`);
-        } else {
-          // Create new store with selected template
-          const storeName = selectedTemplate === "brochure" ? "My Site" :
-                           selectedTemplate === "services" ? "My Business" : "My Store";
+          // If urlTemplate is specified and user has room for more stores, create new store
+          if (urlTemplate && storeCount < MAX_STORES) {
+            // Fall through to new store creation below
+          } else {
+            // Resume existing store - use its template
+            setTemplate(existingStore.template || "goods");
+            setStoreId(existingStore.id);
+            router.replace(`/wizard?store=${existingStore.id}`);
+            setIsLoading(false);
+            return;
+          }
+        }
 
-          // Generate subdomain from store name (will be updated when user changes store name)
-          let subdomain = slugifyStoreName(storeName);
+        // Create new store with selected template
+        const storeName = selectedTemplate === "brochure" ? "My Site" :
+                         selectedTemplate === "services" ? "My Business" : "My Store";
 
-          // Check availability and add suffix if needed
-          try {
-            const checkRes = await fetch(`/api/subdomain/check?subdomain=${encodeURIComponent(subdomain)}`);
-            const checkData = await checkRes.json();
-            if (!checkData.available) {
-              // Add timestamp suffix if default name is taken
-              subdomain = `${subdomain}-${Date.now().toString(36).slice(-4)}`;
-            }
-          } catch {
-            // If check fails, add unique suffix anyway
+        // Generate subdomain from store name (will be updated when user changes store name)
+        let subdomain = slugifyStoreName(storeName);
+
+        // Check availability and add suffix if needed
+        try {
+          const checkRes = await fetch(`/api/subdomain/check?subdomain=${encodeURIComponent(subdomain)}`);
+          const checkData = await checkRes.json();
+          if (!checkData.available) {
+            // Add timestamp suffix if default name is taken
             subdomain = `${subdomain}-${Date.now().toString(36).slice(-4)}`;
           }
+        } catch {
+          // If check fails, add unique suffix anyway
+          subdomain = `${subdomain}-${Date.now().toString(36).slice(-4)}`;
+        }
 
-          const newStore = await createStore(user.id, storeName, subdomain, selectedTemplate);
+        const newStore = await createStore(user.id, storeName, subdomain, selectedTemplate);
 
-          if (newStore) {
-            // Create wizard progress record
-            await createWizardProgress(newStore.id);
+        if (newStore) {
+          // Create wizard progress record
+          await createWizardProgress(newStore.id);
 
-            // Propagate user's payment tier to new store if they paid before creating a store
-            const supabase = createClient();
-            const { data: userProfile } = await supabase
-              .from("users")
-              .select("payment_tier")
-              .eq("id", user.id)
-              .single();
+          // Propagate user's payment tier to new store if they paid before creating a store
+          const supabase = createClient();
+          const { data: userProfile } = await supabase
+            .from("users")
+            .select("payment_tier")
+            .eq("id", user.id)
+            .single();
 
-            if (userProfile?.payment_tier) {
-              // Check if any existing stores already have this tier applied
-              const { data: storesWithTier } = await supabase
+          if (userProfile?.payment_tier) {
+            // Check if any existing stores already have this tier applied
+            const { data: storesWithTier } = await supabase
+              .from("stores")
+              .select("id")
+              .eq("user_id", user.id)
+              .not("payment_tier", "is", null);
+
+            // If no stores have tier applied yet, apply to this new store
+            if (!storesWithTier || storesWithTier.length === 0) {
+              await supabase
                 .from("stores")
-                .select("id")
-                .eq("user_id", user.id)
-                .not("payment_tier", "is", null);
-
-              // If no stores have tier applied yet, apply to this new store
-              if (!storesWithTier || storesWithTier.length === 0) {
-                await supabase
-                  .from("stores")
-                  .update({
-                    payment_tier: userProfile.payment_tier,
-                    subscription_status: userProfile.payment_tier === "hosted" ? "active" : "none",
-                    can_deploy: true,
-                  })
-                  .eq("id", newStore.id);
-              }
+                .update({
+                  payment_tier: userProfile.payment_tier,
+                  subscription_status: userProfile.payment_tier === "hosted" ? "active" : "none",
+                  can_deploy: true,
+                })
+                .eq("id", newStore.id);
             }
-
-            setStoreId(newStore.id);
-            router.replace(`/wizard?store=${newStore.id}`);
-          } else {
-            setError("Failed to create store. Please try again.");
           }
+
+          setStoreId(newStore.id);
+          router.replace(`/wizard?store=${newStore.id}`);
+        } else {
+          setError("Failed to create store. Please try again.");
         }
 
         setIsLoading(false);

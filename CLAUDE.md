@@ -3,7 +3,7 @@
 > **IMPORTANT:** This file is the source of truth for active development.
 > For version history and session logs, see `CLAUDE-HISTORY.md`.
 
-**Current Version: 9.24** | **Last Updated: January 2, 2026**
+**Current Version: 9.25** | **Last Updated: January 2, 2026**
 
 ---
 
@@ -112,14 +112,15 @@
 | **BUG-1** | Brochure deploys with Goods template look | Brochure template not consuming `NEXT_PUBLIC_BRAND_COLOR` | **FIXED** ✅ |
 | **BUG-2** | Custom color not carrying to brochure site | Same as BUG-1 - CSS vars not wired | **FIXED** ✅ |
 | **BUG-3** | Services template - colors and services not showing | Env vars not consumed in services template | **FIXED** ✅ |
+| **BUG-4** | Services stores don't create | Wizard was resuming existing store instead of creating new with urlTemplate | **FIXED** ✅ |
 
 ### HIGH: Wizard UX Issues
 
 | # | Issue | Status |
 |---|-------|--------|
 | **WIZ-1** | Template selector shows "Coming Soon" for brochure/services | **FIXED** ✅ |
-| **WIZ-2** | Brochure Step 2 asks "what do you sell" (wrong copy) | **TODO** |
-| **WIZ-3** | Brochure Step 5 asks to "add a product" (verify PortfolioStep routing) | **VERIFY** |
+| **WIZ-2** | Brochure Step 2 asks "what do you sell" (wrong copy) | **FIXED** ✅ (TaglineStep now template-aware) |
+| **WIZ-3** | Brochure Step 5 asks to "add a product" (verify PortfolioStep routing) | **VERIFIED** ✅ (PortfolioStep exists and routes correctly) |
 | **WIZ-4** | Add AI "Enhance" button to TaglineStep (Step 2) | **TODO** |
 | **WIZ-5** | Add AI "Enhance" button to AboutStep (Step 6) | **TODO** |
 
@@ -140,7 +141,7 @@
 ### Execution Priority
 
 1. ~~**Session 1:** BUG-1, BUG-2, BUG-3 (template deployment fixes)~~ ✅ DONE
-2. **Session 2:** WIZ-2, WIZ-3 (wizard template-conditional UX) - WIZ-1 done
+2. ~~**Session 2:** BUG-4, WIZ-2, WIZ-3 (services creation, template-conditional UX)~~ ✅ DONE
 3. **Session 3:** WIZ-4, WIZ-5 (AI enhance buttons)
 4. **Session 4:** FEAT-2, FEAT-1 (emails, collections)
 
