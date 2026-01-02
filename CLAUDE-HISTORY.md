@@ -46,6 +46,9 @@
 | 9.17 | Jan 1, 2026 | **WooCommerce Import** - Variable products, Parent linking, up to 10 attributes |
 | 9.18 | Jan 1, 2026 | **BigCommerce Import** - Item Type/SKU row detection, variant support, 10 image columns |
 | 9.19 | Jan 2, 2026 | **Services Template MVP** - Complete services template, multi-template deployment, repo mapping fix, bulk redeploy |
+| 9.20 | Jan 2, 2026 | **Brochure Template** - Complete portfolio/information site template, env-var approach, admin dashboard |
+| 9.21 | Jan 2, 2026 | **Visitor Education Initiative** - Documented 5-phase plan to educate visitors (market validation confirmed) |
+| 9.22 | Jan 2, 2026 | **Visitor Education Phase 1 + Mini-Wizard** - Screenshot gallery, video placeholder, demo links, interactive 3-step mini-wizard with live preview |
 
 ---
 
@@ -76,10 +79,47 @@
 | 2025-12-31 | **Custom fetch with cache-busting headers** | Override Supabase client's fetch to add `cache: 'no-store'` and `Cache-Control` headers - the definitive fix for PostgREST caching |
 | 2026-01-02 | **Multi-template architecture** | Separate GitHub repos per template (goods, services, brochure), template selected via `store.template` field |
 | 2026-01-02 | **JJG1488 repo namespace** | All template repos under `JJG1488/` organization (storefront-template, services-template) |
+| 2026-01-02 | **Mini-wizard prefill via URL params** | Simpler than context/localStorage, allows direct linking, full wizard automatically applies prefill values |
 
 ---
 
 ## Session Summaries
+
+### Session 31 - Visitor Education Phase 1 + Mini-Wizard (v9.22) - Jan 2, 2026
+
+**What was done:**
+
+Implemented the highest-impact items from the Visitor Education Initiative to help visitors understand what GoSovereign is.
+
+**Phase 1: Quick Wins**
+- Added "See Live Examples" link in Hero section (links to demo.gosovereign.io placeholder)
+- Created `ScreenshotGallery.tsx` component - 3-card grid showing Wizard, Admin, Storefront
+- Added video placeholder in HowItWorks section (play button with "coming soon" text)
+
+**Mini-Wizard (Highest Impact)**
+- Created `MiniWizard.tsx` - 3-step interactive wizard embedded in Hero
+- Step 1: Template selection (Products/Services/Portfolio) with icons
+- Step 2: Store name input with live subdomain preview
+- Step 3: Color picker with 6 presets + custom color
+- Live preview panel (desktop) showing store mockup with selected name/color
+- "Continue to Full Wizard" passes data via URL params (`prefill_name`, `prefill_color`)
+- Full wizard now accepts and applies prefill params automatically
+
+**Files created:**
+- `components/landing/MiniWizard.tsx` (320 lines)
+- `components/landing/ScreenshotGallery.tsx`
+
+**Files modified:**
+- `components/landing/Hero.tsx` - Replaced HeroCTA with MiniWizard, removed unused props
+- `components/landing/HowItWorks.tsx` - Added video placeholder section
+- `components/landing/index.ts` - Exported new components
+- `app/page.tsx` - Added ScreenshotGallery, removed cta prop from Hero
+- `app/wizard/page.tsx` - Added prefill param handling
+
+**Key Decision:**
+- Mini-wizard data passes via URL query params rather than context/localStorage for simplicity
+
+---
 
 ### Session 30 - Services Template MVP (v9.19) - Jan 2, 2026
 

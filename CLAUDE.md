@@ -3,7 +3,7 @@
 > **IMPORTANT:** This file is the source of truth for active development.
 > For version history and session logs, see `CLAUDE-HISTORY.md`.
 
-**Current Version: 9.21** | **Last Updated: January 2, 2026**
+**Current Version: 9.22** | **Last Updated: January 2, 2026**
 
 ---
 
@@ -22,7 +22,10 @@
 
 **Core Platform:**
 - Landing page with A/B variants (`/a`, `/b`)
-- 8-step configuration wizard (`/wizard`)
+- **Mini-Wizard in Hero** (3-step interactive preview with live mockup)
+- **Screenshot Gallery** ("What You'll Build" section)
+- **Video placeholder** in How It Works (ready for walkthrough)
+- 8-step configuration wizard (`/wizard`) with prefill param support
 - Supabase Auth (signup/login with magic links)
 - Image uploads to Supabase Storage
 - Stripe Connect OAuth for store owners
@@ -92,6 +95,7 @@
 - v9.19: Services Template MVP - complete services template, multi-template deployment, repo mapping fixes
 - v9.20: Brochure Template - complete portfolio/information site template, env-var approach, admin dashboard
 - v9.21: Visitor Education Initiative - documented 5-phase plan to educate visitors (market validation confirmed)
+- v9.22: Visitor Education Phase 1 + Mini-Wizard - Screenshot gallery, video placeholder, interactive 3-step mini-wizard with live preview
 
 **Known Tech Debt:**
 - `WizardContext.tsx:455` - React hooks ref mutation pattern (non-blocking)
@@ -341,6 +345,8 @@ All major e-commerce features built:
 - **BigCommerce Import (v9.18)**
 - **Services Template MVP (v9.19)**
 - **Brochure Template (v9.20)**
+- **Visitor Education Phase 1 (v9.22)** - Screenshot gallery, video placeholder, demo links
+- **Mini-Wizard (v9.22)** - 3-step interactive preview with live mockup, prefill to full wizard
 
 ### Remaining Tasks
 
@@ -373,17 +379,17 @@ All major e-commerce features built:
 
 ### Implementation Phases
 
-#### Phase 1: Quick Wins (Hours) - HIGH PRIORITY
-| Item | Effort | Impact |
-|------|--------|--------|
-| Link existing demo stores in Hero | 30 min | High |
-| Screenshot gallery section ("What You'll Build") | 2-3 hrs | High |
-| Video embed in How It Works (2-min walkthrough) | 1-2 hrs | High |
+#### Phase 1: Quick Wins - COMPLETED (v9.22)
+| Item | Status |
+|------|--------|
+| Link existing demo stores in Hero | ✅ Done |
+| Screenshot gallery section ("What You'll Build") | ✅ Done |
+| Video embed placeholder in How It Works | ✅ Done (placeholder, ready for video URL) |
 
-**Files to modify:**
-- `/components/landing/Hero.tsx` - Add "See Live Examples" button
-- New: `/components/landing/ScreenshotGallery.tsx`
-- `/components/landing/HowItWorks.tsx` - Add video embed
+**Files created/modified:**
+- `/components/landing/Hero.tsx` - "See Live Examples" link added
+- `/components/landing/ScreenshotGallery.tsx` - New component with 3 placeholder cards
+- `/components/landing/HowItWorks.tsx` - Video placeholder with play button
 
 #### Phase 2: Template Showcase (1-2 Days)
 | Item | Effort | Impact |
@@ -396,17 +402,17 @@ All major e-commerce features built:
 - New: `/app/templates/page.tsx` - Enhanced with live previews
 - New: `/components/landing/TemplateShowcase.tsx`
 
-#### Phase 3: Interactive Experience (3-5 Days) - VERY HIGH IMPACT
-| Item | Effort | Impact |
-|------|--------|--------|
-| Landing page mini-wizard (3 questions, instant preview) | 1-2 days | Very High |
-| Wizard preview mode (anonymous until Stripe Connect) | 2-3 days | Very High |
-| Admin dashboard tour (interactive walkthrough) | 1 day | Medium |
+#### Phase 3: Interactive Experience - PARTIALLY COMPLETED (v9.22)
+| Item | Status |
+|------|--------|
+| Landing page mini-wizard (3 questions, instant preview) | ✅ Done |
+| Wizard preview mode (anonymous until Stripe Connect) | Pending |
+| Admin dashboard tour (interactive walkthrough) | Pending |
 
-**Files to modify:**
-- `/components/landing/Hero.tsx` - Embed mini-wizard
-- `/app/wizard/page.tsx` - Anonymous mode support
-- `/components/wizard/WizardContext.tsx` - Guest state handling
+**Files created/modified:**
+- `/components/landing/MiniWizard.tsx` - New 3-step interactive wizard with live preview
+- `/components/landing/Hero.tsx` - MiniWizard embedded, replaced HeroCTA
+- `/app/wizard/page.tsx` - Accepts prefill_name and prefill_color params
 
 #### Phase 4: Social Proof & Trust (Ongoing)
 | Item | Effort | Impact |
@@ -437,13 +443,15 @@ All major e-commerce features built:
 
 ### Execution Priority
 
-1. **Phase 1** - Quick wins with screenshots and demo links
-2. **Phase 3 Item 1** - Mini-wizard on landing (highest impact)
-3. **Phase 2** - Template showcase differentiation
-4. **Phase 3 Item 2** - Wizard preview mode
-5. **Phase 4** - Social proof (ongoing as customers deploy)
+1. ~~**Phase 1** - Quick wins with screenshots and demo links~~ ✅ DONE
+2. ~~**Phase 3 Item 1** - Mini-wizard on landing (highest impact)~~ ✅ DONE
+3. **Deploy demo stores** - Make "See Live Examples" link work (demo-products, demo-services, demo-portfolio)
+4. **Real screenshots + video** - Replace placeholders with actual assets
+5. **Phase 2** - Template showcase differentiation
+6. **Phase 3 Item 2** - Wizard preview mode (anonymous until Stripe Connect)
+7. **Phase 4** - Social proof (ongoing as customers deploy)
 
 ---
 
-*Version: 9.21 | Status: LAUNCHED + VISITOR EDUCATION INITIATIVE*
+*Version: 9.22 | Status: LAUNCHED + VISITOR EDUCATION IN PROGRESS*
 *See CLAUDE-HISTORY.md for version history and session details.*
