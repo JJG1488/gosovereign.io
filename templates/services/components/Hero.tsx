@@ -1,24 +1,43 @@
 import Link from "next/link";
-import { Shield, Award, CheckCircle, ChevronDown } from "lucide-react";
-import type { RuntimeSettings } from "@/lib/settings";
+import {
+  Shield,
+  Award,
+  CheckCircle,
+  ChevronDown,
+  Star,
+  ShieldCheck,
+  BadgeCheck,
+} from "lucide-react";
+import type { RuntimeSettings, TrustBadge } from "@/lib/settings";
 
 interface HeroProps {
   settings: RuntimeSettings;
   storeName: string;
 }
 
-export function Hero({ settings, storeName }: HeroProps) {
-  const trustIndicators = [
-    { icon: Shield, text: "Fully Insured" },
-    { icon: Award, text: "Certified Experts" },
-    { icon: CheckCircle, text: "100% Satisfaction" },
-  ];
+// Icon mapping for trust badges
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  shield: Shield,
+  "shield-check": ShieldCheck,
+  award: Award,
+  star: Star,
+  "check-circle": CheckCircle,
+  "badge-check": BadgeCheck,
+};
 
+function getIcon(iconName: string) {
+  return iconMap[iconName] || CheckCircle;
+}
+
+export function Hero({ settings, storeName }: HeroProps) {
   // Background style based on settings
   const getBgStyle = () => {
     if (settings.heroStyle === "image" && settings.heroImageUrl) {
       return {
-        backgroundImage: "linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url(" + settings.heroImageUrl + ")",
+        backgroundImage:
+          "linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url(" +
+          settings.heroImageUrl +
+          ")",
         backgroundSize: "cover",
         backgroundPosition: "center",
       };
@@ -28,7 +47,8 @@ export function Hero({ settings, storeName }: HeroProps) {
     }
     // Default gradient
     return {
-      background: "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)",
+      background:
+        "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)",
     };
   };
 
@@ -60,29 +80,37 @@ export function Hero({ settings, storeName }: HeroProps) {
         {/* Trust Badge */}
         <div className="inline-flex items-center gap-2 bg-brand/20 text-brand px-4 py-2 rounded-full text-sm font-medium mb-6 animate-fade-in">
           <Award className="w-4 h-4" />
-          Trusted Since 2010
+          {settings.heroBadgeText}
         </div>
 
         {/* Main Heading */}
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 text-shadow animate-slide-up">
-          Professional Services
+          {settings.heroHeading}
           <br />
-          <span className="text-brand">You Can Trust</span>
+          <span className="text-brand">{settings.heroHeadingAccent}</span>
         </h1>
 
-        {/* Tagline */}
+        {/* Tagline / Subheading */}
         <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-2xl mx-auto text-shadow-sm animate-slide-up stagger-2">
-          {settings.tagline || "Quality workmanship, reliable service, and complete customer satisfaction guaranteed."}
+          {settings.heroSubheading ||
+            settings.tagline ||
+            "Quality workmanship, reliable service, and complete customer satisfaction guaranteed."}
         </p>
 
         {/* Trust Indicators */}
         <div className="flex flex-wrap justify-center gap-6 mb-10 animate-slide-up stagger-3">
-          {trustIndicators.map((item, index) => (
-            <div key={index} className="flex items-center gap-2 text-gray-300">
-              <item.icon className="w-5 h-5 text-brand" />
-              <span>{item.text}</span>
-            </div>
-          ))}
+          {settings.trustBadges.map((badge: TrustBadge, index: number) => {
+            const IconComponent = getIcon(badge.icon);
+            return (
+              <div
+                key={index}
+                className="flex items-center gap-2 text-gray-300"
+              >
+                <IconComponent className="w-5 h-5 text-brand" />
+                <span>{badge.text}</span>
+              </div>
+            );
+          })}
         </div>
 
         {/* CTAs */}
@@ -91,13 +119,13 @@ export function Hero({ settings, storeName }: HeroProps) {
             href="/contact"
             className="bg-brand text-gray-900 font-semibold px-8 py-4 rounded-xl hover:bg-brand-dark transition-all btn-glow text-lg"
           >
-            Get a Free Quote
+            {settings.heroCTAText}
           </Link>
           <Link
             href="/services"
             className="border-2 border-white text-white font-semibold px-8 py-4 rounded-xl hover:bg-white hover:text-gray-900 transition-all text-lg"
           >
-            Our Services
+            {settings.heroSecondaryCTAText}
           </Link>
         </div>
       </div>

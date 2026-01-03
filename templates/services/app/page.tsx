@@ -1,8 +1,12 @@
-import Link from "next/link";
 import { Hero } from "@/components/Hero";
 import { ServiceGrid } from "@/components/ServiceGrid";
 import { ProcessSteps } from "@/components/ProcessSteps";
 import { Stats } from "@/components/Stats";
+import { WhyChooseUs } from "@/components/WhyChooseUs";
+import { Specialties } from "@/components/Specialties";
+import { AdditionalServices } from "@/components/AdditionalServices";
+import { Badges } from "@/components/Badges";
+import { Testimonials } from "@/components/Testimonials";
 import { ContactForm } from "@/components/ContactForm";
 import { getActiveServices } from "@/data/services";
 import { getStoreSettingsFromDB } from "@/lib/settings";
@@ -22,8 +26,17 @@ export default async function HomePage() {
       <Hero settings={settings} storeName={store.name} />
 
       {/* Process Steps */}
-      {settings.showProcess && (
-        <ProcessSteps steps={settings.process} />
+      {settings.showProcess && <ProcessSteps settings={settings} />}
+
+      {/* Why Choose Us */}
+      {settings.showWhyChooseUs && <WhyChooseUs settings={settings} />}
+
+      {/* Specialties */}
+      {settings.showSpecialties && <Specialties settings={settings} />}
+
+      {/* Additional Services */}
+      {settings.showAdditionalServices && (
+        <AdditionalServices settings={settings} />
       )}
 
       {/* Services Section */}
@@ -41,14 +54,24 @@ export default async function HomePage() {
             </p>
           </div>
 
-          <ServiceGrid 
+          <ServiceGrid
             services={featuredServices.length > 0 ? featuredServices : services}
           />
         </div>
       </section>
 
-      {/* Stats Section */}
-      {settings.showStats && (
+      {/* Testimonials */}
+      {settings.showTestimonials &&
+        settings.testimonials &&
+        settings.testimonials.length > 0 && (
+          <Testimonials settings={settings} storeName={store.name} />
+        )}
+
+      {/* Badges & Stats */}
+      {settings.showBadges && <Badges settings={settings} />}
+
+      {/* Stats (standalone if badges are hidden) */}
+      {!settings.showBadges && settings.showStats && (
         <Stats stats={settings.stats} />
       )}
 

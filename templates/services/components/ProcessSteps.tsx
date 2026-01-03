@@ -1,8 +1,9 @@
+import Link from "next/link";
 import { ClipboardList, MessageSquare, CheckCircle, ChevronRight } from "lucide-react";
-import type { ProcessStep } from "@/lib/settings";
+import type { RuntimeSettings, ProcessStep } from "@/lib/settings";
 
 interface ProcessStepsProps {
-  steps: ProcessStep[];
+  settings: RuntimeSettings;
 }
 
 // Map icon names to Lucide components
@@ -20,8 +21,10 @@ function getIcon(iconName: string | undefined): React.ComponentType<{ className?
   return iconMap[iconName.toLowerCase()] || ClipboardList;
 }
 
-export function ProcessSteps({ steps }: ProcessStepsProps) {
-  if (steps.length === 0) {
+export function ProcessSteps({ settings }: ProcessStepsProps) {
+  const steps = settings.process;
+
+  if (!steps || steps.length === 0) {
     return null;
   }
 
@@ -33,14 +36,19 @@ export function ProcessSteps({ steps }: ProcessStepsProps) {
           <span className="inline-block text-brand font-semibold text-sm uppercase tracking-wider mb-3">
             How It Works
           </span>
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-            Our Simple Process
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            {settings.processTitle}
           </h2>
+          {settings.processSubtitle && (
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              {settings.processSubtitle}
+            </p>
+          )}
         </div>
 
         {/* Steps */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {steps.map((step, index) => {
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+          {steps.map((step: ProcessStep, index: number) => {
             const Icon = getIcon(step.icon);
             return (
               <div key={index} className="relative">
@@ -77,6 +85,18 @@ export function ProcessSteps({ steps }: ProcessStepsProps) {
             );
           })}
         </div>
+
+        {/* CTA Button */}
+        {settings.processCTAText && (
+          <div className="text-center">
+            <Link
+              href="/contact"
+              className="inline-flex items-center gap-2 bg-brand text-gray-900 font-semibold px-8 py-4 rounded-xl hover:bg-brand-dark transition-all btn-glow text-lg"
+            >
+              {settings.processCTAText}
+            </Link>
+          </div>
+        )}
       </div>
     </section>
   );

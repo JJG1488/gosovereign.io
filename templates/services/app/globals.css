@@ -72,3 +72,187 @@ html {
 .stagger-3 { animation-delay: 200ms; }
 .stagger-4 { animation-delay: 300ms; }
 .stagger-5 { animation-delay: 400ms; }
+
+/* Section transitions - smooth reveal on scroll */
+.section-reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s ease-out;
+}
+
+.section-reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Badge card hover effect */
+.badge-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.badge-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Testimonial card transitions */
+.testimonial-card {
+  transition: all 0.4s ease;
+  opacity: 1;
+}
+
+.testimonial-card.slide-left {
+  transform: translateX(-20px);
+  opacity: 0;
+}
+
+.testimonial-card.slide-right {
+  transform: translateX(20px);
+  opacity: 0;
+}
+
+/* Icon pulse animation for featured items */
+@keyframes iconPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.icon-pulse:hover {
+  animation: iconPulse 0.6s ease-in-out;
+}
+
+/* Gradient text for accents */
+.gradient-text {
+  background: linear-gradient(135deg, var(--brand-color) 0%, #fff8dc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Dark section background with subtle pattern */
+.dark-section {
+  background: linear-gradient(180deg, #1a1a1a 0%, #111111 100%);
+  position: relative;
+}
+
+.dark-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 215, 0, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+/* Form input focus states */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--brand-color);
+  box-shadow: 0 0 0 3px var(--brand-color-20);
+  transition: all 0.2s ease;
+}
+
+/* Link hover underline animation */
+.link-underline {
+  position: relative;
+}
+
+.link-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--brand-color);
+  transition: width 0.3s ease;
+}
+
+.link-underline:hover::after {
+  width: 100%;
+}
+
+/* Service card hover */
+.service-card {
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.service-card:hover {
+  border-color: var(--brand-color-20);
+  background: linear-gradient(180deg, #fff 0%, rgba(255, 215, 0, 0.02) 100%);
+}
+
+/* Star rating animation */
+.star-rating svg {
+  transition: transform 0.2s ease;
+}
+
+.star-rating svg:hover {
+  transform: scale(1.2);
+}
+
+/* Scroll indicator bounce */
+@keyframes scrollBounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0) translateX(-50%);
+  }
+  40% {
+    transform: translateY(-12px) translateX(-50%);
+  }
+  60% {
+    transform: translateY(-6px) translateX(-50%);
+  }
+}
+
+.scroll-indicator {
+  animation: scrollBounce 2s infinite;
+}
+
+/* Social icon hover */
+.social-icon {
+  transition: all 0.3s ease;
+}
+
+.social-icon:hover {
+  transform: translateY(-3px);
+  background: var(--brand-color) !important;
+  color: #1a1a1a !important;
+}
+
+/* Map container styling */
+.map-container {
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Loading spinner */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+/* Responsive section padding */
+@media (max-width: 768px) {
+  .section-padding {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+}
+
+@media (min-width: 769px) {
+  .section-padding {
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+  }
+}
