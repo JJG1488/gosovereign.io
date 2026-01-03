@@ -1,0 +1,135 @@
+# Collections
+
+Collections allow you to organize products into categories that customers can browse on your storefront.
+
+## Features
+
+- **Multiple Collections**: Create unlimited collections to organize your products
+- **Product Assignment**: Products can belong to multiple collections
+- **Collection Images**: Add hero images to make collections visually appealing
+- **Ordering**: Drag and drop to reorder collections and products within them
+- **Active/Inactive**: Toggle collections on/off without deleting them
+
+## Creating Collections
+
+1. Go to **Admin > Collections** in your store dashboard
+2. Click **New Collection**
+3. Enter a name and optional description
+4. Upload a collection image (recommended: 4:3 aspect ratio)
+5. Click **Create**
+
+## Adding Products to Collections
+
+1. Open a collection from the Collections page
+2. Click **Add Products**
+3. Select products from the dropdown
+4. Products appear immediately in the collection
+
+## Customer View
+
+Customers can browse collections at `/collections` on your storefront. Each collection shows:
+- Collection name and image
+- Product count
+- Products within that collection
+
+---
+
+## Troubleshooting: Collections Not Displaying
+
+If collections appear in the admin but not on the customer-facing storefront, this is typically caused by **Row Level Security (RLS)** policies in Supabase.
+
+### Root Cause
+
+The admin API uses a **service role key** which bypasses RLS, while the customer-facing API uses the **anon key** which is subject to RLS policies.
+
+### Required RLS Policies
+
+Run the following SQL in your **Supabase SQL Editor** to fix:
+
+```sql
+-- Enable RLS on tables
+ALTER TABLE public.collections ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.product_collections ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies for clean re-creation
+DROP POLICY IF EXISTS "Collections are viewable by everyone" ON public.collections;
+DROP POLICY IF EXISTS "Product collections are viewable by everyone" ON public.product_collections;
+
+-- Allow anyone to view active collections
+CREATE POLICY "Collections are viewable by everyone"
+  ON public.collections FOR SELECT
+  TO anon, authenticated
+  USING (is_active = true);
+
+-- Allow anyone to view product-collection links
+CREATE POLICY "Product collections are viewable by everyone"
+  ON public.product_collections FOR SELECT
+  TO anon, authenticated
+  USING (true);
+
+-- Grant SELECT permissions
+GRANT SELECT ON public.collections TO anon, authenticated;
+GRANT SELECT ON public.product_collections TO anon, authenticated;
+```
+
+### PostgREST Schema Cache
+
+After applying RLS policies, Supabase's PostgREST layer may cache the old schema. If collections still don't appear:
+
+1. Wait 2-3 minutes for cache expiration
+2. Or go to **Project Settings > API** and look for "Reload schema cache"
+3. Hard refresh your storefront page (Ctrl+Shift+R)
+
+### Verifying the Fix
+
+Test the API directly in your browser:
+
+```
+https://your-store.gosovereign.io/api/collections
+```
+
+You should see a JSON response with your collections:
+
+```json
+{
+  "collections": [
+    {
+      "id": "...",
+      "name": "Summer Collection",
+      "slug": "summer-collection",
+      "product_count": 5
+    }
+  ]
+}
+```
+
+### Debug Endpoints
+
+For advanced troubleshooting, use these debug endpoints:
+
+- `?debug=1` - Shows environment configuration (storeId, Supabase connection)
+- `?debug=2` - Shows raw database query results
+
+### Common Issues
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| Admin shows collections, storefront empty | RLS blocking anon access | Apply RLS policies above |
+| API returns empty array, no error | PostgREST cache | Wait or reload schema |
+| API returns 500 error | Missing env vars | Check Vercel deployment settings |
+| Products in collection not showing | Product status filter | Ensure products have `status: "active"` |
+
+### Technical Details
+
+The collections feature uses two tables:
+
+1. **`collections`** - Stores collection metadata (name, slug, image, is_active)
+2. **`product_collections`** - Junction table linking products to collections (many-to-many)
+
+The customer API at `/api/collections` queries both tables. The query avoids JOINs to prevent RLS cache issues and instead fetches product counts separately.
+
+**Key files:**
+- `/app/api/collections/route.ts` - List all collections
+- `/app/api/collections/[slug]/route.ts` - Get collection with products
+- `/app/collections/page.tsx` - Customer collections page
+- `/app/collections/[slug]/page.tsx` - Single collection view

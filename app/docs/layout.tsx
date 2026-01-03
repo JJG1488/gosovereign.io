@@ -18,6 +18,7 @@ import {
   ChevronRight,
   Menu,
   X,
+  FolderOpen,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -45,6 +46,7 @@ const navigation: NavSection[] = [
     title: "Features",
     items: [
       { title: "Products", href: "/docs/features/products", icon: <Package className="w-4 h-4" /> },
+      { title: "Collections", href: "/docs/features/collections", icon: <FolderOpen className="w-4 h-4" /> },
       { title: "Orders", href: "/docs/features/orders", icon: <ShoppingCart className="w-4 h-4" /> },
       { title: "Coupons", href: "/docs/features/coupons", icon: <Tag className="w-4 h-4" /> },
       { title: "Themes", href: "/docs/features/themes", icon: <Palette className="w-4 h-4" /> },

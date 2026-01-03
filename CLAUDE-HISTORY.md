@@ -56,6 +56,7 @@
 | 9.27 | Jan 2, 2026 | **Order Email Fallback** - Fallback order creation on success page ensures emails send without webhook |
 | 9.28 | Jan 2, 2026 | **Collections Feature** - Products can belong to multiple collections, admin CRUD, customer-facing pages |
 | 9.29 | Jan 2, 2026 | **Collections Bug Fix** - Fixed React error #438 by using useParams() instead of use(params) in client components |
+| 9.30 | Jan 3, 2026 | **Collections RLS Fix** - Customer-facing collections not displaying due to RLS policies blocking anon access, query JOIN workaround |
 
 ---
 
@@ -87,10 +88,74 @@
 | 2026-01-02 | **Multi-template architecture** | Separate GitHub repos per template (goods, services, brochure), template selected via `store.template` field |
 | 2026-01-02 | **JJG1488 repo namespace** | All template repos under `JJG1488/` organization (storefront-template, services-template) |
 | 2026-01-02 | **Mini-wizard prefill via URL params** | Simpler than context/localStorage, allows direct linking, full wizard automatically applies prefill values |
+| 2026-01-03 | **Avoid JOINs in RLS-sensitive queries** | PostgREST can cache JOINed queries even after RLS policy changes; separate queries bypass cache issues |
+| 2026-01-03 | **Explicit `TO anon, authenticated` in RLS policies** | Default `TO public` may not properly target anon role through PostgREST; explicit targeting ensures proper access |
 
 ---
 
 ## Session Summaries
+
+### Session 33 - Collections RLS Fix (v9.30) - Jan 3, 2026
+
+**Problem:**
+Collections appeared in admin dashboard but showed "No collections available" on customer-facing storefront pages.
+
+**Root Cause:**
+Multiple issues combined:
+1. **Status filter mismatch**: Products created with `status: "active"` but API filtered for `"published"`
+2. **RLS policies blocking anon access**: `collections` and `product_collections` tables lacked RLS policies that allowed the `anon` role to SELECT
+3. **PostgREST schema cache**: Even after adding RLS policies, the JOIN query to `product_collections` returned empty due to PostgREST caching the old schema
+4. **Missing /products page**: Template had no products listing page
+
+**Key Insight:**
+- Admin API uses `getSupabaseAdmin()` → **service role key** → **bypasses RLS**
+- Customer API uses `getSupabase()` → **anon key** → **subject to RLS**
+
+**Fixes Applied:**
+
+1. **Status filter fix** (`templates/hosted/app/api/collections/[slug]/route.ts:81`):
+   ```javascript
+   // Changed from:
+   .filter((p) => p !== null && p.status === "published")
+   // To:
+   .filter((p) => p !== null && p.status === "active")
+   ```
+
+2. **Created /products/page.tsx** for product listing
+
+3. **RLS policies** (run in Supabase SQL Editor):
+   ```sql
+   CREATE POLICY "Collections are viewable by everyone"
+     ON public.collections FOR SELECT
+     TO anon, authenticated
+     USING (is_active = true);
+
+   CREATE POLICY "Product collections are viewable by everyone"
+     ON public.product_collections FOR SELECT
+     TO anon, authenticated
+     USING (true);
+
+   GRANT SELECT ON public.collections TO anon, authenticated;
+   GRANT SELECT ON public.product_collections TO anon, authenticated;
+   ```
+
+4. **Query refactor** (`templates/hosted/app/api/collections/route.ts`):
+   - Removed JOIN to `product_collections` from main query
+   - Fetch collections first (simple query works)
+   - Then count products separately with `Promise.all`
+
+**Files Changed:**
+- `templates/hosted/app/api/collections/route.ts` - Refactored to avoid JOIN
+- `templates/hosted/app/api/collections/[slug]/route.ts` - Status filter fix
+- `templates/hosted/app/products/page.tsx` - Created new page
+- `app/docs/features/collections/page.mdx` - New documentation page
+- `app/docs/layout.tsx` - Added Collections to nav
+
+**Debug Endpoints Added:**
+- `/api/collections?debug=1` - Shows env config
+- `/api/collections?debug=2` - Shows raw query results
+
+---
 
 ### Session 32 - AI Enhance + Order Email Fallback (v9.25-9.27) - Jan 2, 2026
 

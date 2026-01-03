@@ -3,7 +3,7 @@
 > **IMPORTANT:** This file is the source of truth for active development.
 > For version history and session logs, see `CLAUDE-HISTORY.md`.
 
-**Current Version: 9.29** | **Last Updated: January 2, 2026**
+**Current Version: 9.30** | **Last Updated: January 3, 2026**
 
 ---
 
@@ -98,6 +98,8 @@
 - v9.20: Brochure Template - complete portfolio/information site template, env-var approach, admin dashboard
 - v9.21: Visitor Education Initiative - documented 5-phase plan to educate visitors (market validation confirmed)
 - v9.22: Visitor Education Phase 1 + Mini-Wizard - Screenshot gallery, video placeholder, interactive 3-step mini-wizard with live preview
+- v9.29: Collections bug fix - useParams async fix for Next.js 15
+- v9.30: Collections RLS fix - customer-facing collections not displaying due to RLS policies blocking anon access
 
 **Known Tech Debt:**
 - `WizardContext.tsx:455` - React hooks ref mutation pattern (non-blocking)
@@ -335,6 +337,7 @@ app/docs/
 ├── tiers/                  # Pricing comparison
 └── features/
     ├── products/           # Products, variants, inventory
+    ├── collections/        # Collections, RLS troubleshooting (v9.30)
     ├── orders/             # Order management
     ├── coupons/            # Discount codes
     ├── themes/             # Appearance (Pro)
@@ -500,5 +503,5 @@ All major e-commerce features built:
 
 ---
 
-*Version: 9.24 | Status: TEMPLATE FIXES COMPLETE - PUSH TO REPOS REQUIRED*
+*Version: 9.30 | Status: Collections RLS Fix Complete*
 *See CLAUDE-HISTORY.md for version history and session details.*
