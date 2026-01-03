@@ -72,6 +72,7 @@ export interface Testimonial {
 export interface RuntimeSettings {
   // Branding
   themePreset: string;
+  brandColor: string; // Admin-configurable brand color (hex)
   logoUrl: string;
 
   // Content
@@ -169,6 +170,7 @@ function getDefaultSettings(): RuntimeSettings {
   return {
     // Branding
     themePreset: config.themePreset || "default",
+    brandColor: config.primaryColor || "#FFD700",
     logoUrl: config.logoUrl || "",
     tagline: config.tagline || "",
     aboutText: config.aboutText || "",
@@ -306,6 +308,7 @@ export async function getStoreSettingsFromDB(): Promise<RuntimeSettings> {
       return {
         // Branding
         themePreset: s.themePreset || defaults.themePreset,
+        brandColor: s.brandColor || defaults.brandColor,
         logoUrl: s.logoUrl || defaults.logoUrl,
         tagline: s.tagline ?? defaults.tagline,
         aboutText: s.aboutText ?? defaults.aboutText,

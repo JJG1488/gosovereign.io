@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { Menu, X, Phone } from "lucide-react";
 import type { RuntimeSettings } from "@/lib/settings";
 
@@ -14,6 +15,12 @@ interface HeaderProps {
 export function Header({ settings, storeName }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
+
+  // On internal pages (not homepage), always use scrolled styling
+  // because internal pages have white backgrounds
+  const isHomepage = pathname === "/";
+  const useScrolledStyle = scrolled || !isHomepage;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -36,7 +43,7 @@ export function Header({ settings, storeName }: HeaderProps) {
   return (
     <header
       className={"fixed top-0 left-0 right-0 z-50 transition-all duration-300 " + (
-        scrolled
+        useScrolledStyle
           ? "bg-white/95 backdrop-blur-md shadow-md py-2"
           : "bg-transparent py-4"
       )}
@@ -49,14 +56,14 @@ export function Header({ settings, storeName }: HeaderProps) {
               <Image
                 src={settings.logoUrl}
                 alt={storeName}
-                width={scrolled ? 36 : 44}
-                height={scrolled ? 36 : 44}
+                width={useScrolledStyle ? 36 : 44}
+                height={useScrolledStyle ? 36 : 44}
                 className="transition-all duration-300"
               />
             ) : null}
             <span
               className={"font-bold transition-all duration-300 " + (
-                scrolled ? "text-lg text-gray-900" : "text-xl text-white"
+                useScrolledStyle ? "text-lg text-gray-900" : "text-xl text-white"
               )}
             >
               {storeName}
@@ -70,7 +77,7 @@ export function Header({ settings, storeName }: HeaderProps) {
                 key={link.href}
                 href={link.href}
                 className={"font-medium transition-colors hover:text-brand " + (
-                  scrolled ? "text-gray-700" : "text-white"
+                  useScrolledStyle ? "text-gray-700" : "text-white"
                 )}
               >
                 {link.label}
@@ -84,7 +91,7 @@ export function Header({ settings, storeName }: HeaderProps) {
               <a
                 href={"tel:" + settings.phoneNumber}
                 className={"flex items-center gap-2 font-medium transition-colors " + (
-                  scrolled ? "text-gray-700 hover:text-brand" : "text-white hover:text-brand"
+                  useScrolledStyle ? "text-gray-700 hover:text-brand" : "text-white hover:text-brand"
                 )}
               >
                 <Phone className="w-4 h-4" />
@@ -101,7 +108,7 @@ export function Header({ settings, storeName }: HeaderProps) {
 
           {/* Mobile Menu Button */}
           <button
-            className={"md:hidden p-2 " + (scrolled ? "text-gray-900" : "text-white")}
+            className={"md:hidden p-2 " + (useScrolledStyle ? "text-gray-900" : "text-white")}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle menu"
           >

@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
+import { LayoutWrapper } from "@/components/LayoutWrapper";
 import { getStoreConfig } from "@/lib/store";
 import { getThemeById, generateThemeCSS } from "@/lib/themes";
 import { getStoreSettingsFromDB } from "@/lib/settings";
@@ -30,10 +29,10 @@ export default async function RootLayout({
   const theme = getThemeById(settings.themePreset);
   const themeCSS = generateThemeCSS(theme);
 
-  // Override brand color with user's selected color from wizard
-  // This ensures the color picker selection takes precedence over theme presets
-  const brandColorOverride = store.primaryColor
-    ? `:root { --brand-color: ${store.primaryColor}; --brand-color-10: ${store.primaryColor}1a; }`
+  // Override brand color with admin-configurable setting
+  // Falls back to wizard-selected color if not set in admin panel
+  const brandColorOverride = settings.brandColor
+    ? `:root { --brand-color: ${settings.brandColor}; --brand-color-10: ${settings.brandColor}1a; --brand-color-20: ${settings.brandColor}33; }`
     : "";
 
   return (
@@ -46,9 +45,9 @@ export default async function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        <Header settings={settings} storeName={store.name} />
-        <main className="min-h-screen">{children}</main>
-        <Footer settings={settings} storeName={store.name} />
+        <LayoutWrapper settings={settings} storeName={store.name}>
+          {children}
+        </LayoutWrapper>
       </body>
     </html>
   );

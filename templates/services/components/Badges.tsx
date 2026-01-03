@@ -84,10 +84,9 @@ export function Badges({ settings }: BadgesProps) {
                     background: `linear-gradient(135deg, ${badge.color}15 0%, ${badge.color}30 100%)`,
                   }}
                 >
-                  <IconComponent
-                    className="w-10 h-10"
-                    style={{ color: badge.color }}
-                  />
+                  <span style={{ color: badge.color }}>
+                    <IconComponent className="w-10 h-10" />
+                  </span>
                 </div>
 
                 {/* Title */}
